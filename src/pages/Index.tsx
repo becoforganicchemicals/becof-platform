@@ -1,14 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Layout from "@/components/layout/Layout";
+import HeroSection from "@/components/home/HeroSection";
+import WhatWeDo from "@/components/home/WhatWeDo";
+import FeaturedProducts from "@/components/home/FeaturedProducts";
+import PlatformHighlights from "@/components/home/PlatformHighlights";
+import ImpactSnapshot from "@/components/home/ImpactSnapshot";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import FinalCTA from "@/components/home/FinalCTA";
 
-const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
-};
+const Index = () => (
+  <Layout>
+    <HeroSection />
+    <WhatWeDo />
+    <FeaturedProducts />
+    <PlatformHighlights />
+    <ImpactSnapshot />
+    <TestimonialsSection />
+    <FinalCTA />
+  </Layout>
+);
 
 export default Index;
