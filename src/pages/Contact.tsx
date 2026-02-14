@@ -7,9 +7,9 @@ import { MapPin, Phone, Mail, Clock, Calendar, User, BookOpen } from "lucide-rea
 import { useState } from "react";
 
 const contactInfo = [
-  { icon: MapPin, label: "Address", value: "Nairobi, Kenya" },
-  { icon: Phone, label: "Phone", value: "+254 700 000 000" },
-  { icon: Mail, label: "Email", value: "info@becof.co.ke" },
+  { icon: MapPin, label: "Address", value: "Nairobi & Kilifi, Kenya" },
+  { icon: Phone, label: "Phone", value: "+254 735 283 397" },
+  { icon: Mail, label: "Email", value: "info@becoforganic.com" },
   { icon: Clock, label: "Hours", value: "Mon-Fri: 8AM - 6PM EAT" },
 ];
 

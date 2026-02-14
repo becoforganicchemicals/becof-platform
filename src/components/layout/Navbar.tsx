@@ -31,7 +31,7 @@ const Navbar = () => {
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="Becof Organic Chemicals" className="h-10 w-10 object-contain" />
-          <span className="font-heading font-bold text-lg text-primary hidden sm:inline">BECOF</span>
+          <span className="font-heading font-bold text-lg text-primary hidden sm:inline">Becof Organic Chemicals</span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
