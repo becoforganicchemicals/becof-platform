@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, ShoppingCart, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/becof-logo.png";
 
 const navLinks = [
@@ -17,6 +18,13 @@ const navLinks = [
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAdmin, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-md border-b border-border">
@@ -32,9 +40,7 @@ const Navbar = () => {
               key={link.path}
               to={link.path}
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors hover:text-primary hover:bg-primary/5 ${
-                location.pathname === link.path
-                  ? "text-primary bg-primary/10"
-                  : "text-foreground/70"
+                location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground/70"
               }`}
             >
               {link.name}
@@ -46,22 +52,28 @@ const Navbar = () => {
           <Button variant="ghost" size="icon" className="relative">
             <ShoppingCart className="h-5 w-5" />
           </Button>
-          <Link to="/signin">
-            <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-              Sign In
-            </Button>
-          </Link>
+          {user ? (
+            <>
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-1">
+                    <Shield className="h-3.5 w-3.5" /> Admin
+                  </Button>
+                </Link>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:inline-flex gap-1">
+                <LogOut className="h-3.5 w-3.5" /> Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link to="/signin">
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex">Sign In</Button>
+            </Link>
+          )}
           <Link to="/products">
-            <Button size="sm" className="hidden sm:inline-flex">
-              Shop Now
-            </Button>
+            <Button size="sm" className="hidden sm:inline-flex">Shop Now</Button>
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setOpen(!open)}
-          >
+          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
@@ -70,23 +82,28 @@ const Navbar = () => {
       {open && (
         <div className="lg:hidden border-t border-border bg-card p-4 space-y-1">
           {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              onClick={() => setOpen(false)}
+            <Link key={link.path} to={link.path} onClick={() => setOpen(false)}
               className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === link.path
-                  ? "text-primary bg-primary/10"
-                  : "text-foreground/70 hover:text-primary"
-              }`}
-            >
+                location.pathname === link.path ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-primary"
+              }`}>
               {link.name}
             </Link>
           ))}
           <div className="flex gap-2 pt-2">
-            <Link to="/signin" className="flex-1">
-              <Button variant="outline" className="w-full" onClick={() => setOpen(false)}>Sign In</Button>
-            </Link>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin" className="flex-1">
+                    <Button variant="outline" className="w-full" onClick={() => setOpen(false)}>Admin</Button>
+                  </Link>
+                )}
+                <Button variant="outline" className="flex-1" onClick={() => { handleSignOut(); setOpen(false); }}>Sign Out</Button>
+              </>
+            ) : (
+              <Link to="/signin" className="flex-1">
+                <Button variant="outline" className="w-full" onClick={() => setOpen(false)}>Sign In</Button>
+              </Link>
+            )}
             <Link to="/products" className="flex-1">
               <Button className="w-full" onClick={() => setOpen(false)}>Shop Now</Button>
             </Link>
