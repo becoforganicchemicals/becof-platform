@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingCart, LogOut, Shield } from "lucide-react";
+import { Menu, X, ShoppingCart, LogOut, Shield, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import logo from "@/assets/becof-logo.png";
 
 const navLinks = [
@@ -20,6 +21,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
+  const { itemCount } = useCart();
 
   const handleSignOut = async () => {
     await signOut();
@@ -49,9 +51,21 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="relative">
-            <ShoppingCart className="h-5 w-5" />
-          </Button>
+          {user && (
+            <Link to="/wishlist">
+              <Button variant="ghost" size="icon"><Heart className="h-5 w-5" /></Button>
+            </Link>
+          )}
+          <Link to="/cart">
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">
+                  {itemCount > 9 ? "9+" : itemCount}
+                </span>
+              )}
+            </Button>
+          </Link>
           {user ? (
             <>
               {isAdmin && (
