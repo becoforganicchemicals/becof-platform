@@ -1,35 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Star, ShoppingCart, Search, SlidersHorizontal } from "lucide-react";
-
-const categories = ["All", "Crop Protection", "Soil Enhancement", "Pest Management", "Organic Fertilizer", "Growth Stimulants"];
-
-const allProducts = [
-  { name: "BioShield Pro", category: "Crop Protection", price: 2500, rating: 4.8, desc: "Advanced organic crop protectant for sustainable pest management.", stock: true },
-  { name: "SoilVita Plus", category: "Soil Enhancement", price: 3200, rating: 4.9, desc: "Premium organic soil conditioner with beneficial microorganisms.", stock: true },
-  { name: "EcoGuard 360", category: "Pest Management", price: 1800, rating: 4.7, desc: "Eco-friendly broad-spectrum pest control for all crop types.", stock: true },
-  { name: "GreenGrow Max", category: "Organic Fertilizer", price: 2800, rating: 4.6, desc: "High-performance organic fertilizer for maximum yield.", stock: true },
-  { name: "RootBoost Elite", category: "Growth Stimulants", price: 2100, rating: 4.5, desc: "Root development enhancer for stronger, healthier plants.", stock: false },
-  { name: "CropShield Nano", category: "Crop Protection", price: 3500, rating: 4.8, desc: "Next-gen nano-technology crop protection formula.", stock: true },
-  { name: "MicroSoil Pro", category: "Soil Enhancement", price: 2900, rating: 4.7, desc: "Microbial soil enhancer for depleted farmlands.", stock: true },
-  { name: "PestAway Natural", category: "Pest Management", price: 1500, rating: 4.4, desc: "100% natural pest deterrent safe for organic farming.", stock: true },
-];
+import { Star, ShoppingCart, Search, Heart } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Products = () => {
-  const [activeCat, setActiveCat] = useState("All");
+  const { user } = useAuth();
+  const { addToCart } = useCart();
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCat, setActiveCat] = useState("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("popular");
+  const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
 
-  let filtered = allProducts
-    .filter(p => activeCat === "All" || p.category === activeCat)
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const [prodRes, catRes] = await Promise.all([
+        supabase.from("products").select("*, categories(name)").eq("is_published", true),
+        supabase.from("categories").select("id, name, slug"),
+      ]);
+      setProducts(prodRes.data || []);
+      setCategories(catRes.data || []);
+      setLoading(false);
+
+      if (user) {
+        const { data: wl } = await supabase.from("wishlists").select("product_id").eq("user_id", user.id);
+        setWishlistedIds(new Set(wl?.map(w => w.product_id) || []));
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  const toggleWishlist = async (productId: string) => {
+    if (!user) { toast.error("Please sign in"); return; }
+    if (wishlistedIds.has(productId)) {
+      await supabase.from("wishlists").delete().eq("user_id", user.id).eq("product_id", productId);
+      setWishlistedIds(prev => { const n = new Set(prev); n.delete(productId); return n; });
+      toast.success("Removed from wishlist");
+    } else {
+      await supabase.from("wishlists").insert({ user_id: user.id, product_id: productId });
+      setWishlistedIds(prev => new Set(prev).add(productId));
+      toast.success("Added to wishlist");
+    }
+  };
+
+  let filtered = products
+    .filter(p => activeCat === "all" || p.category_id === activeCat)
     .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
   if (sort === "price-low") filtered.sort((a, b) => a.price - b.price);
   else if (sort === "price-high") filtered.sort((a, b) => b.price - a.price);
-  else if (sort === "rating") filtered.sort((a, b) => b.rating - a.rating);
+  else if (sort === "rating") filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
 
   return (
     <Layout>
@@ -45,11 +75,7 @@ const Products = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search products..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <select
-              className="border border-border rounded-lg px-4 py-2 bg-card text-sm"
-              value={sort}
-              onChange={e => setSort(e.target.value)}
-            >
+            <select className="border border-border rounded-lg px-4 py-2 bg-card text-sm" value={sort} onChange={e => setSort(e.target.value)}>
               <option value="popular">Popularity</option>
               <option value="rating">Highest Rated</option>
               <option value="price-low">Price: Low to High</option>
@@ -58,55 +84,55 @@ const Products = () => {
           </div>
 
           <div className="flex flex-wrap gap-2 mb-8">
+            <Button variant={activeCat === "all" ? "default" : "outline"} size="sm" onClick={() => setActiveCat("all")}>All</Button>
             {categories.map(c => (
-              <Button
-                key={c}
-                variant={activeCat === c ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveCat(c)}
-              >
-                {c}
-              </Button>
+              <Button key={c.id} variant={activeCat === c.id ? "default" : "outline"} size="sm" onClick={() => setActiveCat(c.id)}>{c.name}</Button>
             ))}
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filtered.map((p, i) => (
-              <motion.div
-                key={p.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all"
-              >
-                <div className="h-44 bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center relative">
-                  <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-2xl">🌿</span>
+          {loading ? (
+            <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">No products found.</div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filtered.map((p, i) => (
+                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                  className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
+                  <Link to={`/products/${p.slug}`} className="block h-44 bg-muted relative overflow-hidden">
+                    <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    {p.stock_quantity === 0 && (
+                      <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">Out of Stock</span>
+                    )}
+                  </Link>
+                  <div className="p-5">
+                    <span className="text-xs font-medium text-accent">{p.categories?.name}</span>
+                    <Link to={`/products/${p.slug}`}><h3 className="font-semibold text-lg mt-1 mb-1 hover:text-primary">{p.name}</h3></Link>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{p.short_description}</p>
+                    <div className="flex items-center gap-1 mb-3">
+                      <Star className="h-3.5 w-3.5 fill-earth text-earth" />
+                      <span className="text-sm font-medium">{p.average_rating || 0}</span>
+                      <span className="text-xs text-muted-foreground">({p.review_count || 0})</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-primary">KES {p.price.toLocaleString()}</span>
+                        {p.compare_at_price && <span className="text-xs text-muted-foreground line-through ml-2">KES {p.compare_at_price.toLocaleString()}</span>}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleWishlist(p.id)}>
+                          <Heart className={`h-3.5 w-3.5 ${wishlistedIds.has(p.id) ? "fill-destructive text-destructive" : ""}`} />
+                        </Button>
+                        <Button size="sm" disabled={p.stock_quantity === 0} className="gap-1" onClick={() => addToCart(p.id)}>
+                          <ShoppingCart className="h-3.5 w-3.5" /> Add
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  {!p.stock && (
-                    <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">
-                      Out of Stock
-                    </span>
-                  )}
-                </div>
-                <div className="p-5">
-                  <span className="text-xs font-medium text-accent">{p.category}</span>
-                  <h3 className="font-semibold text-lg mt-1 mb-1">{p.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{p.desc}</p>
-                  <div className="flex items-center gap-1 mb-3">
-                    <Star className="h-3.5 w-3.5 fill-earth text-earth" />
-                    <span className="text-sm font-medium">{p.rating}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-primary">KES {p.price.toLocaleString()}</span>
-                    <Button size="sm" disabled={!p.stock} className="gap-1">
-                      <ShoppingCart className="h-3.5 w-3.5" /> Add
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </Layout>
