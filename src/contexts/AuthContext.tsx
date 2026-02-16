@@ -14,6 +14,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  isSuspended: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isAdmin: false,
   isSuperAdmin: false,
+  isSuspended: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -82,9 +84,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAdmin = role === "admin" || role === "super_admin";
   const isSuperAdmin = role === "super_admin";
+  const isSuspended = profile?.status === "suspended";
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, profile, signOut, isAdmin, isSuperAdmin }}>
+    <AuthContext.Provider value={{ user, session, loading, role, profile, signOut, isAdmin, isSuperAdmin, isSuspended }}>
       {children}
     </AuthContext.Provider>
   );
