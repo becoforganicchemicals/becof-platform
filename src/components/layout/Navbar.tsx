@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, ShoppingCart, LogOut, Shield, Heart } from "lucide-react";
+import { Menu, X, ShoppingCart, LogOut, Shield, Heart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
@@ -14,6 +14,7 @@ const navLinks = [
   { name: "About", path: "/about" },
   { name: "Partners", path: "/partners" },
   { name: "Contact", path: "/contact" },
+  { name: "Careers", path: "/careers" },
 ];
 
 const Navbar = () => {
@@ -68,6 +69,9 @@ const Navbar = () => {
           </Link>
           {user ? (
             <>
+              <Link to="/profile">
+                <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
+              </Link>
               {isAdmin && (
                 <Link to="/admin">
                   <Button variant="outline" size="sm" className="hidden sm:inline-flex gap-1">
