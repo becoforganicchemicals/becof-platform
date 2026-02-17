@@ -1,22 +1,68 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Package, AlertTriangle } from "lucide-react";
+import { Plus, Edit, Trash2, Package, AlertTriangle, Upload, FileText, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+
+interface ProductForm {
+  name: string;
+  slug: string;
+  price: string;
+  stock_quantity: string;
+  short_description: string;
+  long_description: string;
+  usage_instructions: string;
+  sku: string;
+  is_published: boolean;
+  category_id: string;
+}
+
+const emptyForm: ProductForm = {
+  name: "", slug: "", price: "", stock_quantity: "", short_description: "",
+  long_description: "", usage_instructions: "", sku: "", is_published: true, category_id: "",
+};
 
 const AdminProducts = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", slug: "", price: "", stock_quantity: "", short_description: "", sku: "", is_published: true });
+  const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Fetch categories (top-level)
+  const { data: categories = [] } = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("*").is("parent_id", null).order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch subcategories filtered by selected category
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["admin-subcategories", form.category_id],
+    queryFn: async () => {
+      if (!form.category_id) return [];
+      const { data, error } = await supabase.from("categories").select("*").eq("parent_id", form.category_id).order("name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!form.category_id,
+  });
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -27,21 +73,52 @@ const AdminProducts = () => {
     },
   });
 
+  const uploadFile = async (file: File, bucket: string, folder: string): Promise<string> => {
+    const ext = file.name.split(".").pop();
+    const path = `${folder}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from(bucket).upload(path, file);
+    if (error) throw error;
+    if (bucket === "product-images") {
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      return data.publicUrl;
+    }
+    // For private buckets, store the path
+    return path;
+  };
+
   const upsertProduct = useMutation({
     mutationFn: async (product: any) => {
+      setUploading(true);
+      let imageUrl = editingProduct?.images?.[0] || null;
+      let safetySheetUrl = editingProduct?.safety_sheet_url || null;
+
+      if (imageFile) {
+        imageUrl = await uploadFile(imageFile, "product-images", "products");
+      }
+      if (pdfFile) {
+        safetySheetUrl = await uploadFile(pdfFile, "product-pdfs", "manuals");
+      }
+
       const payload = {
         name: product.name,
-        slug: product.slug,
+        slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
         price: Number(product.price),
         stock_quantity: Number(product.stock_quantity),
-        short_description: product.short_description,
+        short_description: product.short_description || null,
+        long_description: product.long_description || null,
+        usage_instructions: product.usage_instructions || null,
         sku: product.sku || null,
         is_published: product.is_published,
+        category_id: product.category_id || null,
+        images: imageUrl ? [imageUrl] : [],
+        safety_sheet_url: safetySheetUrl,
       };
+
       if (product.id) {
         const { error } = await supabase.from("products").update(payload).eq("id", product.id);
         if (error) throw error;
       } else {
+        if (!product.category_id) throw new Error("Category is required");
         const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
       }
@@ -51,8 +128,12 @@ const AdminProducts = () => {
       setDialogOpen(false);
       resetForm();
       toast({ title: "Product saved successfully" });
+      setUploading(false);
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: any) => {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+      setUploading(false);
+    },
   });
 
   const deleteProduct = useMutation({
@@ -67,17 +148,28 @@ const AdminProducts = () => {
   });
 
   const resetForm = () => {
-    setForm({ name: "", slug: "", price: "", stock_quantity: "", short_description: "", sku: "", is_published: true });
+    setForm(emptyForm);
     setEditingProduct(null);
+    setImageFile(null);
+    setPdfFile(null);
   };
 
   const openEdit = (p: any) => {
     setEditingProduct(p);
-    setForm({ name: p.name, slug: p.slug, price: String(p.price), stock_quantity: String(p.stock_quantity), short_description: p.short_description || "", sku: p.sku || "", is_published: p.is_published });
+    setForm({
+      name: p.name, slug: p.slug, price: String(p.price),
+      stock_quantity: String(p.stock_quantity),
+      short_description: p.short_description || "",
+      long_description: p.long_description || "",
+      usage_instructions: p.usage_instructions || "",
+      sku: p.sku || "", is_published: p.is_published,
+      category_id: p.category_id || "",
+    });
     setDialogOpen(true);
   };
 
   const lowStockProducts = products?.filter(p => p.stock_quantity <= p.low_stock_threshold) || [];
+  const noCategoriesExist = categories.length === 0;
 
   return (
     <div className="space-y-6">
@@ -93,23 +185,108 @@ const AdminProducts = () => {
       )}
 
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold flex items-center gap-2"><Package className="h-5 w-5" /> Products ({products?.length || 0})</h2>
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Package className="h-5 w-5" /> Products ({products?.length || 0})
+        </h2>
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-2" /> Add Product</Button>
+            <Button disabled={noCategoriesExist}>
+              <Plus className="h-4 w-4 mr-2" /> Add Product
+            </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{editingProduct ? "Edit Product" : "New Product"}</DialogTitle></DialogHeader>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingProduct ? "Edit Product" : "New Product"}</DialogTitle>
+            </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); upsertProduct.mutate({ ...form, id: editingProduct?.id }); }} className="space-y-4">
-              <div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required /></div>
-              <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} required /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Price (KES)</Label><Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required /></div>
-                <div><Label>Stock</Label><Input type="number" value={form.stock_quantity} onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))} required /></div>
+              <div>
+                <Label>Product Name *</Label>
+                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
               </div>
-              <div><Label>SKU</Label><Input value={form.sku} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))} /></div>
-              <div><Label>Description</Label><Input value={form.short_description} onChange={e => setForm(f => ({ ...f, short_description: e.target.value }))} /></div>
-              <Button type="submit" className="w-full" disabled={upsertProduct.isPending}>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Category *</Label>
+                  <Select value={form.category_id} onValueChange={(v) => setForm(f => ({ ...f, category_id: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Subcategory</Label>
+                  <Select
+                    value={form.category_id && subcategories.length > 0 ? undefined : ""}
+                    onValueChange={(v) => setForm(f => ({ ...f, category_id: v }))}
+                    disabled={!form.category_id || subcategories.length === 0}
+                  >
+                    <SelectTrigger><SelectValue placeholder={subcategories.length === 0 ? "None available" : "Select subcategory"} /></SelectTrigger>
+                    <SelectContent>
+                      {subcategories.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label>Price (KES) *</Label>
+                  <Input type="number" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} required />
+                </div>
+                <div>
+                  <Label>Stock Quantity *</Label>
+                  <Input type="number" min="0" value={form.stock_quantity} onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))} required />
+                </div>
+                <div>
+                  <Label>SKU</Label>
+                  <Input value={form.sku} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Short Description</Label>
+                <Input value={form.short_description} onChange={e => setForm(f => ({ ...f, short_description: e.target.value }))} />
+              </div>
+
+              <div>
+                <Label>Full Description</Label>
+                <Textarea rows={4} value={form.long_description} onChange={e => setForm(f => ({ ...f, long_description: e.target.value }))} />
+              </div>
+
+              <div>
+                <Label>Usage Instructions</Label>
+                <Textarea rows={4} value={form.usage_instructions} onChange={e => setForm(f => ({ ...f, usage_instructions: e.target.value }))} placeholder="Enter usage instructions..." />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-2"><Upload className="h-4 w-4" /> Product Image</Label>
+                  <Input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
+                  {editingProduct?.images?.[0] && !imageFile && (
+                    <p className="text-xs text-muted-foreground mt-1">Current image set. Upload new to replace.</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2"><FileText className="h-4 w-4" /> Usage Manual (PDF)</Label>
+                  <Input type="file" accept=".pdf" onChange={e => setPdfFile(e.target.files?.[0] || null)} />
+                  {editingProduct?.safety_sheet_url && !pdfFile && (
+                    <p className="text-xs text-muted-foreground mt-1">Current PDF set. Upload new to replace.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Label>Published (Active)</Label>
+                <Switch checked={form.is_published} onCheckedChange={(c) => setForm(f => ({ ...f, is_published: c }))} />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={upsertProduct.isPending || uploading}>
+                {(upsertProduct.isPending || uploading) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {editingProduct ? "Update" : "Create"} Product
               </Button>
             </form>
@@ -117,12 +294,23 @@ const AdminProducts = () => {
         </Dialog>
       </div>
 
+      {noCategoriesExist && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="py-4">
+            <p className="text-amber-700 text-sm font-medium">
+              ⚠️ No categories exist. Create a category first before adding products.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Product</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
@@ -132,10 +320,18 @@ const AdminProducts = () => {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-8">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-8">Loading...</TableCell></TableRow>
               ) : products?.map(p => (
                 <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.name}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {p.images?.[0] && (
+                        <img src={p.images[0]} alt={p.name} className="h-10 w-10 rounded object-cover" />
+                      )}
+                      <span className="font-medium">{p.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{(p as any).categories?.name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{p.sku || "—"}</TableCell>
                   <TableCell>KES {p.price.toLocaleString()}</TableCell>
                   <TableCell>
@@ -145,7 +341,7 @@ const AdminProducts = () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant={p.is_published ? "default" : "secondary"}>
-                      {p.is_published ? "Published" : "Draft"}
+                      {p.is_published ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
