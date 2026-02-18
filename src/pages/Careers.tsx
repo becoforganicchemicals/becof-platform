@@ -74,14 +74,170 @@ const Careers = () => {
   return (
     <Layout>
       <section className="py-16">
-        <div className="container max-w-4xl">
+        <div className="container max-w-7xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">Join Our Team</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-7xl mx-auto">
               Help us revolutionize sustainable agriculture. Explore open positions and become part of the Becof family.
             </p>
           </motion.div>
 
+          {/* Why Join Becof */}
+          <section className="py-20 bg-muted/30">
+            <div className="container max-w-7xl">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Join Becof?</h2>
+                <p className="text-muted-foreground max-w-7xl mx-auto">
+                  We don’t just build products — we build purpose-driven careers.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {[
+                  {
+                    title: "Our Mission",
+                    desc: "Drive sustainability through groundbreaking eco-friendly innovations.",
+                  },
+                  {
+                    title: "Career Growth",
+                    desc: "Tailored training programs and leadership opportunities await you.",
+                  },
+                  {
+                    title: "Impactful Work",
+                    desc: "Contribute directly to global communities, agriculture, and the environment.",
+                  },
+                  {
+                    title: "Benefits & Wellness",
+                    desc: "Enjoy flexible work, health perks, and recognition for excellence.",
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-card border border-border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <h3 className="text-lg font-semibold mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Career Growth & Development */}
+          <section className="py-24">
+            <div className="container max-w-7xl">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  Career Growth & Development
+                </h2>
+                <p className="text-muted-foreground max-w-7xl mx-auto">
+                  We invest in people who invest in impact.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {[
+                  "Workshops, certifications, and continuous learning initiatives.",
+                  "Leadership pipeline to nurture high-potential employees.",
+                  "Collaboration with global industry experts and mentors.",
+                  "Recognition programs celebrating excellence and innovation.",
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-card border border-border rounded-2xl p-6"
+                  >
+                    <p className="text-foreground">{item}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* What We Value */}
+          <section className="py-20 bg-muted/30">
+            <div className="container max-w-7xl">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                  What We Value
+                </h2>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                {[
+                  {
+                    title: "Innovation",
+                    desc: "We foster creativity to build sustainable solutions for tomorrow.",
+                  },
+                  {
+                    title: "Teamwork",
+                    desc: "Collaboration is at the heart of everything we achieve together.",
+                  },
+                  {
+                    title: "Excellence",
+                    desc: "We strive for exceptional results that positively impact the world.",
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-card border border-border rounded-2xl p-8 text-center hover:shadow-lg transition"
+                  >
+                    <h3 className="text-xl font-semibold mb-4">{item.title}</h3>
+                    <p className="text-muted-foreground">{item.desc}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Life at Becof */}
+          <section className="py-24">
+            <div className="container max-w-7xl text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                Life at Becof
+              </h2>
+              <p className="text-muted-foreground leading-relaxed text-lg">
+                At Becof, we celebrate diversity, nurture innovation, and support one another like family.
+                Our people are our greatest asset, and we believe in growing together while making a meaningful difference.
+              </p>
+            </div>
+          </section>
+
+          {/* Final CTA */}
+          <section className="py-16 bg-primary text-primary-foreground text-center">
+            <div className="container max-w-7xl">
+              <h2 className="text-3xl font-bold mb-4">
+                Ready to Shape the Future?
+              </h2>
+              <p className="mb-6 opacity-90">
+                Explore opportunities to work on impactful projects and grow professionally with us.
+              </p>
+              <Button
+                size="lg"
+                variant="secondary"
+                onClick={() =>
+                  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
+                }
+              >
+                View Open Positions
+              </Button>
+            </div>
+          </section>
+
+          {/* Open Positions */}
           {isLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
