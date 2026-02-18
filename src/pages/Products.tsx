@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Star, ShoppingCart, Search, Heart } from "lucide-react";
+import { Star, ShoppingCart, Search, Heart, Zap, ClipboardList } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const Products = () => {
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +52,12 @@ const Products = () => {
       setWishlistedIds(prev => new Set(prev).add(productId));
       toast.success("Added to wishlist");
     }
+  };
+
+  const handleBuyNow = async (product: any) => {
+    if (!user) { toast.error("Please sign in to proceed"); return; }
+    await addToCart(product.id, 1);
+    navigate("/checkout");
   };
 
   let filtered = products
@@ -96,41 +103,56 @@ const Products = () => {
             <div className="text-center py-20 text-muted-foreground">No products found.</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filtered.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
-                  <Link to={`/products/${p.slug}`} className="block h-44 bg-muted relative overflow-hidden">
-                    <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    {p.stock_quantity === 0 && (
-                      <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">Out of Stock</span>
-                    )}
-                  </Link>
-                  <div className="p-5">
-                    <span className="text-xs font-medium text-accent">{p.categories?.name}</span>
-                    <Link to={`/products/${p.slug}`}><h3 className="font-semibold text-lg mt-1 mb-1 hover:text-primary">{p.name}</h3></Link>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{p.short_description}</p>
-                    <div className="flex items-center gap-1 mb-3">
-                      <Star className="h-3.5 w-3.5 fill-earth text-earth" />
-                      <span className="text-sm font-medium">{p.average_rating || 0}</span>
-                      <span className="text-xs text-muted-foreground">({p.review_count || 0})</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-primary">KES {p.price.toLocaleString()}</span>
-                        {p.compare_at_price && <span className="text-xs text-muted-foreground line-through ml-2">KES {p.compare_at_price.toLocaleString()}</span>}
+              {filtered.map((p, i) => {
+                const inStock = p.stock_quantity > 0;
+                return (
+                  <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                    className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
+                    <Link to={`/products/${p.slug}`} className="block h-44 bg-muted relative overflow-hidden">
+                      <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      {!inStock && (
+                        <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">Out of Stock</span>
+                      )}
+                    </Link>
+                    <div className="p-5">
+                      <span className="text-xs font-medium text-accent">{p.categories?.name}</span>
+                      <Link to={`/products/${p.slug}`}><h3 className="font-semibold text-lg mt-1 mb-1 hover:text-primary">{p.name}</h3></Link>
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{p.short_description}</p>
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="h-3.5 w-3.5 fill-earth text-earth" />
+                        <span className="text-sm font-medium">{p.average_rating || 0}</span>
+                        <span className="text-xs text-muted-foreground">({p.review_count || 0})</span>
                       </div>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleWishlist(p.id)}>
-                          <Heart className={`h-3.5 w-3.5 ${wishlistedIds.has(p.id) ? "fill-destructive text-destructive" : ""}`} />
-                        </Button>
-                        <Button size="sm" disabled={p.stock_quantity === 0} className="gap-1" onClick={() => addToCart(p.id)}>
-                          <ShoppingCart className="h-3.5 w-3.5" /> Add
-                        </Button>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <span className="font-bold text-primary">KES {p.price.toLocaleString()}</span>
+                          {p.compare_at_price && <span className="text-xs text-muted-foreground line-through ml-2">KES {p.compare_at_price.toLocaleString()}</span>}
+                        </div>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleWishlist(p.id)}>
+                            <Heart className={`h-3.5 w-3.5 ${wishlistedIds.has(p.id) ? "fill-destructive text-destructive" : ""}`} />
+                          </Button>
+                          {inStock && (
+                            <Button size="sm" className="gap-1" onClick={() => addToCart(p.id)}>
+                              <ShoppingCart className="h-3.5 w-3.5" /> Add
+                            </Button>
+                          )}
+                        </div>
                       </div>
+                      {/* Buy Now / Make an Order */}
+                      {inStock ? (
+                        <Button size="sm" variant="secondary" className="w-full gap-1" onClick={() => handleBuyNow(p)}>
+                          <Zap className="h-3.5 w-3.5" /> Buy Now
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => navigate("/contact")}>
+                          <ClipboardList className="h-3.5 w-3.5" /> Make an Order
+                        </Button>
+                      )}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
