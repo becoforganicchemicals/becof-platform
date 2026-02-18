@@ -150,16 +150,11 @@ Each role sees a different dashboard.
 ├── package.json
 ├── postcss.config.js
 ├── public
-│   ├── favicon.ico
-│   ├── placeholder.svg
-│   └── robots.txt
 ├── README.md
 ├── src
 │   ├── App.css
 │   ├── App.tsx
 │   ├── assets
-│   │   ├── becof-logo.png
-│   │   └── hero-bg.jpg
 │   ├── components
 │   │   ├── home
 │   │   │   ├── FeaturedProducts.tsx
@@ -175,55 +170,6 @@ Each role sees a different dashboard.
 │   │   │   └── Navbar.tsx
 │   │   ├── NavLink.tsx
 │   │   └── ui
-│   │       ├── accordion.tsx
-│   │       ├── alert-dialog.tsx
-│   │       ├── alert.tsx
-│   │       ├── aspect-ratio.tsx
-│   │       ├── avatar.tsx
-│   │       ├── badge.tsx
-│   │       ├── breadcrumb.tsx
-│   │       ├── button.tsx
-│   │       ├── calendar.tsx
-│   │       ├── card.tsx
-│   │       ├── carousel.tsx
-│   │       ├── chart.tsx
-│   │       ├── checkbox.tsx
-│   │       ├── collapsible.tsx
-│   │       ├── command.tsx
-│   │       ├── context-menu.tsx
-│   │       ├── dialog.tsx
-│   │       ├── drawer.tsx
-│   │       ├── dropdown-menu.tsx
-│   │       ├── form.tsx
-│   │       ├── hover-card.tsx
-│   │       ├── input-otp.tsx
-│   │       ├── input.tsx
-│   │       ├── label.tsx
-│   │       ├── menubar.tsx
-│   │       ├── navigation-menu.tsx
-│   │       ├── pagination.tsx
-│   │       ├── popover.tsx
-│   │       ├── progress.tsx
-│   │       ├── radio-group.tsx
-│   │       ├── resizable.tsx
-│   │       ├── scroll-area.tsx
-│   │       ├── select.tsx
-│   │       ├── separator.tsx
-│   │       ├── sheet.tsx
-│   │       ├── sidebar.tsx
-│   │       ├── skeleton.tsx
-│   │       ├── slider.tsx
-│   │       ├── sonner.tsx
-│   │       ├── switch.tsx
-│   │       ├── table.tsx
-│   │       ├── tabs.tsx
-│   │       ├── textarea.tsx
-│   │       ├── toast.tsx
-│   │       ├── toaster.tsx
-│   │       ├── toggle-group.tsx
-│   │       ├── toggle.tsx
-│   │       ├── tooltip.tsx
-│   │       └── use-toast.ts
 │   ├── contexts
 │   │   ├── AuthContext.tsx
 │   │   └── CartContext.tsx
@@ -267,18 +213,10 @@ Each role sees a different dashboard.
 │   │   ├── SignIn.tsx
 │   │   └── Wishlist.tsx
 │   ├── test
-│   │   ├── example.test.ts
-│   │   └── setup.ts
 │   └── vite-env.d.ts
 ├── supabase
 │   ├── config.toml
 │   └── migrations
-│       ├── 20260214091831_4b8be89f-6579-493b-8a70-18aa4c501a3c.sql
-│       ├── 20260214091903_61467b1d-76e0-4386-b0b1-564c9433fe41.sql
-│       ├── 20260215164357_c1ef8b8f-d197-4fb7-953d-0458d864eb02.sql
-│       ├── 20260215165400_7ed9b149-ac9d-4ffb-9065-b2007ec0265f.sql
-│       ├── 20260216201128_3f5da262-0a30-4850-a73e-ff629797cba5.sql
-│       └── 20260217103917_205afdb2-38fb-4c56-9e9a-3e06051bf7bf.sql
 ├── tailwind.config.ts
 ├── tsconfig.app.json
 ├── tsconfig.json
