@@ -19,6 +19,7 @@ const AdminPermissions = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Fetch all admin users (non-super_admin, non-farmer roles that need permissions)
+  // Exclude the current super admin from the list so they can't toggle their own permissions
   const { data: adminUsers = [], isLoading: loadingUsers } = useQuery({
     queryKey: ["permission-users"],
     queryFn: async () => {
@@ -28,7 +29,9 @@ const AdminPermissions = () => {
         .in("role", ["admin", "expert", "distributor"]);
       if (rolesErr) throw rolesErr;
 
-      const userIds = roles.map((r) => r.user_id);
+      // Filter out the current user so super admins can't modify their own permissions
+      const filteredRoles = roles.filter((r) => r.user_id !== currentUser?.id);
+      const userIds = filteredRoles.map((r) => r.user_id);
       if (userIds.length === 0) return [];
 
       const { data: profiles, error: profErr } = await supabase
@@ -37,7 +40,7 @@ const AdminPermissions = () => {
         .in("user_id", userIds);
       if (profErr) throw profErr;
 
-      return roles.map((r) => ({
+      return filteredRoles.map((r) => ({
         ...r,
         profile: profiles.find((p) => p.user_id === r.user_id),
       }));

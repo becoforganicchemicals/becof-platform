@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,12 +24,14 @@ interface ProductForm {
   usage_instructions: string;
   sku: string;
   is_published: boolean;
-  category_id: string;
+  parent_category_id: string;
+  subcategory_id: string;
 }
 
 const emptyForm: ProductForm = {
   name: "", slug: "", price: "", stock_quantity: "", short_description: "",
-  long_description: "", usage_instructions: "", sku: "", is_published: true, category_id: "",
+  long_description: "", usage_instructions: "", sku: "", is_published: true,
+  parent_category_id: "", subcategory_id: "",
 };
 
 const AdminProducts = () => {
@@ -52,22 +54,22 @@ const AdminProducts = () => {
     },
   });
 
-  // Fetch subcategories filtered by selected category
+  // Fetch subcategories filtered by selected parent category
   const { data: subcategories = [] } = useQuery({
-    queryKey: ["admin-subcategories", form.category_id],
+    queryKey: ["admin-subcategories", form.parent_category_id],
     queryFn: async () => {
-      if (!form.category_id) return [];
-      const { data, error } = await supabase.from("categories").select("*").eq("parent_id", form.category_id).order("name");
+      if (!form.parent_category_id) return [];
+      const { data, error } = await supabase.from("categories").select("*").eq("parent_id", form.parent_category_id).order("name");
       if (error) throw error;
       return data;
     },
-    enabled: !!form.category_id,
+    enabled: !!form.parent_category_id,
   });
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*, categories(name)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("products").select("*, categories(name, parent_id)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -82,7 +84,7 @@ const AdminProducts = () => {
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       return data.publicUrl;
     }
-    // For private buckets, store the path
+    // For private buckets, store only the path (not a signed URL)
     return path;
   };
 
@@ -90,14 +92,17 @@ const AdminProducts = () => {
     mutationFn: async (product: any) => {
       setUploading(true);
       let imageUrl = editingProduct?.images?.[0] || null;
-      let safetySheetUrl = editingProduct?.safety_sheet_url || null;
+      let safetySheetPath = editingProduct?.safety_sheet_url || null;
 
       if (imageFile) {
         imageUrl = await uploadFile(imageFile, "product-images", "products");
       }
       if (pdfFile) {
-        safetySheetUrl = await uploadFile(pdfFile, "product-pdfs", "manuals");
+        safetySheetPath = await uploadFile(pdfFile, "product-pdfs", "manuals");
       }
+
+      // Use subcategory if selected, otherwise parent category
+      const finalCategoryId = product.subcategory_id || product.parent_category_id || null;
 
       const payload = {
         name: product.name,
@@ -109,16 +114,16 @@ const AdminProducts = () => {
         usage_instructions: product.usage_instructions || null,
         sku: product.sku || null,
         is_published: product.is_published,
-        category_id: product.category_id || null,
+        category_id: finalCategoryId,
         images: imageUrl ? [imageUrl] : [],
-        safety_sheet_url: safetySheetUrl,
+        safety_sheet_url: safetySheetPath,
       };
 
       if (product.id) {
         const { error } = await supabase.from("products").update(payload).eq("id", product.id);
         if (error) throw error;
       } else {
-        if (!product.category_id) throw new Error("Category is required");
+        if (!finalCategoryId) throw new Error("Category is required");
         const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
       }
@@ -156,6 +161,9 @@ const AdminProducts = () => {
 
   const openEdit = (p: any) => {
     setEditingProduct(p);
+    // Determine if category_id is a subcategory or parent
+    const cat = p.categories;
+    const isSubcategory = cat?.parent_id;
     setForm({
       name: p.name, slug: p.slug, price: String(p.price),
       stock_quantity: String(p.stock_quantity),
@@ -163,7 +171,8 @@ const AdminProducts = () => {
       long_description: p.long_description || "",
       usage_instructions: p.usage_instructions || "",
       sku: p.sku || "", is_published: p.is_published,
-      category_id: p.category_id || "",
+      parent_category_id: isSubcategory ? cat.parent_id : (p.category_id || ""),
+      subcategory_id: isSubcategory ? p.category_id : "",
     });
     setDialogOpen(true);
   };
@@ -207,7 +216,10 @@ const AdminProducts = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Category *</Label>
-                  <Select value={form.category_id} onValueChange={(v) => setForm(f => ({ ...f, category_id: v }))}>
+                  <Select
+                    value={form.parent_category_id}
+                    onValueChange={(v) => setForm(f => ({ ...f, parent_category_id: v, subcategory_id: "" }))}
+                  >
                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
                       {categories.map(c => (
@@ -219,9 +231,9 @@ const AdminProducts = () => {
                 <div>
                   <Label>Subcategory</Label>
                   <Select
-                    value={form.category_id && subcategories.length > 0 ? undefined : ""}
-                    onValueChange={(v) => setForm(f => ({ ...f, category_id: v }))}
-                    disabled={!form.category_id || subcategories.length === 0}
+                    value={form.subcategory_id}
+                    onValueChange={(v) => setForm(f => ({ ...f, subcategory_id: v }))}
+                    disabled={!form.parent_category_id || subcategories.length === 0}
                   >
                     <SelectTrigger><SelectValue placeholder={subcategories.length === 0 ? "None available" : "Select subcategory"} /></SelectTrigger>
                     <SelectContent>
@@ -272,7 +284,7 @@ const AdminProducts = () => {
                   )}
                 </div>
                 <div>
-                  <Label className="flex items-center gap-2"><FileText className="h-4 w-4" /> Usage Manual (PDF)</Label>
+                  <Label className="flex items-center gap-2"><FileText className="h-4 w-4" /> Safety Sheet (PDF)</Label>
                   <Input type="file" accept=".pdf" onChange={e => setPdfFile(e.target.files?.[0] || null)} />
                   {editingProduct?.safety_sheet_url && !pdfFile && (
                     <p className="text-xs text-muted-foreground mt-1">Current PDF set. Upload new to replace.</p>

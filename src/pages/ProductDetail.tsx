@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, ShoppingCart, Heart, Minus, Plus, Leaf, ArrowLeft, FileText } from "lucide-react";
+import { Star, ShoppingCart, Heart, Minus, Plus, Leaf, ArrowLeft, FileText, Zap, ClipboardList, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<any>(null);
@@ -19,9 +20,10 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [wishlisted, setWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchProduct = async () => {
       setLoading(true);
       const { data } = await supabase.from("products").select("*, categories(name)").eq("slug", slug!).maybeSingle();
       setProduct(data);
@@ -31,7 +33,7 @@ const ProductDetail = () => {
         setWishlisted(!!w);
       }
     };
-    if (slug) fetch();
+    if (slug) fetchProduct();
   }, [slug, user]);
 
   const toggleWishlist = async () => {
@@ -47,10 +49,32 @@ const ProductDetail = () => {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!product?.safety_sheet_url) return;
+    setDownloadingPdf(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from("product-pdfs")
+        .createSignedUrl(product.safety_sheet_url, 3600);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch {
+      toast.error("Failed to download safety sheet");
+    }
+    setDownloadingPdf(false);
+  };
+
+  const handleBuyNow = async () => {
+    if (!user) { toast.error("Please sign in to proceed"); return; }
+    await addToCart(product.id, quantity);
+    navigate("/checkout");
+  };
+
   if (loading) return <Layout><div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
   if (!product) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Product not found</h1><Link to="/products"><Button>Back to Products</Button></Link></div></Layout>;
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
+  const inStock = product.stock_quantity > 0;
 
   return (
     <Layout>
@@ -106,34 +130,52 @@ const ProductDetail = () => {
               <p className="text-muted-foreground">{product.short_description}</p>
 
               <div className="flex items-center gap-2">
-                <Badge variant={product.stock_quantity > 0 ? "default" : "destructive"}>
-                  {product.stock_quantity > 0 ? `${product.stock_quantity} in stock` : "Out of Stock"}
+                <Badge variant={inStock ? "default" : "destructive"}>
+                  {inStock ? `${product.stock_quantity} in stock` : "Out of Stock"}
                 </Badge>
                 {product.sku && <span className="text-xs text-muted-foreground">SKU: {product.sku}</span>}
               </div>
 
-              {/* Quantity & Add to Cart */}
-              <div className="flex items-center gap-4 pt-2">
-                <div className="flex items-center border border-border rounded-lg">
-                  <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus className="h-4 w-4" /></Button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
-                  <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
-                </div>
-                <Button className="flex-1 gap-2" size="lg" disabled={product.stock_quantity === 0} onClick={() => addToCart(product.id, quantity)}>
-                  <ShoppingCart className="h-4 w-4" /> Add to Cart
-                </Button>
-                <Button variant="outline" size="icon" onClick={toggleWishlist} className={wishlisted ? "text-destructive border-destructive" : ""}>
-                  <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
-                </Button>
+              {/* Quantity & Actions */}
+              <div className="space-y-3 pt-2">
+                {inStock && (
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center border border-border rounded-lg">
+                      <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus className="h-4 w-4" /></Button>
+                      <span className="w-12 text-center font-medium">{quantity}</span>
+                      <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
+                    </div>
+                    <Button className="flex-1 gap-2" size="lg" onClick={() => addToCart(product.id, quantity)}>
+                      <ShoppingCart className="h-4 w-4" /> Add to Cart
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={toggleWishlist} className={wishlisted ? "text-destructive border-destructive" : ""}>
+                      <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
+                    </Button>
+                  </div>
+                )}
+
+                {inStock ? (
+                  <Button className="w-full gap-2" size="lg" variant="secondary" onClick={handleBuyNow}>
+                    <Zap className="h-4 w-4" /> Buy Now
+                  </Button>
+                ) : (
+                  <Button className="w-full gap-2" size="lg" onClick={() => navigate("/contact")}>
+                    <ClipboardList className="h-4 w-4" /> Make an Order
+                  </Button>
+                )}
               </div>
 
               {product.safety_sheet_url && (
-                <a href={product.safety_sheet_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-accent hover:underline">
-                  <FileText className="h-4 w-4" /> Download Safety Sheet (PDF)
-                </a>
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={downloadingPdf}
+                  className="inline-flex items-center gap-2 text-sm text-accent hover:underline disabled:opacity-50"
+                >
+                  {downloadingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                  Download Safety Sheet (PDF)
+                </button>
               )}
 
-              {/* Long description */}
               {product.long_description && (
                 <div className="pt-4 border-t border-border">
                   <h3 className="font-semibold mb-2">Description</h3>
