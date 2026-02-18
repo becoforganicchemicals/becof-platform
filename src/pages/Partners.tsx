@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, TrendingUp, Globe, Award, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import SEO from "@/components/SEO";
 
 const benefits = [
   { icon: TrendingUp, title: "Growing Market", desc: "Access Kenya's booming organic agriculture sector." },
@@ -24,6 +25,11 @@ const Partners = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Partners"
+        description="Learn about Becof Organic Chemicals' network of distributors and partners across Kenya and beyond. Join us in transforming agriculture with sustainable solutions."
+        url="https://www.becoforganicchemicals.com/partners"
+      />
       <section className="py-16">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">

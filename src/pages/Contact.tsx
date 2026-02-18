@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, Phone, Mail, Clock, Calendar, User, BookOpen } from "lucide-react";
 import { useState } from "react";
+import SEO from "@/components/SEO";
 
 const contactInfo = [
   { icon: MapPin, label: "Address", value: "Nairobi & Kilifi, Kenya" },
@@ -21,6 +22,11 @@ const Contact = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Contact"
+        description="Get in touch with Becof Organic Chemicals for product inquiries, consultations, and partnership opportunities."
+        url="https://www.becoforganicchemicals.com/contact"
+      />
       <section className="py-16">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-14">

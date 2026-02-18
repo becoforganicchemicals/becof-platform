@@ -3,6 +3,7 @@ import Layout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import { BookOpen, FlaskConical, Award, FileText, Calendar, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/SEO";
 
 const tabs = [
   { id: "blog", label: "Blog & Insights", icon: FileText },
@@ -26,6 +27,11 @@ const Learn = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Learning Hub"
+        description="Explore educational resources, research insights, and farming guides to support sustainable agriculture practices."
+        url="https://www.becoforganicchemicals.com/learn"
+      />
       <section className="py-16">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">

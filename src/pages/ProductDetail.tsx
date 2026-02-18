@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import SEO from "@/components/SEO";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -78,6 +79,42 @@ const ProductDetail = () => {
 
   return (
     <Layout>
+      <SEO
+        title={product.name}
+        description={product.short_description}
+        url={`https://www.becoforganicchemicals.com/products/${product.slug}`}
+        image={images[0]}
+      />
+
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org/",
+          "@type": "Product",
+          name: product.name,
+          image: images.map((img: string) =>
+            img.startsWith("http")
+              ? img
+              : `https://www.becoforganicchemicals.com${img}`
+          ),
+          description: product.short_description,
+          sku: product.sku,
+          brand: {
+            "@type": "Brand",
+            name: "Becof Organic Chemicals",
+          },
+          offers: {
+            "@type": "Offer",
+            url: `https://www.becoforganicchemicals.com/products/${product.slug}`,
+            priceCurrency: "KES",
+            price: product.price,
+            availability:
+              product.stock_quantity > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+          },
+        })}
+      </script>
+
       <section className="py-8">
         <div className="container">
           <Link to="/products" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
@@ -106,7 +143,7 @@ const ProductDetail = () => {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
               {product.categories?.name && <Badge variant="secondary">{product.categories.name}</Badge>}
               <h1 className="text-3xl font-bold">{product.name}</h1>
-              
+
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-earth text-earth" />

@@ -1,19 +1,7 @@
 import Layout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
-import {
-  Target,
-  Eye,
-  Leaf,
-  Users,
-  Scale,
-  Lightbulb,
-  Handshake,
-  TrendingUp,
-  Globe,
-  Smile,
-  Settings,
-  Rocket,
-} from "lucide-react";
+import SEO from "@/components/SEO";
+import { Target, Eye, Leaf, Users, Scale, Lightbulb, Handshake, TrendingUp, Globe, Smile, Settings, Rocket, } from "lucide-react";
 
 
 const values = [
@@ -118,6 +106,11 @@ const timeline = [
 
 const About = () => (
   <Layout>
+    <SEO
+      title="About"
+      description="Learn about our company, leadership, and commitment to sustainable organic chemical manufacturing."
+      url="https://www.becoforganicchemicals.com/about"
+    />
     <section className="py-16">
       <div className="container">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center mb-16">

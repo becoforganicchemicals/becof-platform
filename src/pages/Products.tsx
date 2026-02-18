@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Star, ShoppingCart, Search, Heart, Zap, ClipboardList } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import SEO from "@/components/SEO";
 
 const Products = () => {
   const { user } = useAuth();
@@ -70,11 +71,16 @@ const Products = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Products"
+        description="Explore our range of sustainable organic chemical products designed for agriculture."
+        url="https://www.becoforganicchemicals.com/products"
+      />
       <section className="py-16">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
             <h1 className="text-4xl font-bold mb-2">Our Products</h1>
-            <p className="text-muted-foreground">Premium organic solutions for sustainable agriculture</p>
+            <p className="text-muted-foreground">Explore our range of sustainable organic chemical products designed for agriculture.</p>
           </motion.div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-8">

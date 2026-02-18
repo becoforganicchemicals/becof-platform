@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Briefcase, MapPin, Clock, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import SEO from "@/components/SEO";
 
 const Careers = () => {
   const { toast } = useToast();
@@ -73,6 +74,11 @@ const Careers = () => {
 
   return (
     <Layout>
+      <SEO
+        title="Careers"
+        description="Explore career opportunities at Becof Organic Chemicals. Join our team dedicated to sustainable agriculture and eco-friendly chemical solutions."
+        url="https://www.becoforganicchemicals.com/careers"
+      />
       <section className="py-16">
         <div className="container max-w-7xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
