@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,52 +102,60 @@ const AdminProducts = () => {
   const upsertProduct = useMutation({
     mutationFn: async (product: any) => {
       setUploading(true);
-      let imageUrl = editingProduct?.images?.[0] || null;
-      let safetySheetPath = editingProduct?.safety_sheet_url || null;
 
-      if (imageFile) {
-        imageUrl = await uploadFile(imageFile, "product-images", "products");
-      }
-      if (pdfFile) {
-        safetySheetPath = await uploadFile(pdfFile, "product-pdfs", "manuals");
-      }
+      try {
+        let imageUrl = editingProduct?.images?.[0] || null;
+        let safetySheetPath = editingProduct?.safety_sheet_url || null;
 
-      // Use subcategory if selected, otherwise parent category
-      const finalCategoryId = product.subcategory_id || product.parent_category_id || null;
+        if (imageFile) {
+          imageUrl = await uploadFile(imageFile, "product-images", "products");
+        }
+        if (pdfFile) {
+          safetySheetPath = await uploadFile(pdfFile, "product-pdfs", "manuals");
+        }
 
-      let generatedSku = product.sku;
-
-      if (!generatedSku) {
-        const { count } = await supabase
-          .from("products")
-          .select("*", { count: "exact", head: true });
-
-        const nextNumber = String((count || 0) + 1).padStart(7, "0");
-        generatedSku = `BECOF-${nextNumber}`;
-      }
-
-      const payload = {
-        name: product.name,
-        slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-        price: Number(product.price),
-        stock_quantity: Number(product.stock_quantity),
-        short_description: product.short_description || null,
-        long_description: product.long_description || null,
-        usage_instructions: product.usage_instructions || null,
-        sku: generatedSku,
-        is_published: product.is_published,
-        category_id: finalCategoryId,
-        images: imageUrl ? [imageUrl] : [],
-        safety_sheet_url: safetySheetPath,
-      };
-
-      if (product.id) {
-        const { error } = await supabase.from("products").update(payload).eq("id", product.id);
-        if (error) throw error;
-      } else {
+        const finalCategoryId = product.subcategory_id || product.parent_category_id || null;
         if (!finalCategoryId) throw new Error("Category is required");
-        const { error } = await supabase.from("products").insert(payload);
-        if (error) throw error;
+
+        let generatedSku = product.sku || await generateSkuWithDate();
+
+        const payload = {
+          name: product.name,
+          slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+          price: Number(product.price),
+          stock_quantity: Number(product.stock_quantity),
+          short_description: product.short_description || null,
+          long_description: product.long_description || null,
+          usage_instructions: product.usage_instructions || null,
+          sku: generatedSku,
+          is_published: product.is_published,
+          category_id: finalCategoryId,
+          images: imageUrl ? [imageUrl] : [],
+          safety_sheet_url: safetySheetPath,
+        };
+
+        if (product.id) {
+          // Update existing product
+          const { error } = await supabase.from("products").update(payload).eq("id", product.id);
+          if (error) throw error;
+        } else {
+          // Insert new product with SKU conflict retry
+          try {
+            const { error } = await supabase.from("products").insert(payload);
+            if (error?.message?.includes("unique_sku")) {
+              // Retry once with new SKU
+              payload.sku = await generateSkuWithDate();
+              const { error: retryError } = await supabase.from("products").insert(payload);
+              if (retryError) throw retryError;
+            } else if (error) {
+              throw error;
+            }
+          } catch (err: any) {
+            throw err;
+          }
+        }
+      } finally {
+        setUploading(false);
       }
     },
     onSuccess: () => {
@@ -155,11 +163,9 @@ const AdminProducts = () => {
       setDialogOpen(false);
       resetForm();
       toast({ title: "Product saved successfully" });
-      setUploading(false);
     },
     onError: (e: any) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
-      setUploading(false);
     },
   });
 
@@ -210,6 +216,41 @@ const AdminProducts = () => {
       .replace(/[^a-z0-9-]/g, "")
       .replace(/-+/g, "-");
 
+  const generateSkuWithDate = async () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    const dateString = `${year}${month}${day}`;
+
+    // Count how many products were created today
+    const startOfDay = new Date(year, today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(year, today.getMonth(), today.getDate() + 1).toISOString();
+
+    const { count } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", startOfDay)
+      .lt("created_at", endOfDay);
+
+    const nextNumber = String((count || 0) + 1).padStart(4, "0");
+
+    return `BECOF-${dateString}-${nextNumber}`;
+  };
+
+  useEffect(() => {
+    if (dialogOpen && !editingProduct) {
+      generateSkuWithDate().then((sku) => {
+        setForm((f) => ({
+          ...f,
+          sku,
+        }));
+      });
+    }
+  }, [dialogOpen, editingProduct]);
+
   return (
     <div className="space-y-6">
       {lowStockProducts.length > 0 && (
@@ -248,6 +289,11 @@ const AdminProducts = () => {
                     slug: generateSlug(name),
                   }));
                 }} required />
+              </div>
+
+              <div>
+                <Label>Slug</Label>
+                <Input value={form.slug} readOnly />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -293,7 +339,7 @@ const AdminProducts = () => {
                 </div>
                 <div>
                   <Label>SKU</Label>
-                  <Input value={form.sku} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))} />
+                  <Input value={form.sku} readOnly />
                 </div>
               </div>
 
