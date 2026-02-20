@@ -69,7 +69,18 @@ const AdminProducts = () => {
   const { data: products, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*, categories(name, parent_id)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("products").select(`
+  *,
+  categories (
+    id,
+    name,
+    parent_id,
+    parent:parent_id (
+      id,
+      name
+    )
+  )
+`).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -104,6 +115,17 @@ const AdminProducts = () => {
       // Use subcategory if selected, otherwise parent category
       const finalCategoryId = product.subcategory_id || product.parent_category_id || null;
 
+      let generatedSku = product.sku;
+
+      if (!generatedSku) {
+        const { count } = await supabase
+          .from("products")
+          .select("*", { count: "exact", head: true });
+
+        const nextNumber = String((count || 0) + 1).padStart(7, "0");
+        generatedSku = `BECOF-${nextNumber}`;
+      }
+
       const payload = {
         name: product.name,
         slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
@@ -112,7 +134,7 @@ const AdminProducts = () => {
         short_description: product.short_description || null,
         long_description: product.long_description || null,
         usage_instructions: product.usage_instructions || null,
-        sku: product.sku || null,
+        sku: generatedSku,
         is_published: product.is_published,
         category_id: finalCategoryId,
         images: imageUrl ? [imageUrl] : [],
@@ -180,6 +202,14 @@ const AdminProducts = () => {
   const lowStockProducts = products?.filter(p => p.stock_quantity <= p.low_stock_threshold) || [];
   const noCategoriesExist = categories.length === 0;
 
+  const generateSlug = (name: string) =>
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-");
+
   return (
     <div className="space-y-6">
       {lowStockProducts.length > 0 && (
@@ -210,7 +240,14 @@ const AdminProducts = () => {
             <form onSubmit={(e) => { e.preventDefault(); upsertProduct.mutate({ ...form, id: editingProduct?.id }); }} className="space-y-4">
               <div>
                 <Label>Product Name *</Label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+                <Input value={form.name} onChange={e => {
+                  const name = e.target.value;
+                  setForm(f => ({
+                    ...f,
+                    name,
+                    slug: generateSlug(name),
+                  }));
+                }} required />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -323,6 +360,7 @@ const AdminProducts = () => {
               <TableRow>
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead className="text-muted-foreground">Subcategory</TableHead>
                 <TableHead>SKU</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
@@ -343,7 +381,19 @@ const AdminProducts = () => {
                       <span className="font-medium">{p.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{(p as any).categories?.name || "—"}</TableCell>
+                  {/* Category Column */}
+                  <TableCell>
+                    {(p as any).categories?.parent?.name
+                      ? (p as any).categories.parent.name
+                      : (p as any).categories?.name || "—"}
+                  </TableCell>
+
+                  {/* Subcategory Column */}
+                  <TableCell className="text-muted-foreground">
+                    {(p as any).categories?.parent?.name
+                      ? (p as any).categories.name
+                      : "—"}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{p.sku || "—"}</TableCell>
                   <TableCell>KES {p.price.toLocaleString()}</TableCell>
                   <TableCell>

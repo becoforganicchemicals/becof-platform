@@ -18,17 +18,38 @@ const Products = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCat, setActiveCat] = useState("all");
+  const [activeParent, setActiveParent] = useState<string>("all");
+  const [activeSub, setActiveSub] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("popular");
   const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
+  const [stockFilter, setStockFilter] = useState<"all" | "in" | "out">("all");
+  const parentCategories = categories.filter(c => !c.parent_id);
+  const subCategories = categories.filter(c => c.parent_id);
+
+  const visibleSubCategories =
+    activeParent === "all"
+      ? []
+      : subCategories.filter(s => s.parent_id === activeParent);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       const [prodRes, catRes] = await Promise.all([
-        supabase.from("products").select("*, categories(name)").eq("is_published", true),
-        supabase.from("categories").select("id, name, slug"),
+        supabase
+          .from("products")
+          .select(`
+            *,
+            categories (
+              id,
+              name,
+              parent_id
+            )
+         `)
+          .eq("is_published", true),
+        supabase
+          .from("categories")
+          .select("id, name, slug, parent_id")
       ]);
       setProducts(prodRes.data || []);
       setCategories(catRes.data || []);
@@ -62,12 +83,43 @@ const Products = () => {
   };
 
   let filtered = products
-    .filter(p => activeCat === "all" || p.category_id === activeCat)
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+    // Parent filter
+    .filter(p => {
+      if (activeParent === "all") return true;
+
+      // Direct category match
+      if (p.category_id === activeParent) return true;
+
+      // Subcategory under selected parent
+      if (p.categories?.parent_id === activeParent) return true;
+
+      return false;
+    })
+    // Subcategory filter (only if selected)
+    .filter(p => {
+      if (activeSub === "all") return true;
+      return p.category_id === activeSub;
+    })
+    // Search filter
+    .filter(p =>
+      p.name.toLowerCase().includes(search.toLowerCase())
+    )
+    // Stock filter
+    .filter(p => {
+      const qty = p.stock_quantity ?? 0;
+
+      if (stockFilter === "all") return true;
+      if (stockFilter === "in") return qty > 0;
+      if (stockFilter === "out") return qty <= 0;
+
+      return true;
+    });
 
   if (sort === "price-low") filtered.sort((a, b) => a.price - b.price);
   else if (sort === "price-high") filtered.sort((a, b) => b.price - a.price);
   else if (sort === "rating") filtered.sort((a, b) => (b.average_rating || 0) - (a.average_rating || 0));
+
+
 
   return (
     <Layout>
@@ -94,14 +146,72 @@ const Products = () => {
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
             </select>
+            <select
+              className="border border-border rounded-lg px-4 py-2 bg-card text-sm"
+              value={stockFilter}
+              onChange={e => setStockFilter(e.target.value as any)}
+            >
+              <option value="all">All Stock</option>
+              <option value="in">In Stock</option>
+              <option value="out">Out of Stock</option>
+            </select>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-8">
-            <Button variant={activeCat === "all" ? "default" : "outline"} size="sm" onClick={() => setActiveCat("all")}>All</Button>
-            {categories.map(c => (
-              <Button key={c.id} variant={activeCat === c.id ? "default" : "outline"} size="sm" onClick={() => setActiveCat(c.id)}>{c.name}</Button>
+          {/* Parent Categories */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Button
+              variant={activeParent === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setActiveParent("all");
+                setActiveSub("all");
+              }}
+            >
+              All
+            </Button>
+
+            {parentCategories.map(c => (
+              <Button
+                key={c.id}
+                variant={activeParent === c.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setActiveParent(c.id);
+                  setActiveSub("all");
+                }}
+              >
+                {c.name}
+              </Button>
             ))}
           </div>
+          
+          <p className="text-xs text-muted-foreground mb-2">
+            Subcategories
+          </p>
+
+          {/* Subcategories (ALWAYS below parents) */}
+          {activeParent !== "all" && visibleSubCategories.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              <Button
+                variant={activeSub === "all" ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setActiveSub("all")}
+              >
+                All
+              </Button>
+
+              {visibleSubCategories.map(s => (
+                <Button
+                  key={s.id}
+                  variant={activeSub === s.id ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveSub(s.id)}
+                >
+                  {s.name}
+                </Button>
+              ))}
+            </div>
+          )}
 
           {loading ? (
             <div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>
