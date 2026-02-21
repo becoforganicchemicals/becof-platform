@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Package, ShoppingCart, Users, Bell, Activity, BarChart3, LogOut,
   Shield, ShieldCheck, ArrowLeft, Ban, FolderTree, Briefcase, User,
-  Camera, Lock, Save, Loader2, BookOpen
+  Camera, Lock, Save, Loader2, BookOpen, Award
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -30,6 +30,7 @@ import AdminPermissions from "./AdminPermissions";
 import AdminCategories from "./AdminCategories";
 import AdminCareers from "./AdminCareers";
 import AdminLearn from "./AdminLearn";
+import AdminImpact from "./AdminImpact";
 
 
 const AdminDashboard = () => {
@@ -65,6 +66,7 @@ const AdminDashboard = () => {
     { id: "notifications", label: "Alerts", icon: Bell },
     { id: "careers", label: "Careers", icon: Briefcase },
     { id: "learn", label: "Learn", icon: BookOpen },
+    { id: "impact", label: "Impact", icon: Award },
   ];
 
   const superAdminNav = [
@@ -86,6 +88,7 @@ const AdminDashboard = () => {
       case "logs": return isSuperAdmin ? <AdminActivityLogs /> : null;
       case "profile": return <AdminProfile />;
       case "learn": return <AdminLearn />;
+      case "impact": return <AdminImpact />;
       default: return <AdminAnalytics />;
     }
   };
