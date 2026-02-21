@@ -57,9 +57,9 @@ const AdminLearn = () => {
         extensions: [
             StarterKit,
             Image.configure({
-                inline: true,
+                inline: false,
                 HTMLAttributes: {
-                    class: "inline-block my-2",
+                    class: "block mx-auto my-4",
                 },
             }),
             ImageResize.configure({
@@ -250,7 +250,7 @@ const AdminLearn = () => {
 
             {/* ================= EDIT MODAL ================= */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingArticle ? "Edit Article" : "Create Article"}</DialogTitle>
                     </DialogHeader>
@@ -304,8 +304,10 @@ const AdminLearn = () => {
                                 <Button size="sm" onClick={handleImageUpload}>Image</Button>
                             </div>
 
-                            <div className="min-h-[500px] p-6 border rounded-md prose max-w-none focus:outline-none">
-                                <EditorContent editor={editor} />
+                            <div className="border rounded-md p-4">
+                                <div className="max-h-[400px] overflow-y-auto prose max-w-none">
+                                    <EditorContent editor={editor} />
+                                </div>
                             </div>
                         </div>
 
