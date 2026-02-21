@@ -9,7 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil } from "lucide-react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import TipTapImage from "@tiptap/extension-image";
+import Image from "@tiptap/extension-image";
+import ImageResize from 'tiptap-extension-resize-image'
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 
@@ -55,17 +56,21 @@ const AdminLearn = () => {
     const editor = useEditor({
         extensions: [
             StarterKit,
-            TipTapImage.configure({
-                inline: false,
-                allowBase64: true,
-                HTMLAttributes: { class: "max-w-full h-auto", draggable: "true" },
+            Image.configure({
+                inline: true,
+                HTMLAttributes: {
+                    class: "inline-block my-2",
+                },
+            }),
+            ImageResize.configure({
+                inline: true,
             }),
             TextAlign.configure({ types: ["heading", "paragraph"] }),
-            Placeholder.configure({ placeholder: "Start writing your article..." }),
+            Placeholder.configure({
+                placeholder: "Start writing your article...",
+            }),
         ],
-        content: form.content,
-        onUpdate: ({ editor }) => setForm(prev => ({ ...prev, content: editor.getHTML() })),
-    });
+    })
 
     useEffect(() => {
         fetchData();
@@ -298,7 +303,10 @@ const AdminLearn = () => {
                                 <Button size="sm" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>Numbered List</Button>
                                 <Button size="sm" onClick={handleImageUpload}>Image</Button>
                             </div>
-                            <EditorContent editor={editor} />
+
+                            <div className="min-h-[500px] p-6 border rounded-md prose max-w-none focus:outline-none">
+                                <EditorContent editor={editor} />
+                            </div>
                         </div>
 
                         <Button onClick={saveArticle}>{editingArticle ? "Update" : "Create"}</Button>
