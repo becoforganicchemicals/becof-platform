@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import typography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -99,7 +100,17 @@ export default {
         "fade-in": "fade-in 0.6s ease-out forwards",
         "counter-up": "counter-up 0.5s ease-out forwards",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            h1: { fontSize: "2.25rem", lineHeight: "2.5rem", fontWeight: "700" },
+            h2: { fontSize: "1.875rem", lineHeight: "2.25rem", fontWeight: "700" },
+            h3: { fontSize: "1.5rem", lineHeight: "2rem", fontWeight: "700" },
+            h4: { fontSize: "1.25rem", lineHeight: "1.75rem", fontWeight: "700" },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), typography],
 } satisfies Config;
