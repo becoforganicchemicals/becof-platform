@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil } from "lucide-react";
-
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
+import TipTapImage from "@tiptap/extension-image";
+import TextAlign from "@tiptap/extension-text-align";
+import Placeholder from "@tiptap/extension-placeholder";
 
 interface Category {
     id: string;
@@ -31,11 +32,7 @@ interface Article {
 }
 
 const slugify = (text: string) =>
-    text
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
+    text.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
 const AdminLearn = () => {
     const { toast } = useToast();
@@ -56,11 +53,18 @@ const AdminLearn = () => {
     });
 
     const editor = useEditor({
-        extensions: [StarterKit, Image],
+        extensions: [
+            StarterKit,
+            TipTapImage.configure({
+                inline: false,
+                allowBase64: true,
+                HTMLAttributes: { class: "max-w-full h-auto", draggable: "true" },
+            }),
+            TextAlign.configure({ types: ["heading", "paragraph"] }),
+            Placeholder.configure({ placeholder: "Start writing your article..." }),
+        ],
         content: form.content,
-        onUpdate: ({ editor }) => {
-            setForm((prev) => ({ ...prev, content: editor.getHTML() }));
-        },
+        onUpdate: ({ editor }) => setForm(prev => ({ ...prev, content: editor.getHTML() })),
     });
 
     useEffect(() => {
@@ -78,7 +82,38 @@ const AdminLearn = () => {
         setArticles(artData || []);
     };
 
-    // ================= IMAGE UPLOAD =================
+    const resizeImage = (file: File, maxWidth = 800, maxHeight = 600): Promise<File> => {
+        return new Promise(resolve => {
+            const img = new window.Image(); // make sure it's the DOM Image
+            img.src = URL.createObjectURL(file);
+
+            img.onload = () => {
+                let { width, height } = img;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+
+                if (height > maxHeight) {
+                    width = (maxHeight / height) * width;
+                    height = maxHeight;
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(blob => {
+                    if (blob) resolve(new File([blob], file.name, { type: file.type }));
+                }, file.type);
+            };
+        });
+    };
+
     const uploadImage = async (file: File) => {
         const fileName = `learn-${Date.now()}-${file.name}`;
 
@@ -91,10 +126,7 @@ const AdminLearn = () => {
             return null;
         }
 
-        const { data } = supabase.storage
-            .from("learn-content")
-            .getPublicUrl(fileName);
-
+        const { data } = supabase.storage.from("learn-content").getPublicUrl(fileName);
         return data.publicUrl;
     };
 
@@ -105,11 +137,13 @@ const AdminLearn = () => {
 
         input.onchange = async () => {
             if (!input.files?.length) return;
-            const file = input.files[0];
+            let file = input.files[0];
+
+            // Resize before upload
+            file = await resizeImage(file, 800, 600);
+
             const url = await uploadImage(file);
-            if (url && editor) {
-                editor.chain().focus().setImage({ src: url }).run();
-            }
+            if (url && editor) editor.chain().focus().setImage({ src: url }).run();
         };
 
         input.click();
@@ -122,16 +156,10 @@ const AdminLearn = () => {
             return;
         }
 
-        const payload = {
-            ...form,
-            slug: form.slug || slugify(form.title),
-        };
+        const payload = { ...form, slug: form.slug || slugify(form.title) };
 
         if (editingArticle) {
-            await supabase
-                .from("learn_articles")
-                .update(payload)
-                .eq("id", editingArticle.id);
+            await supabase.from("learn_articles").update(payload).eq("id", editingArticle.id);
             toast({ title: "Article updated" });
         } else {
             await supabase.from("learn_articles").insert(payload);
@@ -144,15 +172,7 @@ const AdminLearn = () => {
 
     const resetForm = () => {
         setEditingArticle(null);
-        setForm({
-            title: "",
-            slug: "",
-            excerpt: "",
-            content: "",
-            category_id: "",
-            author: "",
-            published: true,
-        });
+        setForm({ title: "", slug: "", excerpt: "", content: "", category_id: "", author: "", published: true });
         editor?.commands.setContent("");
         setDialogOpen(false);
     };
@@ -173,11 +193,7 @@ const AdminLearn = () => {
     };
 
     const togglePublish = async (article: Article) => {
-        await supabase
-            .from("learn_articles")
-            .update({ published: !article.published })
-            .eq("id", article.id);
-
+        await supabase.from("learn_articles").update({ published: !article.published }).eq("id", article.id);
         fetchData();
     };
 
@@ -200,11 +216,8 @@ const AdminLearn = () => {
                     <CardTitle>Articles</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {articles.map((article) => (
-                        <div
-                            key={article.id}
-                            className="flex items-center justify-between border rounded-md p-3"
-                        >
+                    {articles.map(article => (
+                        <div key={article.id} className="flex items-center justify-between border rounded-md p-3">
                             <div>
                                 <p className="font-medium">{article.title}</p>
                                 <p className="text-sm text-muted-foreground">
@@ -234,75 +247,61 @@ const AdminLearn = () => {
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>
-                            {editingArticle ? "Edit Article" : "Create Article"}
-                        </DialogTitle>
+                        <DialogTitle>{editingArticle ? "Edit Article" : "Create Article"}</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4">
                         <Input
                             placeholder="Title"
                             value={form.title}
-                            onChange={(e) =>
-                                setForm((prev) => ({
-                                    ...prev,
-                                    title: e.target.value,
-                                    slug: slugify(e.target.value),
-                                }))
-                            }
+                            onChange={e => setForm(prev => ({ ...prev, title: e.target.value, slug: slugify(e.target.value) }))}
                         />
 
                         <Input
                             placeholder="Slug"
                             value={form.slug}
-                            onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                            onChange={e => setForm({ ...form, slug: e.target.value })}
                         />
 
                         <Textarea
                             placeholder="Excerpt"
                             value={form.excerpt}
-                            onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                            onChange={e => setForm({ ...form, excerpt: e.target.value })}
                         />
 
                         <select
                             className="border rounded-md p-2"
                             value={form.category_id}
-                            onChange={(e) =>
-                                setForm({ ...form, category_id: e.target.value })
-                            }
+                            onChange={e => setForm({ ...form, category_id: e.target.value })}
                         >
                             <option value="">Select Category</option>
-                            {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
                             ))}
                         </select>
 
                         <Input
                             placeholder="Author"
                             value={form.author}
-                            onChange={(e) => setForm({ ...form, author: e.target.value })}
+                            onChange={e => setForm({ ...form, author: e.target.value })}
                         />
 
                         <div className="border rounded-md p-2">
-                            <div className="flex gap-2 mb-2">
-                                <Button size="sm" onClick={() => editor?.chain().focus().toggleBold().run()}>
-                                    Bold
-                                </Button>
-                                <Button size="sm" onClick={() => editor?.chain().focus().toggleItalic().run()}>
-                                    Italic
-                                </Button>
-                                <Button size="sm" onClick={handleImageUpload}>
-                                    Image
-                                </Button>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleBold().run()}>Bold</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleItalic().run()}>Italic</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleStrike().run()}>Strike</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}>H1</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}>H2</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}>H3</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleBulletList().run()}>Bullet List</Button>
+                                <Button size="sm" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>Numbered List</Button>
+                                <Button size="sm" onClick={handleImageUpload}>Image</Button>
                             </div>
                             <EditorContent editor={editor} />
                         </div>
 
-                        <Button onClick={saveArticle}>
-                            {editingArticle ? "Update" : "Create"}
-                        </Button>
+                        <Button onClick={saveArticle}>{editingArticle ? "Update" : "Create"}</Button>
                     </div>
                 </DialogContent>
             </Dialog>

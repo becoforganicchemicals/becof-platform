@@ -1,29 +1,61 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
-import { BookOpen, FlaskConical, Award, FileText, Calendar, User, Tag } from "lucide-react";
+import { BookOpen, FlaskConical, FileText, Calendar, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  category_id: string;
+  author?: string;
+  published: boolean;
+  created_at: string;
+}
 
 const tabs = [
-  { id: "blog", label: "Blog & Insights", icon: FileText },
-  { id: "guides", label: "Farming Guides", icon: BookOpen },
-  { id: "research", label: "Research & Innovation", icon: FlaskConical },
-  { id: "certs", label: "Certifications", icon: Award },
-];
-
-const articles = [
-  { tab: "blog", title: "The Future of Organic Farming in East Africa", author: "Dr. Sarah Kimani", date: "Jan 15, 2026", tags: ["Organic", "Trends"], excerpt: "Explore how organic farming practices are reshaping agricultural landscapes across East Africa." },
-  { tab: "blog", title: "5 Ways to Reduce Chemical Runoff", author: "James Mwangi", date: "Dec 28, 2025", tags: ["Environment", "Tips"], excerpt: "Practical strategies every farmer can implement to protect waterways and soil health." },
-  { tab: "guides", title: "Complete Guide to Organic Pest Management", author: "Becof Research Team", date: "Feb 1, 2026", tags: ["Pest Control", "Guide"], excerpt: "A comprehensive guide to managing pests without synthetic chemicals." },
-  { tab: "guides", title: "Soil Health Assessment: A Farmer's Handbook", author: "Dr. Peter Oloo", date: "Jan 20, 2026", tags: ["Soil", "Guide"], excerpt: "Learn how to assess and improve your soil health using simple, accessible methods." },
-  { tab: "research", title: "Nano-Biotechnology in Crop Protection", author: "Becof R&D Lab", date: "Jan 10, 2026", tags: ["Innovation", "Research"], excerpt: "Our latest breakthroughs in applying nanotechnology to organic crop protection." },
-  { tab: "certs", title: "Organic Farming Certification Pathway", author: "Compliance Team", date: "Dec 15, 2025", tags: ["Certification", "Compliance"], excerpt: "Step-by-step guide to achieving organic farming certification in Kenya." },
+  { id: "blogs-insights", label: "Blog & Insights", icon: FileText },
+  { id: "farming-guides", label: "Farming Guides", icon: BookOpen },
+  { id: "research-innovation", label: "Research & Innovation", icon: FlaskConical },
 ];
 
 const Learn = () => {
-  const [activeTab, setActiveTab] = useState("blog");
-  const filtered = articles.filter(a => a.tab === activeTab);
+  const [activeTab, setActiveTab] = useState("blogs-insights");
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const { data: catData } = await supabase.from("learn_categories").select("*");
+    const { data: artData } = await supabase
+      .from("learn_articles")
+      .select("*")
+      .eq("published", true)
+      .order("created_at", { ascending: false });
+
+    setCategories(catData || []);
+    setArticles(artData || []);
+  };
+
+  const filtered = articles.filter((a) => {
+    const category = categories.find((c) => c.id === a.category_id);
+    return category?.slug === activeTab;
+  });
 
   return (
     <Layout>
@@ -40,7 +72,7 @@ const Learn = () => {
           </motion.div>
 
           <div className="flex flex-wrap gap-2 mb-10">
-            {tabs.map(t => (
+            {tabs.map((t) => (
               <Button
                 key={t.id}
                 variant={activeTab === t.id ? "default" : "outline"}
@@ -53,29 +85,35 @@ const Learn = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {filtered.map((a, i) => (
-              <motion.article
-                key={a.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {a.tags.map(tag => (
-                    <span key={tag} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                      <Tag className="h-3 w-3" />{tag}
-                    </span>
-                  ))}
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{a.title}</h3>
-                <p className="text-muted-foreground text-sm mb-4">{a.excerpt}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><User className="h-3 w-3" />{a.author}</span>
-                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{a.date}</span>
-                </div>
-              </motion.article>
-            ))}
+            {filtered.length === 0 ? (
+              <p className="text-muted-foreground col-span-2">
+                No articles available in this category yet.
+              </p>
+            ) : (
+              filtered.map((a, i) => (
+                <motion.article
+                  key={a.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-shadow"
+                >
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {a.excerpt && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                        <Tag className="h-3 w-3" /> {a.excerpt}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{a.title}</h3>
+                  <p className="text-muted-foreground text-sm mb-4">{a.excerpt}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><User className="h-3 w-3" />{a.author || "Becof Team"}</span>
+                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(a.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
+                  </div>
+                </motion.article>
+              ))
+            )}
           </div>
         </div>
       </section>
