@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Careers from "./pages/Careers";
 import Profile from "./pages/Profile";
+import LearnDetail from "./pages/LearnDetail";
+
 
 const queryClient = new QueryClient();
 
@@ -40,6 +42,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/learn" element={<Learn />} />
+              <Route path="/learn/:slug" element={<LearnDetail />} />
               <Route path="/impact" element={<Impact />} />
               <Route path="/about" element={<About />} />
               <Route path="/partners" element={<Partners />} />
