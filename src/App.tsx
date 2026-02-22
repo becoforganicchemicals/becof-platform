@@ -22,6 +22,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Careers from "./pages/Careers";
 import Profile from "./pages/Profile";
 import LearnDetail from "./pages/LearnDetail";
+import CustomOrder from "./pages/CustomOrder";
 
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/products/:slug" element={<ProductDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/custom-order" element={<CustomOrder />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/learn" element={<Learn />} />
               <Route path="/learn/:slug" element={<LearnDetail />} />

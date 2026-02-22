@@ -261,7 +261,7 @@ const Products = () => {
                           <Zap className="h-3.5 w-3.5" /> Buy Now
                         </Button>
                       ) : (
-                        <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => navigate("/contact")}>
+                        <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => navigate("/custom-order", { state: { productName: p.name, productId: p.id } })}>
                           <ClipboardList className="h-3.5 w-3.5" /> Make an Order
                         </Button>
                       )}
