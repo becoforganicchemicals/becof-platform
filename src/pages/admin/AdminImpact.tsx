@@ -54,6 +54,9 @@ const AdminImpact = () => {
         setMetrics(m || []);
         setReports(r || []);
         setAwards(a || []);
+
+        const { data, error } = await supabase.rpc('is_admin_or_super_admin');
+        console.log('is_admin_or_super_admin:', data, error);
     };
 
     /* ════════════ METRICS ════════════ */
