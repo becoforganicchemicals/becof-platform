@@ -31,6 +31,7 @@ import AdminCategories from "./AdminCategories";
 import AdminCareers from "./AdminCareers";
 import AdminLearn from "./AdminLearn";
 import AdminImpact from "./AdminImpact";
+import AdminPartners from "./AdminPartners";
 
 
 const AdminDashboard = () => {
@@ -67,6 +68,7 @@ const AdminDashboard = () => {
     { id: "careers", label: "Careers", icon: Briefcase },
     { id: "learn", label: "Learn", icon: BookOpen },
     { id: "impact", label: "Impact", icon: Award },
+    { id: "partners", label: "Partners", icon: Users },
   ];
 
   const superAdminNav = [
@@ -89,6 +91,7 @@ const AdminDashboard = () => {
       case "profile": return <AdminProfile />;
       case "learn": return <AdminLearn />;
       case "impact": return <AdminImpact />;
+      case "partners": return <AdminPartners />;
       default: return <AdminAnalytics />;
     }
   };
