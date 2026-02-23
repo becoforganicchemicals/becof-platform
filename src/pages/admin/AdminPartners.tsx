@@ -349,7 +349,7 @@ const AdminPartners = () => {
                                                 <p className="font-semibold text-slate-800 mt-0.5">{app.full_name}</p>
                                                 <p className="text-sm text-slate-500">
                                                     {app.business_name && <span>{app.business_name} · </span>}
-                                                    {app.applicant_type.replace(/_/g, " ")} · {app.county}
+                                                    {app?.applicant_type?.replace(/_/g, " ")} · {app.county}
                                                 </p>
                                             </div>
                                             <div className="text-right shrink-0">
@@ -385,9 +385,9 @@ const AdminPartners = () => {
                                                     <div>
                                                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Products Interest</p>
                                                         <div className="flex flex-wrap gap-1">
-                                                            {app.products_interest?.map(p => (
+                                                            {app.products_interest?.filter(Boolean).map(p => (
                                                                 <span key={p} className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full capitalize">
-                                                                    {p.replace(/_/g, " ")}
+                                                                    {p?.replace(/_/g, " ")}
                                                                 </span>
                                                             ))}
                                                         </div>
