@@ -14,6 +14,7 @@ import {
   Package, ShoppingCart, Users, Bell, Activity, BarChart3, LogOut,
   Shield, ShieldCheck, ArrowLeft, Ban, FolderTree, Briefcase, User,
   Camera, Lock, Save, Loader2, BookOpen, Award, Mail,
+  MessageSquare,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -33,6 +34,7 @@ import AdminLearn from "./AdminLearn";
 import AdminImpact from "./AdminImpact";
 import AdminPartners from "./AdminPartners";
 import AdminInbox from "./AdminInbox";
+import AdminTestimonials from "./AdminTestimonials";
 
 
 const AdminDashboard = () => {
@@ -71,6 +73,7 @@ const AdminDashboard = () => {
     { id: "impact", label: "Impact", icon: Award },
     { id: "partners", label: "Partners", icon: Users },
     { id: "inbox", label: "Inbox", icon: Mail },
+    { id: "testimonials", label: "Testimonials", icon: MessageSquare },
   ];
 
   const superAdminNav = [
@@ -95,6 +98,7 @@ const AdminDashboard = () => {
       case "impact": return <AdminImpact />;
       case "partners": return <AdminPartners />;
       case "inbox": return <AdminInbox />;
+      case "testimonials": return <AdminTestimonials />;
       default: return <AdminAnalytics />;
     }
   };
