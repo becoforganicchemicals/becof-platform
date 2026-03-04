@@ -42,7 +42,11 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("analytics");
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   if (!user || !isAdmin) {
@@ -108,24 +112,32 @@ const AdminDashboard = () => {
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r border-border">
           <SidebarContent className="flex flex-col h-full">
+
             {/* Logo */}
             <div className="p-4 flex items-center gap-3 border-b border-border">
               <Shield className="h-6 w-6 text-primary shrink-0" />
               <div className="overflow-hidden">
                 <h1 className="font-heading font-bold text-sm truncate">Becof Admin</h1>
-                <p className="text-xs text-muted-foreground capitalize truncate">{role?.replace(/_/g, " ")}</p>
+                <p className="text-xs text-muted-foreground capitalize truncate">
+                  {role?.replace(/_/g, " ")}
+                </p>
               </div>
             </div>
 
             {/* User Profile Card */}
             <div
-              className={`mx-3 mt-3 p-3 rounded-lg border cursor-pointer transition-colors ${activeTab === "profile" ? "bg-primary/10 border-primary/30" : "border-border hover:bg-muted/50"}`}
+              className={`mx-3 mt-3 p-3 rounded-lg border cursor-pointer transition-colors ${activeTab === "profile"
+                  ? "bg-primary/10 border-primary/30"
+                  : "border-border hover:bg-muted/50"
+                }`}
               onClick={() => setActiveTab("profile")}
             >
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs">{profile?.full_name?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {profile?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="overflow-hidden">
                   <p className="text-sm font-medium truncate">{profile?.full_name || "User"}</p>
@@ -185,10 +197,16 @@ const AdminDashboard = () => {
                   <ArrowLeft className="h-4 w-4" /> Back to Website
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-destructive hover:text-destructive" onClick={signOut}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+                onClick={signOut}
+              >
                 <LogOut className="h-4 w-4" /> Sign Out
               </Button>
             </div>
+
           </SidebarContent>
         </Sidebar>
 
@@ -196,7 +214,9 @@ const AdminDashboard = () => {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-40 bg-card border-b border-border px-4 py-3 flex items-center gap-3">
             <SidebarTrigger />
-            <h2 className="font-semibold capitalize">{activeTab === "profile" ? "My Profile" : activeTab.replace(/_/g, " ")}</h2>
+            <h2 className="font-semibold capitalize">
+              {activeTab === "profile" ? "My Profile" : activeTab.replace(/_/g, " ")}
+            </h2>
           </header>
           <main className="flex-1 p-6 overflow-auto">
             {renderContent()}
@@ -207,15 +227,15 @@ const AdminDashboard = () => {
   );
 };
 
-/** Inline admin profile */
+
+// ── Admin profile — no farm/distributor fields for admins ────────────────────
 const AdminProfile = () => {
-  const { user, profile, role, signOut } = useAuth();
+  const { user, profile, role } = useAuth();
   const { toast } = useToast();
+
   const [form, setForm] = useState({
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
-    farm_location: profile?.farm_location || "",
-    farm_size_hectares: profile?.farm_size_hectares ? String(profile.farm_size_hectares) : "",
     bio: profile?.bio || "",
   });
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -232,19 +252,22 @@ const AdminProfile = () => {
       if (avatarFile) {
         const ext = avatarFile.name.split(".").pop();
         const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, avatarFile);
+        const { error: uploadErr } = await supabase.storage
+          .from("avatars")
+          .upload(path, avatarFile, { upsert: true });
         if (uploadErr) throw uploadErr;
         const { data } = supabase.storage.from("avatars").getPublicUrl(path);
         avatarUrl = data.publicUrl;
       }
-      const { error } = await supabase.from("profiles").update({
-        full_name: form.full_name || null,
-        phone: form.phone || null,
-        farm_location: form.farm_location || null,
-        farm_size_hectares: form.farm_size_hectares ? Number(form.farm_size_hectares) : null,
-        bio: form.bio || null,
-        avatar_url: avatarUrl,
-      }).eq("user_id", user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: form.full_name || null,
+          phone: form.phone || null,
+          bio: form.bio || null,
+          avatar_url: avatarUrl,
+        })
+        .eq("user_id", user.id);
       if (error) throw error;
       toast({ title: "Profile updated" });
       setAvatarFile(null);
@@ -276,45 +299,107 @@ const AdminProfile = () => {
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-2 mb-4">
-        <Badge variant="outline" className="capitalize">{role?.replace(/_/g, " ") || "User"}</Badge>
+        <Badge variant="outline" className="capitalize">
+          {role?.replace(/_/g, " ") || "User"}
+        </Badge>
         <span className="text-sm text-muted-foreground">{user.email}</span>
       </div>
 
+      {/* Profile info */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><User className="h-5 w-5" /> Profile Information</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" /> Profile Information
+          </CardTitle>
+        </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div className="flex items-center gap-4 mb-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarFile ? URL.createObjectURL(avatarFile) : profile?.avatar_url || undefined} />
-                <AvatarFallback className="text-2xl">{form.full_name?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
+                <AvatarImage
+                  src={avatarFile ? URL.createObjectURL(avatarFile) : profile?.avatar_url || undefined}
+                />
+                <AvatarFallback className="text-2xl">
+                  {form.full_name?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
-              <div>
-                <Label className="flex items-center gap-2 cursor-pointer text-sm text-primary">
-                  <Camera className="h-4 w-4" /> Change Photo
-                  <Input type="file" accept="image/*" className="hidden" onChange={e => setAvatarFile(e.target.files?.[0] || null)} />
-                </Label>
-              </div>
+              <Label className="flex items-center gap-2 cursor-pointer text-sm text-primary">
+                <Camera className="h-4 w-4" /> Change Photo
+                <Input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => setAvatarFile(e.target.files?.[0] || null)}
+                />
+              </Label>
             </div>
-            <div><Label>Full Name</Label><Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} /></div>
-            <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
-            <div><Label>Farm Location</Label><Input value={form.farm_location} onChange={e => setForm(f => ({ ...f, farm_location: e.target.value }))} /></div>
-            <div><Label>Farm Size (hectares)</Label><Input type="number" value={form.farm_size_hectares} onChange={e => setForm(f => ({ ...f, farm_size_hectares: e.target.value }))} /></div>
-            <div><Label>Bio</Label><Textarea rows={3} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} /></div>
+
+            <div>
+              <Label>Full Name</Label>
+              <Input
+                value={form.full_name}
+                onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>Bio</Label>
+              <Textarea
+                rows={3}
+                value={form.bio}
+                onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+                className="resize-none"
+              />
+            </div>
+
             <Button type="submit" disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              {saving
+                ? <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                : <Save className="h-4 w-4 mr-2" />}
               Save Changes
             </Button>
           </form>
         </CardContent>
       </Card>
 
+      {/* Change password */}
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><Lock className="h-5 w-5" /> Change Password</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" /> Change Password
+          </CardTitle>
+        </CardHeader>
         <CardContent>
           <form onSubmit={handleChangePassword} className="space-y-4">
-            <div><Label>New Password</Label><Input type="password" value={passwords.new_password} onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))} required minLength={6} /></div>
-            <div><Label>Confirm</Label><Input type="password" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} required minLength={6} /></div>
+            <div>
+              <Label>New Password</Label>
+              <Input
+                type="password"
+                value={passwords.new_password}
+                onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))}
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <Label>Confirm</Label>
+              <Input
+                type="password"
+                value={passwords.confirm}
+                onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))}
+                required
+                minLength={6}
+              />
+            </div>
+            {passwords.confirm && passwords.new_password !== passwords.confirm && (
+              <p className="text-xs text-destructive">Passwords do not match</p>
+            )}
             <Button type="submit" variant="outline" disabled={changingPw}>
               {changingPw && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Update Password
