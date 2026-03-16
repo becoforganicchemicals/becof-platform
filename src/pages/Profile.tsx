@@ -80,7 +80,7 @@ const Profile = () => {
         bio: profile.bio || "",
         farm_location: profile.farm_location || "",
         farm_size_hectares: profile.farm_size_hectares ? String(profile.farm_size_hectares) : "",
-        crop_types: profile.crop_types || "",
+        crop_types: Array.isArray(profile.crop_types) ? profile.crop_types.join(", ") : profile.crop_types || "",
         business_name: profile.business_name || "",
         business_location: profile.business_location || "",
         coverage_area: profile.coverage_area || "",
