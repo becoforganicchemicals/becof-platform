@@ -9,12 +9,12 @@ import { useCart } from "@/contexts/CartContext";
 interface Product {
   id: string;
   name: string;
-  category: string;
   price: number;
   average_rating: number | null;
   short_description: string | null;
   images: string[] | null;
   slug: string;
+  categories: { name: string } | null;
 }
 
 const FeaturedProducts = () => {
