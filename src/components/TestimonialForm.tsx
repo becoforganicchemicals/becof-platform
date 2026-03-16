@@ -75,11 +75,10 @@ const TestimonialForm = () => {
 
         setSubmitting(true);
 
-        // Get user's display name from profile table (adjust table name if different)
         const { data: profile } = await supabase
             .from("profiles")
             .select("full_name")
-            .eq("id", user.id)
+            .eq("user_id", user.id)
             .maybeSingle();
 
         const authorName = profile?.full_name || user.email?.split("@")[0] || "Farmer";
