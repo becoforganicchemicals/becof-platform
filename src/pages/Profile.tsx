@@ -205,12 +205,42 @@ const Profile = () => {
   // ── Tabs available per role ───────────────────────────────────────────────
   const tabs = [
     { value: "profile", label: "Profile", icon: User },
+    { value: "orders", label: "My Orders", icon: ShoppingBag },
     { value: "security", label: "Security", icon: Lock },
     ...(isFarmerOrDistributor
       ? [{ value: "testimonial", label: "My Testimonial", icon: MessageSquare }]
       : []),
     { value: "danger", label: "Danger Zone", icon: AlertTriangle },
   ];
+
+  // ── Order history queries ─────────────────────────────────────────────────
+  const { data: orders = [] } = useQuery({
+    queryKey: ["my-orders", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, order_items(*)")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: customOrders = [] } = useQuery({
+    queryKey: ["my-custom-orders", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("custom_orders")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   return (
     <Layout>
