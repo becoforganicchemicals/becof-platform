@@ -129,7 +129,7 @@ const FeaturedProducts = () => {
                   </Link>
 
                   <div className="p-5 flex flex-col flex-1">
-                    <span className="text-xs font-semibold text-accent uppercase tracking-wide">{p.category}</span>
+                    <span className="text-xs font-semibold text-accent uppercase tracking-wide">{p.categories?.name}</span>
                     <Link to={`/products/${p.slug}`}>
                       <h3 className="font-semibold text-base mt-1 mb-1 hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
                     </Link>

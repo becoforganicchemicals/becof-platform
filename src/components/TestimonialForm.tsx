@@ -111,7 +111,7 @@ const TestimonialForm = () => {
                 .order("created_at", { ascending: false })
                 .limit(1)
                 .maybeSingle();
-            setExisting(newT ?? null);
+            setExisting(newT ? toStatus(newT) : null);
         }
 
         setSubmitting(false);
