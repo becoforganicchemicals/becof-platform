@@ -36,6 +36,8 @@ const TestimonialForm = () => {
     const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [existing, setExisting] = useState<TestimonialStatus | null | undefined>(undefined);
+    type TestimonialRow = { id: string; status: string; content: string; rating: number; created_at: string; rejection_note: string | null };
+    const toStatus = (row: TestimonialRow): TestimonialStatus => ({ ...row, status: row.status as TestimonialStatus["status"] });
 
     // Fetch user's existing testimonial + available products
     useEffect(() => {
