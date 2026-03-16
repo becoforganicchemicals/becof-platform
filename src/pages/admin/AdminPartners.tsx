@@ -212,7 +212,7 @@ const AdminPartners = () => {
             await supabase.from("partner_profiles").update(payload).eq("id", editingProfile.id);
             toast({ title: "Partner profile updated ✓" });
         } else {
-            await supabase.from("partner_profiles").insert(payload);
+            await supabase.from("partner_profiles").insert([payload]);
             toast({ title: "Partner profile created ✓" });
         }
 
