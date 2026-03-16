@@ -485,6 +485,7 @@ const Profile = () => {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
 
               {/* ── Security Tab ── */}
               <TabsContent value="security" className="mt-6">
