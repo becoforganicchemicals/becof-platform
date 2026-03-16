@@ -126,7 +126,7 @@ const Profile = () => {
       if (role === "farmer") {
         payload.farm_location = form.farm_location || null;
         payload.farm_size_hectares = form.farm_size_hectares ? Number(form.farm_size_hectares) : null;
-        payload.crop_types = form.crop_types || null;
+        payload.crop_types = form.crop_types ? form.crop_types.split(",").map((s: string) => s.trim()).filter(Boolean) : null;
       }
 
       if (role === "distributor") {
