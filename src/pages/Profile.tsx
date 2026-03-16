@@ -58,7 +58,7 @@ const Profile = () => {
     // farmer-specific
     farm_location: profile?.farm_location || "",
     farm_size_hectares: profile?.farm_size_hectares ? String(profile.farm_size_hectares) : "",
-    crop_types: profile?.crop_types || "",          // comma-separated crops
+    crop_types: Array.isArray(profile?.crop_types) ? profile.crop_types.join(", ") : profile?.crop_types || "",
     // distributor-specific
     business_name: profile?.business_name || "",
     business_location: profile?.business_location || "",
