@@ -385,20 +385,6 @@ Protected under:
 /admin/*
 ```
 
-Examples:
-
-* `/admin/dashboard`
-* `/admin/products`
-* `/admin/categories`
-* `/admin/subcategories`
-* `/admin/orders`
-* `/admin/users`
-* `/admin/permissions`
-* `/admin/activity-logs`
-* `/admin/careers`
-
----
-
 # 🧪 Testing
 
 Run tests:
