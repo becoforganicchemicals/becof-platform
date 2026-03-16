@@ -75,10 +75,10 @@ const SignIn = () => {
             .maybeSingle();
 
           if (!existingRole) {
-            await supabase.from("user_roles").insert({
+            await supabase.from("user_roles").insert([{
               user_id: data.user.id,
-              role: selectedRole,
-            });
+              role: selectedRole as "farmer" | "distributor",
+            }]);
           }
 
           const { data: existingProfile } = await supabase

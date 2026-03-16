@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -58,7 +59,7 @@ const Profile = () => {
     // farmer-specific
     farm_location: profile?.farm_location || "",
     farm_size_hectares: profile?.farm_size_hectares ? String(profile.farm_size_hectares) : "",
-    crop_types: profile?.crop_types || "",          // comma-separated crops
+    crop_types: Array.isArray(profile?.crop_types) ? profile.crop_types.join(", ") : profile?.crop_types || "",
     // distributor-specific
     business_name: profile?.business_name || "",
     business_location: profile?.business_location || "",
@@ -80,7 +81,7 @@ const Profile = () => {
         bio: profile.bio || "",
         farm_location: profile.farm_location || "",
         farm_size_hectares: profile.farm_size_hectares ? String(profile.farm_size_hectares) : "",
-        crop_types: profile.crop_types || "",
+        crop_types: Array.isArray(profile.crop_types) ? profile.crop_types.join(", ") : profile.crop_types || "",
         business_name: profile.business_name || "",
         business_location: profile.business_location || "",
         coverage_area: profile.coverage_area || "",
@@ -126,7 +127,7 @@ const Profile = () => {
       if (role === "farmer") {
         payload.farm_location = form.farm_location || null;
         payload.farm_size_hectares = form.farm_size_hectares ? Number(form.farm_size_hectares) : null;
-        payload.crop_types = form.crop_types || null;
+        payload.crop_types = form.crop_types ? form.crop_types.split(",").map((s: string) => s.trim()).filter(Boolean) : null;
       }
 
       if (role === "distributor") {
@@ -204,12 +205,42 @@ const Profile = () => {
   // ── Tabs available per role ───────────────────────────────────────────────
   const tabs = [
     { value: "profile", label: "Profile", icon: User },
+    { value: "orders", label: "My Orders", icon: ShoppingBag },
     { value: "security", label: "Security", icon: Lock },
     ...(isFarmerOrDistributor
       ? [{ value: "testimonial", label: "My Testimonial", icon: MessageSquare }]
       : []),
     { value: "danger", label: "Danger Zone", icon: AlertTriangle },
   ];
+
+  // ── Order history queries ─────────────────────────────────────────────────
+  const { data: orders = [] } = useQuery({
+    queryKey: ["my-orders", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, order_items(*)")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: customOrders = [] } = useQuery({
+    queryKey: ["my-custom-orders", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("custom_orders")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   return (
     <Layout>
@@ -377,6 +408,81 @@ const Profile = () => {
                         Save Changes
                       </Button>
                     </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* ── Orders Tab ── */}
+              <TabsContent value="orders" className="mt-6 space-y-6">
+                {/* Standard Orders */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ShoppingBag className="h-5 w-5" /> Standard Orders ({orders.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {orders.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4 text-center">No orders yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {orders.map((order: any) => (
+                          <div key={order.id} className="border border-border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-sm font-semibold">#{order.id.slice(0, 8).toUpperCase()}</span>
+                              <Badge variant={order.status === "delivered" ? "default" : order.status === "cancelled" ? "destructive" : "secondary"}>
+                                {order.status?.replace(/_/g, " ")}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p>Total: <span className="font-semibold text-foreground">KES {order.total_amount?.toLocaleString()}</span></p>
+                              <p>Date: {new Date(order.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</p>
+                              {order.mpesa_receipt_number && <p className="text-primary">M-Pesa: {order.mpesa_receipt_number}</p>}
+                              {order.order_items?.length > 0 && (
+                                <div className="pt-2 border-t border-border mt-2">
+                                  {order.order_items.map((item: any) => (
+                                    <p key={item.id} className="text-xs">{item.product_name} × {item.quantity} — KES {item.total_price?.toLocaleString()}</p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Custom Orders */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="h-5 w-5" /> Custom Orders ({customOrders.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {customOrders.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4 text-center">No custom orders yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {customOrders.map((order: any) => (
+                          <div key={order.id} className="border border-border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-sm font-semibold">#{order.id.slice(0, 8).toUpperCase()}</span>
+                              <Badge variant={order.status === "fulfilled" ? "default" : order.status === "cancelled" ? "destructive" : "secondary"}>
+                                {order.status?.replace(/_/g, " ")}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p>Product: <span className="font-medium text-foreground">{order.product_name}</span></p>
+                              <p>Qty: {order.quantity} {order.unit || ""}</p>
+                              <p>Date: {new Date(order.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</p>
+                              {order.deposit_amount && <p>Deposit: KES {order.deposit_amount?.toLocaleString()} {order.deposit_paid ? "✓ Paid" : "— Pending"}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

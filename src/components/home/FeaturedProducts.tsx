@@ -9,12 +9,12 @@ import { useCart } from "@/contexts/CartContext";
 interface Product {
   id: string;
   name: string;
-  category: string;
   price: number;
   average_rating: number | null;
   short_description: string | null;
   images: string[] | null;
   slug: string;
+  categories: { name: string } | null;
 }
 
 const FeaturedProducts = () => {
@@ -27,9 +27,9 @@ const FeaturedProducts = () => {
     const fetchFeatured = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, category, price, average_rating, short_description, images, slug")
+        .select("id, name, price, average_rating, short_description, images, slug, categories(name)")
         .eq("is_featured", true)
-        .eq("is_active", true)
+        .eq("is_published", true)
         .order("average_rating", { ascending: false, nullsFirst: false })
         .limit(12);
 
@@ -129,7 +129,7 @@ const FeaturedProducts = () => {
                   </Link>
 
                   <div className="p-5 flex flex-col flex-1">
-                    <span className="text-xs font-semibold text-accent uppercase tracking-wide">{p.category}</span>
+                    <span className="text-xs font-semibold text-accent uppercase tracking-wide">{p.categories?.name}</span>
                     <Link to={`/products/${p.slug}`}>
                       <h3 className="font-semibold text-base mt-1 mb-1 hover:text-primary transition-colors line-clamp-1">{p.name}</h3>
                     </Link>

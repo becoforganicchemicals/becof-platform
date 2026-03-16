@@ -36,6 +36,8 @@ const TestimonialForm = () => {
     const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [existing, setExisting] = useState<TestimonialStatus | null | undefined>(undefined);
+    type TestimonialRow = { id: string; status: string; content: string; rating: number; created_at: string; rejection_note: string | null };
+    const toStatus = (row: TestimonialRow): TestimonialStatus => ({ ...row, status: row.status as TestimonialStatus["status"] });
 
     // Fetch user's existing testimonial + available products
     useEffect(() => {
@@ -51,13 +53,13 @@ const TestimonialForm = () => {
                 .limit(1)
                 .maybeSingle();
 
-            setExisting(tData ?? null);
+            setExisting(tData ? toStatus(tData) : null);
 
             // Fetch products for dropdown
             const { data: pData } = await supabase
                 .from("products")
                 .select("id, name")
-                .eq("is_active", true)
+                .eq("is_published", true)
                 .order("name");
 
             if (pData) setProducts(pData);
@@ -73,11 +75,10 @@ const TestimonialForm = () => {
 
         setSubmitting(true);
 
-        // Get user's display name from profile table (adjust table name if different)
         const { data: profile } = await supabase
             .from("profiles")
             .select("full_name")
-            .eq("id", user.id)
+            .eq("user_id", user.id)
             .maybeSingle();
 
         const authorName = profile?.full_name || user.email?.split("@")[0] || "Farmer";
@@ -110,7 +111,7 @@ const TestimonialForm = () => {
                 .order("created_at", { ascending: false })
                 .limit(1)
                 .maybeSingle();
-            setExisting(newT ?? null);
+            setExisting(newT ? toStatus(newT) : null);
         }
 
         setSubmitting(false);
