@@ -27,9 +27,9 @@ const FeaturedProducts = () => {
     const fetchFeatured = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, category, price, average_rating, short_description, images, slug")
+        .select("id, name, price, average_rating, short_description, images, slug, categories(name)")
         .eq("is_featured", true)
-        .eq("is_active", true)
+        .eq("is_published", true)
         .order("average_rating", { ascending: false, nullsFirst: false })
         .limit(12);
 
