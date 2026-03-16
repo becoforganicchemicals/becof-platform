@@ -53,13 +53,13 @@ const TestimonialForm = () => {
                 .limit(1)
                 .maybeSingle();
 
-            setExisting(tData ?? null);
+            setExisting(tData ? toStatus(tData) : null);
 
             // Fetch products for dropdown
             const { data: pData } = await supabase
                 .from("products")
                 .select("id, name")
-                .eq("is_active", true)
+                .eq("is_published", true)
                 .order("name");
 
             if (pData) setProducts(pData);
