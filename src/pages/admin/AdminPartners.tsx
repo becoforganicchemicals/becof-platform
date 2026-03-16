@@ -206,13 +206,13 @@ const AdminPartners = () => {
             if (url) logo_url = url;
         }
 
-        const payload = { ...profileForm, logo_url, products: selectedProducts };
+        const payload = { ...profileForm, logo_url, products: selectedProducts, display_name: profileForm.display_name! };
 
         if (editingProfile) {
             await supabase.from("partner_profiles").update(payload).eq("id", editingProfile.id);
             toast({ title: "Partner profile updated ✓" });
         } else {
-            await supabase.from("partner_profiles").insert([payload]);
+            await supabase.from("partner_profiles").insert([payload as any]);
             toast({ title: "Partner profile created ✓" });
         }
 
