@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Leaf, Mail, Lock, Tractor, Truck,
+  Leaf, Mail, Lock, Tractor,
   Loader2, ArrowRight, Eye, EyeOff, CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleRedirect } from "@/App";
 
-// ── Role options — expert removed ─────────────────────────────────────────────
+// ── Only farmer self-registration allowed. Distributors go through the application flow. ──
 const ROLES = [
   {
     id: "farmer",
@@ -22,17 +22,11 @@ const ROLES = [
     icon: Tractor,
     desc: "Buy products, learn sustainable farming, join the community.",
   },
-  {
-    id: "distributor",
-    label: "Distributor",
-    icon: Truck,
-    desc: "Distribute Becof products and manage your agro-dealer business.",
-  },
 ];
 
 const SignIn = () => {
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [selectedRole, setSelectedRole] = useState("farmer");
+  const [selectedRole] = useState("farmer"); // Always farmer for self-registration
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -66,7 +60,7 @@ const SignIn = () => {
         });
         if (signUpError) throw signUpError;
 
-        // Assign role + create profile if user was auto-confirmed (dev env)
+        // Handle auto-confirmed users (dev env)
         if (data.user) {
           const { data: existingRole } = await supabase
             .from("user_roles")
@@ -77,7 +71,7 @@ const SignIn = () => {
           if (!existingRole) {
             await supabase.from("user_roles").insert([{
               user_id: data.user.id,
-              role: selectedRole as "farmer" | "distributor",
+              role: selectedRole as "farmer",
             }]);
           }
 
@@ -97,12 +91,24 @@ const SignIn = () => {
 
         setRegistered(true);
       } else {
-        // Login — fetch role then redirect
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (signInError) throw signInError;
+
+        // Check must_change_password flag
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("must_change_password")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
+        if (profileData?.must_change_password) {
+          navigate("/profile?tab=security&force_password=true", { replace: true });
+          toast({ title: "Welcome! Please change your temporary password to continue." });
+          return;
+        }
 
         const { data: roleData } = await supabase
           .from("user_roles")
@@ -234,56 +240,17 @@ const SignIn = () => {
                 >
                   {/* Register-only fields */}
                   {mode === "register" && (
-                    <>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="fullName">Full Name</Label>
-                        <Input
-                          id="fullName"
-                          placeholder="Jane Wanjiku"
-                          value={fullName}
-                          onChange={e => setFullName(e.target.value)}
-                          required
-                          className="h-11"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>I am registering as a:</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {ROLES.map(r => (
-                            <button
-                              key={r.id}
-                              type="button"
-                              onClick={() => setSelectedRole(r.id)}
-                              className={`relative flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all duration-200 ${selectedRole === r.id
-                                  ? "border-primary bg-primary/5 shadow-sm"
-                                  : "border-border hover:border-primary/40 hover:bg-muted/40"
-                                }`}
-                            >
-                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${selectedRole === r.id ? "bg-primary/15" : "bg-muted"
-                                }`}>
-                                <r.icon className={`h-5 w-5 ${selectedRole === r.id ? "text-primary" : "text-muted-foreground"
-                                  }`} />
-                              </div>
-                              <div>
-                                <p className={`font-semibold text-sm ${selectedRole === r.id ? "text-primary" : "text-foreground"
-                                  }`}>
-                                  {r.label}
-                                </p>
-                                <p className="text-xs text-muted-foreground leading-snug mt-0.5">
-                                  {r.desc}
-                                </p>
-                              </div>
-                              {selectedRole === r.id && (
-                                <div className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                  <CheckCircle2 className="h-3 w-3 text-white" />
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        placeholder="Jane Wanjiku"
+                        value={fullName}
+                        onChange={e => setFullName(e.target.value)}
+                        required
+                        className="h-11"
+                      />
+                    </div>
                   )}
 
                   {/* Email */}
@@ -366,6 +333,15 @@ const SignIn = () => {
                   {mode === "login" ? "Register" : "Sign In"}
                 </button>
               </p>
+
+              {mode === "register" && (
+                <p className="text-center text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
+                  Want to become a distributor?{" "}
+                  <a href="/partners" className="text-primary hover:underline font-medium">
+                    Apply through our Partners page
+                  </a>
+                </p>
+              )}
 
               <p className="text-center text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
                 Admin or Super Admin accounts are created by the system administrator.
