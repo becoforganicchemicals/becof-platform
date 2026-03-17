@@ -164,10 +164,20 @@ const Profile = () => {
         throw new Error("Password must be at least 6 characters");
       const { error } = await supabase.auth.updateUser({ password: passwords.new_password });
       if (error) throw error;
+
+      // Clear must_change_password flag
+      if (mustChangePassword && user) {
+        await supabase.from("profiles").update({ must_change_password: false }).eq("user_id", user.id);
+      }
     },
     onSuccess: () => {
       toast({ title: "Password changed successfully" });
       setPasswords({ new_password: "", confirm: "" });
+      // Remove force_password param and redirect
+      if (forcePassword) {
+        setSearchParams({});
+        window.location.href = "/profile";
+      }
     },
     onError: (e: any) =>
       toast({ title: "Error", description: e.message, variant: "destructive" }),
