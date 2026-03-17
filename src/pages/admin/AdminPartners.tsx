@@ -126,10 +126,18 @@ const AdminPartners = () => {
         if (!selectedApp) return;
         setReviewing(true);
 
+        // Idempotency: prevent re-approving if already approved & account created
+        if (newStatus === "approved" && selectedApp.portal_account_created) {
+            toast({ title: "Already approved", description: "This application has already been approved and the account created. Use 'Resend Credentials' instead.", variant: "destructive" });
+            setReviewing(false);
+            return;
+        }
+
         const updates: any = {
             status: newStatus,
             admin_notes: adminNotes,
             reviewed_at: new Date().toISOString(),
+            reviewed_by: user?.id || null,
         };
         if (newStatus === "rejected") updates.rejection_reason = rejectionReason;
 
@@ -154,6 +162,7 @@ const AdminPartners = () => {
                 type: emailType,
                 temp_password: newStatus === "approved" ? tempPassword : undefined,
                 rejection_reason: newStatus === "rejected" ? rejectionReason : undefined,
+                admin_user_id: user?.id || null,
             },
         });
 
@@ -161,6 +170,7 @@ const AdminPartners = () => {
         setReviewing(false);
         setReviewDialog(false);
         queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };
 
     /* ─── Resend approval email ─── */
