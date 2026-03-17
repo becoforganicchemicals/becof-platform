@@ -51,6 +51,7 @@ const statusStyle = (s: string) => ({
 const AdminPartners = () => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const [tab, setTab] = useState<Tab>("applications");
     const [search, setSearch] = useState("");
