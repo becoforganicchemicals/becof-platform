@@ -173,13 +173,17 @@ const AdminPartners = () => {
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };
 
-    /* ─── Resend approval email ─── */
-    const resendApproval = async (app: Application) => {
+    /* ─── Resend credentials (does NOT create a new user) ─── */
+    const resendCredentials = async (app: Application) => {
+        if (!app.portal_account_created) {
+            toast({ title: "Account not yet created", description: "Approve the application first before resending credentials.", variant: "destructive" });
+            return;
+        }
         const newTemp = `Becof@${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
         await supabase.functions.invoke("send-partner-email", {
-            body: { application_id: app.id, type: "application_approved", temp_password: newTemp },
+            body: { application_id: app.id, type: "resend_credentials", temp_password: newTemp },
         });
-        toast({ title: "Approval email resent with new temp password ✓" });
+        toast({ title: "New credentials sent to applicant ✓" });
     };
 
     /* ─── Open profile dialog ─── */
