@@ -51,6 +51,9 @@ const Field = ({
 const Profile = () => {
   const { user, profile, role, loading, signOut } = useAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const forcePassword = searchParams.get("force_password") === "true";
+  const mustChangePassword = profile?.must_change_password === true;
 
   // Shared fields
   const [form, setForm] = useState({
