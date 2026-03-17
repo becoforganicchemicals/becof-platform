@@ -88,6 +88,7 @@ const App = () => (
               <Route path="/partners" element={<Partners />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/careers" element={<Careers />} />
+              <Route path="/application-status" element={<ApplicationStatus />} />
 
               {/* Sign-in: kick already-logged-in users to their portal */}
               <Route path="/signin"

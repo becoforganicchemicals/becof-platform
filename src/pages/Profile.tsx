@@ -209,6 +209,66 @@ const Profile = () => {
 
   if (!user) return <Navigate to="/signin" replace />;
 
+  // ── Forced password change interstitial ──
+  if (forcePassword || mustChangePassword) {
+    return (
+      <Layout>
+        <section className="py-16 min-h-[80vh] flex items-center">
+          <div className="container max-w-md">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <Card>
+                <CardHeader>
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Lock className="h-6 w-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-center">Change Your Password</CardTitle>
+                  <CardDescription className="text-center">
+                    Welcome to Becof! For security, please set a new password before continuing.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form
+                    onSubmit={e => { e.preventDefault(); changePassword.mutate(); }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-1.5">
+                      <Label htmlFor="force_new_password">New Password</Label>
+                      <Input
+                        id="force_new_password"
+                        type="password"
+                        value={passwords.new_password}
+                        onChange={e => setPasswords(p => ({ ...p, new_password: e.target.value }))}
+                        required minLength={6}
+                        placeholder="Min. 6 characters"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="force_confirm_password">Confirm New Password</Label>
+                      <Input
+                        id="force_confirm_password"
+                        type="password"
+                        value={passwords.confirm}
+                        onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))}
+                        required minLength={6}
+                      />
+                    </div>
+                    {passwords.confirm && passwords.new_password !== passwords.confirm && (
+                      <p className="text-xs text-destructive">Passwords do not match</p>
+                    )}
+                    <Button type="submit" className="w-full gap-2" disabled={changePassword.isPending}>
+                      {changePassword.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Set New Password & Continue
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
+      </Layout>
+    );
+  }
+
   const meta = roleMeta[role || "farmer"] ?? roleMeta.farmer;
   const RoleIcon = meta.icon;
   const isFarmerOrDistributor = role === "farmer" || role === "distributor";
