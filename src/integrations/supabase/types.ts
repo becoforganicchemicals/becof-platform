@@ -1051,6 +1051,7 @@ export type Database = {
           farm_size_hectares: number | null
           full_name: string | null
           id: string
+          must_change_password: boolean
           phone: string | null
           status: string
           updated_at: string
@@ -1069,6 +1070,7 @@ export type Database = {
           farm_size_hectares?: number | null
           full_name?: string | null
           id?: string
+          must_change_password?: boolean
           phone?: string | null
           status?: string
           updated_at?: string
@@ -1087,6 +1089,7 @@ export type Database = {
           farm_size_hectares?: number | null
           full_name?: string | null
           id?: string
+          must_change_password?: boolean
           phone?: string | null
           status?: string
           updated_at?: string
@@ -1258,6 +1261,15 @@ export type Database = {
       is_admin_or_super_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
+      lookup_application_status: {
+        Args: { _email: string }
+        Returns: {
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "farmer" | "distributor"
