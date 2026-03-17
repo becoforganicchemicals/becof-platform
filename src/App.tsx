@@ -25,6 +25,7 @@ import Careers from "./pages/Careers";
 import Profile from "./pages/Profile";
 import LearnDetail from "./pages/LearnDetail";
 import CustomOrder from "./pages/CustomOrder";
+import ApplicationStatus from "./pages/ApplicationStatus";
 
 const queryClient = new QueryClient();
 
