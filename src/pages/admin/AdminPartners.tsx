@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const statusStyle = (s: string) => ({
 const AdminPartners = () => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const [tab, setTab] = useState<Tab>("applications");
     const [search, setSearch] = useState("");
@@ -124,10 +126,18 @@ const AdminPartners = () => {
         if (!selectedApp) return;
         setReviewing(true);
 
+        // Idempotency: prevent re-approving if already approved & account created
+        if (newStatus === "approved" && selectedApp.portal_account_created) {
+            toast({ title: "Already approved", description: "This application has already been approved and the account created. Use 'Resend Credentials' instead.", variant: "destructive" });
+            setReviewing(false);
+            return;
+        }
+
         const updates: any = {
             status: newStatus,
             admin_notes: adminNotes,
             reviewed_at: new Date().toISOString(),
+            reviewed_by: user?.id || null,
         };
         if (newStatus === "rejected") updates.rejection_reason = rejectionReason;
 
@@ -152,6 +162,7 @@ const AdminPartners = () => {
                 type: emailType,
                 temp_password: newStatus === "approved" ? tempPassword : undefined,
                 rejection_reason: newStatus === "rejected" ? rejectionReason : undefined,
+                admin_user_id: user?.id || null,
             },
         });
 
@@ -159,15 +170,20 @@ const AdminPartners = () => {
         setReviewing(false);
         setReviewDialog(false);
         queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };
 
-    /* ─── Resend approval email ─── */
-    const resendApproval = async (app: Application) => {
+    /* ─── Resend credentials (does NOT create a new user) ─── */
+    const resendCredentials = async (app: Application) => {
+        if (!app.portal_account_created) {
+            toast({ title: "Account not yet created", description: "Approve the application first before resending credentials.", variant: "destructive" });
+            return;
+        }
         const newTemp = `Becof@${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
         await supabase.functions.invoke("send-partner-email", {
-            body: { application_id: app.id, type: "application_approved", temp_password: newTemp },
+            body: { application_id: app.id, type: "resend_credentials", temp_password: newTemp },
         });
-        toast({ title: "Approval email resent with new temp password ✓" });
+        toast({ title: "New credentials sent to applicant ✓" });
     };
 
     /* ─── Open profile dialog ─── */
@@ -422,17 +438,15 @@ const AdminPartners = () => {
                                                         className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
                                                         <Eye className="h-4 w-4" /> Review / Update Status
                                                     </Button>
-                                                    {app.status === "approved" && (
-                                                        <Button size="sm" variant="outline" onClick={() => resendApproval(app)} className="gap-1.5">
-                                                            <Mail className="h-4 w-4" /> Resend Approval Email
+                                                    {app.status === "approved" && app.portal_account_created && (
+                                                        <Button size="sm" variant="outline" onClick={() => resendCredentials(app)} className="gap-1.5">
+                                                            <Mail className="h-4 w-4" /> Resend Credentials
                                                         </Button>
                                                     )}
-                                                    {app.status === "approved" && (
-                                                        <Button size="sm" variant="outline"
-                                                            onClick={() => { setTab("profiles"); openProfileDialog(); }}
-                                                            className="gap-1.5">
-                                                            <Building2 className="h-4 w-4" /> Create Profile
-                                                        </Button>
+                                                    {app.status === "approved" && app.portal_account_created && (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-50 rounded-full">
+                                                            <CheckCircle className="h-3 w-3" /> Account Created · Profile Auto-generated
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>

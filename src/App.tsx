@@ -25,6 +25,7 @@ import Careers from "./pages/Careers";
 import Profile from "./pages/Profile";
 import LearnDetail from "./pages/LearnDetail";
 import CustomOrder from "./pages/CustomOrder";
+import ApplicationStatus from "./pages/ApplicationStatus";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => (
               <Route path="/partners" element={<Partners />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/careers" element={<Careers />} />
+              <Route path="/application-status" element={<ApplicationStatus />} />
 
               {/* Sign-in: kick already-logged-in users to their portal */}
               <Route path="/signin"
