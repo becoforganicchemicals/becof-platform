@@ -438,17 +438,15 @@ const AdminPartners = () => {
                                                         className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
                                                         <Eye className="h-4 w-4" /> Review / Update Status
                                                     </Button>
-                                                    {app.status === "approved" && (
-                                                        <Button size="sm" variant="outline" onClick={() => resendApproval(app)} className="gap-1.5">
-                                                            <Mail className="h-4 w-4" /> Resend Approval Email
+                                                    {app.status === "approved" && app.portal_account_created && (
+                                                        <Button size="sm" variant="outline" onClick={() => resendCredentials(app)} className="gap-1.5">
+                                                            <Mail className="h-4 w-4" /> Resend Credentials
                                                         </Button>
                                                     )}
-                                                    {app.status === "approved" && (
-                                                        <Button size="sm" variant="outline"
-                                                            onClick={() => { setTab("profiles"); openProfileDialog(); }}
-                                                            className="gap-1.5">
-                                                            <Building2 className="h-4 w-4" /> Create Profile
-                                                        </Button>
+                                                    {app.status === "approved" && app.portal_account_created && (
+                                                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-50 rounded-full">
+                                                            <CheckCircle className="h-3 w-3" /> Account Created · Profile Auto-generated
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
