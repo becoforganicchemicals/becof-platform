@@ -38,7 +38,7 @@ export const getRoleRedirect = (role: string | null): string => {
     case "admin":
       return "/admin";
     case "distributor":
-      return "/profile";
+      return "/distributor";
     case "farmer":
     default:
       return "/products";

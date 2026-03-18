@@ -140,10 +140,10 @@ const Partners = () => {
       setSubmitting(false); return;
     }
 
-    // Send confirmation email
-    await supabase.functions.invoke("send-partner-email", {
+    // Send confirmation email (fire-and-forget, don't block on failure)
+    supabase.functions.invoke("send-partner-email", {
       body: { application_id: data.id, type: "application_received" },
-    });
+    }).catch(err => console.warn("Email notification failed:", err));
 
     setSubmitted(true);
     setSubmitting(false);
