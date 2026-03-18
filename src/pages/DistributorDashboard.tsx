@@ -114,7 +114,7 @@ const DistributorDashboard = () => {
 
   return (
     <Layout>
-      <SEO title="Distributor Dashboard | Becof" description="Manage your distributor account, orders, and products." />
+      <SEO title="Distributor Dashboard | Becof" description="Manage your distributor account, orders, and products." url="https://www.becoforganicchemicals.com/distributor" />
 
       <section className="py-8 bg-muted/30 min-h-screen">
         <div className="container max-w-6xl space-y-6">
