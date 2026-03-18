@@ -26,6 +26,7 @@ import Profile from "./pages/Profile";
 import LearnDetail from "./pages/LearnDetail";
 import CustomOrder from "./pages/CustomOrder";
 import ApplicationStatus from "./pages/ApplicationStatus";
+import DistributorDashboard from "./pages/DistributorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -37,7 +38,7 @@ export const getRoleRedirect = (role: string | null): string => {
     case "admin":
       return "/admin";
     case "distributor":
-      return "/profile";
+      return "/distributor";
     case "farmer":
     default:
       return "/products";
@@ -110,6 +111,9 @@ const App = () => (
               />
               <Route path="/profile"
                 element={<RequireAuth><Profile /></RequireAuth>}
+              />
+              <Route path="/distributor"
+                element={<RequireAuth><DistributorDashboard /></RequireAuth>}
               />
 
               {/* ── Admin (guards are inside AdminDashboard itself) ───── */}
