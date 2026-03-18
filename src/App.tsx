@@ -26,6 +26,7 @@ import Profile from "./pages/Profile";
 import LearnDetail from "./pages/LearnDetail";
 import CustomOrder from "./pages/CustomOrder";
 import ApplicationStatus from "./pages/ApplicationStatus";
+import DistributorDashboard from "./pages/DistributorDashboard";
 
 const queryClient = new QueryClient();
 
