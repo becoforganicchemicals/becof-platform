@@ -112,6 +112,9 @@ const App = () => (
               <Route path="/profile"
                 element={<RequireAuth><Profile /></RequireAuth>}
               />
+              <Route path="/distributor"
+                element={<RequireAuth><DistributorDashboard /></RequireAuth>}
+              />
 
               {/* ── Admin (guards are inside AdminDashboard itself) ───── */}
               <Route path="/admin" element={<AdminDashboard />} />
