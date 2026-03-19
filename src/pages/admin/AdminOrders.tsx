@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,7 +119,8 @@ const AdminOrders = () => {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, { id, status }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "orders", targetId: id, afterData: { status } });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       toast({ title: "Order updated & customer notified ✓" });
     },
@@ -189,6 +191,7 @@ const AdminOrders = () => {
       });
     }
 
+    logAdminActivity({ action: "UPDATE", targetTable: "custom_orders", targetId: selectedCustom.id, afterData: { status: newCustomStatus, admin_notes: adminNotes } });
     toast({ title: "Custom order updated & customer notified ✓" });
     setNotifying(false);
     setUpdateDialog(false);

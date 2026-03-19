@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,9 +67,11 @@ const AdminImpact = () => {
         }
         if (editingMetric) {
             await supabase.from("impact_metrics").update(metricForm).eq("id", editingMetric.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "impact_metrics", targetId: editingMetric.id, afterData: metricForm });
             toast({ title: "Metric updated" });
         } else {
-            await supabase.from("impact_metrics").insert(metricForm);
+            const { data } = await supabase.from("impact_metrics").insert(metricForm).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "impact_metrics", targetId: data?.id || null, afterData: metricForm });
             toast({ title: "Metric created" });
         }
         setMetricDialog(false);
@@ -80,6 +83,7 @@ const AdminImpact = () => {
     const deleteMetric = async (id: string) => {
         if (!confirm("Delete this metric?")) return;
         await supabase.from("impact_metrics").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "impact_metrics", targetId: id });
         fetchAll();
     };
 
@@ -118,9 +122,11 @@ const AdminImpact = () => {
         const payload = { ...reportForm, file_url };
         if (editingReport) {
             await supabase.from("esg_reports").update(payload).eq("id", editingReport.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "esg_reports", targetId: editingReport.id, afterData: { title: reportForm.title } });
             toast({ title: "Report updated" });
         } else {
-            await supabase.from("esg_reports").insert(payload);
+            const { data } = await supabase.from("esg_reports").insert(payload).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "esg_reports", targetId: data?.id || null, afterData: { title: reportForm.title } });
             toast({ title: "Report published" });
         }
         setUploading(false);
@@ -134,11 +140,13 @@ const AdminImpact = () => {
     const deleteReport = async (id: string) => {
         if (!confirm("Delete this ESG report?")) return;
         await supabase.from("esg_reports").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "esg_reports", targetId: id });
         fetchAll();
     };
 
     const toggleReport = async (r: Report) => {
         await supabase.from("esg_reports").update({ published: !r.published }).eq("id", r.id);
+        logAdminActivity({ action: "UPDATE", targetTable: "esg_reports", targetId: r.id, afterData: { published: !r.published } });
         fetchAll();
     };
 
@@ -162,9 +170,11 @@ const AdminImpact = () => {
         const payload = { ...awardForm, image_url };
         if (editingAward) {
             await supabase.from("impact_awards").update(payload).eq("id", editingAward.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "impact_awards", targetId: editingAward.id, afterData: { name: awardForm.name } });
             toast({ title: "Award updated" });
         } else {
-            await supabase.from("impact_awards").insert(payload);
+            const { data } = await supabase.from("impact_awards").insert(payload).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "impact_awards", targetId: data?.id || null, afterData: { name: awardForm.name } });
             toast({ title: "Award created" });
         }
         setAwardDialog(false);
@@ -177,6 +187,7 @@ const AdminImpact = () => {
     const deleteAward = async (id: string) => {
         if (!confirm("Delete this award?")) return;
         await supabase.from("impact_awards").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "impact_awards", targetId: id });
         fetchAll();
     };
 

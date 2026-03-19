@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Handshake, Users, ShoppingBag } from "lucide-react";
+import { ArrowRight, Handshake, ShoppingBag } from "lucide-react";
 
 const stats = [
   { value: "5,000+", label: "Farmers Served" },
@@ -75,14 +75,6 @@ const FinalCTA = () => (
                 className="gap-2 font-semibold bg-transparent text-white border border-white/60 hover:bg-white/15 hover:border-white transition-all duration-300"
               >
                 <Handshake className="h-4 w-4" /> Become a Distributor
-              </Button>
-            </Link>
-            <Link to="/community">
-              <Button
-                size="lg"
-                className="gap-2 font-semibold bg-transparent text-white border border-white/60 hover:bg-white/15 hover:border-white transition-all duration-300"
-              >
-                <Users className="h-4 w-4" /> Join Community
               </Button>
             </Link>
           </div>

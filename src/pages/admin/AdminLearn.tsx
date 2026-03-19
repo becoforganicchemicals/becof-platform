@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -197,9 +198,11 @@ const AdminLearn = () => {
         const payload = { ...form, slug: form.slug || slugify(form.title) };
         if (editingArticle) {
             await supabase.from("learn_articles").update(payload).eq("id", editingArticle.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "learn_articles", targetId: editingArticle.id, afterData: { title: form.title } });
             toast({ title: "Article updated ✓" });
         } else {
-            await supabase.from("learn_articles").insert(payload);
+            const { data } = await supabase.from("learn_articles").insert(payload).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "learn_articles", targetId: data?.id || null, afterData: { title: form.title } });
             toast({ title: "Article created ✓" });
             localStorage.removeItem(AUTOSAVE_KEY);
         }
@@ -231,12 +234,14 @@ const AdminLearn = () => {
 
     const togglePublish = async (article: Article) => {
         await supabase.from("learn_articles").update({ published: !article.published }).eq("id", article.id);
+        logAdminActivity({ action: "UPDATE", targetTable: "learn_articles", targetId: article.id, afterData: { published: !article.published } });
         fetchData();
     };
 
     const deleteArticle = async (id: string) => {
         if (!confirm("Delete this article? This cannot be undone.")) return;
         await supabase.from("learn_articles").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "learn_articles", targetId: id });
         fetchData();
     };
 

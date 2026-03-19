@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
@@ -10,7 +9,7 @@ import {
   Truck,
   HeartHandshake,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 
 const highlights = [
   {
@@ -128,16 +127,6 @@ const PlatformHighlights = () => (
         ))}
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="text-center mt-12"
-      >
-        <Link to="/products">
-          <Button className="gap-2">Explore the Platform</Button>
-        </Link>
-      </motion.div>
     </div>
   </section>
 );

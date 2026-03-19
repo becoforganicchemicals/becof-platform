@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,7 +64,8 @@ const AdminInbox = () => {
                 .update({ read: true, replied: true })
                 .eq("id", id);
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
+            logAdminActivity({ action: "UPDATE", targetTable: "contact_messages", targetId: id, afterData: { read: true, replied: true } });
             queryClient.invalidateQueries({ queryKey: ["admin-inbox"] });
             toast({ title: "Marked as replied ✓" });
         },
@@ -74,7 +76,8 @@ const AdminInbox = () => {
         mutationFn: async (id: string) => {
             await supabase.from("contact_messages").delete().eq("id", id);
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
+            logAdminActivity({ action: "DELETE", targetTable: "contact_messages", targetId: id });
             queryClient.invalidateQueries({ queryKey: ["admin-inbox"] });
             if (selectedId === selectedMessage?.id) setSelectedId(null);
             toast({ title: "Message deleted" });

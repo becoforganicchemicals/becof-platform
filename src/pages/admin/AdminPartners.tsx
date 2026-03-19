@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,6 +167,7 @@ const AdminPartners = () => {
             },
         });
 
+        logAdminActivity({ action: "UPDATE", targetTable: "distributor_applications", targetId: selectedApp.id, afterData: { status: newStatus } });
         toast({ title: `Application ${newStatus} — customer notified ✓` });
         setReviewing(false);
         setReviewDialog(false);
@@ -226,9 +228,11 @@ const AdminPartners = () => {
 
         if (editingProfile) {
             await supabase.from("partner_profiles").update(payload).eq("id", editingProfile.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "partner_profiles", targetId: editingProfile.id, afterData: { display_name: profileForm.display_name } });
             toast({ title: "Partner profile updated ✓" });
         } else {
-            await supabase.from("partner_profiles").insert([payload as any]);
+            const { data } = await supabase.from("partner_profiles").insert([payload as any]).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "partner_profiles", targetId: data?.id || null, afterData: { display_name: profileForm.display_name } });
             toast({ title: "Partner profile created ✓" });
         }
 
@@ -241,6 +245,7 @@ const AdminPartners = () => {
     const deleteProfile = async (id: string) => {
         if (!confirm("Delete this partner profile? This cannot be undone.")) return;
         await supabase.from("partner_profiles").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "partner_profiles", targetId: id });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
         toast({ title: "Profile deleted" });
     };
@@ -248,6 +253,7 @@ const AdminPartners = () => {
     /* ─── Toggle published/featured ─── */
     const toggleField = async (id: string, field: "published" | "featured", current: boolean) => {
         await supabase.from("partner_profiles").update({ [field]: !current }).eq("id", id);
+        logAdminActivity({ action: "UPDATE", targetTable: "partner_profiles", targetId: id, afterData: { [field]: !current } });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };
 

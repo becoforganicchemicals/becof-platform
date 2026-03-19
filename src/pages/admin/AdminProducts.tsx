@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,7 +174,13 @@ const AdminProducts = () => {
         setUploading(false);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, product) => {
+      logAdminActivity({
+        action: product.id ? "UPDATE" : "INSERT",
+        targetTable: "products",
+        targetId: product.id || null,
+        afterData: { name: product.name, price: product.price, is_published: product.is_published },
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       setDialogOpen(false);
       resetForm();
@@ -188,7 +195,8 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").update({ is_featured }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_, { is_featured }) => {
+    onSuccess: (_, { id, is_featured }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "products", targetId: id, afterData: { is_featured } });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({ title: is_featured ? "⭐ Product featured on homepage" : "Product removed from featured" });
     },
@@ -200,7 +208,10 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").update({ is_published }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: (_, { id, is_published }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "products", targetId: id, afterData: { is_published } });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
   });
 
   /* ─── Delete ─── */
@@ -209,7 +220,8 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      logAdminActivity({ action: "DELETE", targetTable: "products", targetId: id });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({ title: "Product deleted" });
     },

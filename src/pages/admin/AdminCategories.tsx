@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -52,7 +53,8 @@ const AdminCategories = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, cat) => {
+      logAdminActivity({ action: cat.id ? "UPDATE" : "INSERT", targetTable: "categories", targetId: cat.id || null, afterData: { name: cat.name, slug: cat.slug } });
       queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] });
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       setDialogOpen(false);
@@ -67,7 +69,10 @@ const AdminCategories = () => {
       const { error } = await supabase.from("categories").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] }),
+    onSuccess: (_, { id, is_active }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "categories", targetId: id, afterData: { is_active } });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] });
+    },
   });
 
   const deleteCategory = useMutation({
@@ -75,7 +80,8 @@ const AdminCategories = () => {
       const { error } = await supabase.from("categories").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      logAdminActivity({ action: "DELETE", targetTable: "categories", targetId: id });
       queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] });
       toast({ title: "Category deleted" });
     },

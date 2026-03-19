@@ -9,6 +9,7 @@ import {
     Clock, MessageSquare, Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -82,6 +83,7 @@ const AdminTestimonials = () => {
             toast.error("Failed to update testimonial");
         } else {
             toast.success(status === "approved" ? "Testimonial approved and featured" : "Testimonial rejected");
+            logAdminActivity({ action: "UPDATE", targetTable: "testimonials", targetId: id, afterData: { status, featured: status === "approved" } });
             fetchTestimonials();
         }
         setActionId(null);
@@ -98,6 +100,7 @@ const AdminTestimonials = () => {
             .eq("id", t.id);
 
         if (!error) {
+            logAdminActivity({ action: "UPDATE", targetTable: "testimonials", targetId: t.id, afterData: { featured: !t.featured } });
             toast.success(t.featured ? "Removed from landing page" : "Now featured on landing page");
             fetchTestimonials();
         }

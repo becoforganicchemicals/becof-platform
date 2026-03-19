@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,7 +123,8 @@ const AdminCareers = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, job) => {
+      logAdminActivity({ action: job.id ? "UPDATE" : "INSERT", targetTable: "job_positions", targetId: job.id || null, afterData: { title: job.title, type: job.type } });
       queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
       setJobDialogOpen(false);
       setJobForm(blankJob());
@@ -140,7 +142,10 @@ const AdminCareers = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-jobs"] }),
+    onSuccess: (_, { id, is_active }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "job_positions", targetId: id, afterData: { is_active } });
+      queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
+    },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
@@ -152,7 +157,8 @@ const AdminCareers = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, { id, status }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "career_applications", targetId: id, afterData: { status } });
       queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
       toast({ title: "Status updated" });
     },

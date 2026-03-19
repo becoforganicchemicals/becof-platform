@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,7 +85,8 @@ const AdminUsers = () => {
       const { error } = await supabase.from("user_roles").update({ role }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, { id, role }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "user_roles", targetId: id, afterData: { role } });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast({ title: "Role updated successfully" });
     },
@@ -100,6 +102,7 @@ const AdminUsers = () => {
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "profiles", targetId: vars.userId, afterData: { status: vars.suspend ? "suspended" : "active" } });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast({ title: vars.suspend ? "User suspended" : "User reactivated" });
     },
