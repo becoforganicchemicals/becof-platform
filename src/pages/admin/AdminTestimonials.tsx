@@ -9,6 +9,7 @@ import {
     Clock, MessageSquare, Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
