@@ -227,9 +227,11 @@ const AdminPartners = () => {
 
         if (editingProfile) {
             await supabase.from("partner_profiles").update(payload).eq("id", editingProfile.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "partner_profiles", targetId: editingProfile.id, afterData: { display_name: profileForm.display_name } });
             toast({ title: "Partner profile updated ✓" });
         } else {
-            await supabase.from("partner_profiles").insert([payload as any]);
+            const { data } = await supabase.from("partner_profiles").insert([payload as any]).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "partner_profiles", targetId: data?.id || null, afterData: { display_name: profileForm.display_name } });
             toast({ title: "Partner profile created ✓" });
         }
 
