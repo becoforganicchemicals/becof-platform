@@ -119,7 +119,8 @@ const AdminOrders = () => {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, { id, status }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "orders", targetId: id, afterData: { status } });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       toast({ title: "Order updated & customer notified ✓" });
     },
