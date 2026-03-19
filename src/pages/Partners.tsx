@@ -276,9 +276,6 @@ const Partners = () => {
                       <label className="text-xs font-medium text-slate-500 block mb-1">Years in Business</label>
                       <Input name="years_in_business" type="number" min={0} value={form.years_in_business} onChange={handleChange} placeholder="e.g. 5" />
                     </div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">Years in Business</label>
-                      <Input name="years_in_business" type="number" min={0} value={form.years_in_business} onChange={handleChange} placeholder="e.g. 5" />
-                    </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 block mb-1">County *</label>
                       <select name="county" value={form.county} onChange={handleChange} required
