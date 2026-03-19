@@ -195,7 +195,8 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").update({ is_featured }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_, { is_featured }) => {
+    onSuccess: (_, { id, is_featured }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "products", targetId: id, afterData: { is_featured } });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({ title: is_featured ? "⭐ Product featured on homepage" : "Product removed from featured" });
     },
