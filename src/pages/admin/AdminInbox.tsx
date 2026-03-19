@@ -64,7 +64,8 @@ const AdminInbox = () => {
                 .update({ read: true, replied: true })
                 .eq("id", id);
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
+            logAdminActivity({ action: "UPDATE", targetTable: "contact_messages", targetId: id, afterData: { read: true, replied: true } });
             queryClient.invalidateQueries({ queryKey: ["admin-inbox"] });
             toast({ title: "Marked as replied ✓" });
         },
