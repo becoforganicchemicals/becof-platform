@@ -21,14 +21,6 @@ const benefits = [
   { icon: CheckCircle, title: "Full Support", desc: "Training, marketing materials, and a dedicated account manager for every partner." },
 ];
 
-const faqs = [
-  { q: "What are the requirements to become a distributor?", a: "You need a valid business registration, appropriate storage facilities for agricultural products, and a genuine commitment to our sustainability standards. Agrovets, cooperatives, and wholesale dealers are especially encouraged to apply." },
-  { q: "What territories are available?", a: "We are actively expanding across all 47 counties in Kenya. Priority is given to underserved agricultural regions. Contact us for specific availability in your area." },
-  { q: "What margins can I expect?", a: "Distributor margins range from 15–30% depending on volume and product category. High-volume partners qualify for additional incentives and exclusive territory rights." },
-  { q: "How long does the approval process take?", a: "Applications are reviewed within 5–10 business days. You will receive email updates at every stage — submission, review, and final decision." },
-  { q: "Do I need prior experience in agricultural chemicals?", a: "Prior experience is an advantage but not mandatory. We provide comprehensive product training and onboarding support for all approved partners." },
-];
-
 const APPLICANT_TYPES = [
   { value: "agrovet", label: "Agrovet / Agricultural Input Shop" },
   { value: "cooperative", label: "Farmer Cooperative / SACCO" },
@@ -478,33 +470,6 @@ const Partners = () => {
         </section>
       )}
 
-      {/* ── FAQs ── */}
-      <section className="py-16 bg-white">
-        <div className="container max-w-2xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-3xl font-bold text-center mb-8 text-slate-900">Frequently Asked Questions</h2>
-            <div className="space-y-3">
-              {faqs.map((faq, i) => (
-                <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between p-5 text-left font-medium text-slate-800 hover:text-emerald-700 transition-colors"
-                  >
-                    {faq.q}
-                    <ChevronDown className={`h-4 w-4 shrink-0 ml-4 transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
-                  </button>
-                  {openFaq === i && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className="px-5 pb-5 text-sm text-slate-500 leading-relaxed">
-                      {faq.a}
-                    </motion.div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
     </Layout>
   );
 };
