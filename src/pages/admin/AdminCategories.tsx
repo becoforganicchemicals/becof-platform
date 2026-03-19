@@ -69,7 +69,10 @@ const AdminCategories = () => {
       const { error } = await supabase.from("categories").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] }),
+    onSuccess: (_, { id, is_active }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "categories", targetId: id, afterData: { is_active } });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] });
+    },
   });
 
   const deleteCategory = useMutation({
