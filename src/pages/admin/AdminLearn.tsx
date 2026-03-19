@@ -198,9 +198,11 @@ const AdminLearn = () => {
         const payload = { ...form, slug: form.slug || slugify(form.title) };
         if (editingArticle) {
             await supabase.from("learn_articles").update(payload).eq("id", editingArticle.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "learn_articles", targetId: editingArticle.id, afterData: { title: form.title } });
             toast({ title: "Article updated ✓" });
         } else {
-            await supabase.from("learn_articles").insert(payload);
+            const { data } = await supabase.from("learn_articles").insert(payload).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "learn_articles", targetId: data?.id || null, afterData: { title: form.title } });
             toast({ title: "Article created ✓" });
             localStorage.removeItem(AUTOSAVE_KEY);
         }
