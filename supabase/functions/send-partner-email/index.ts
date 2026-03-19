@@ -301,7 +301,7 @@ serve(async (req) => {
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     // ── Application Rejected ──
