@@ -83,6 +83,7 @@ const AdminImpact = () => {
     const deleteMetric = async (id: string) => {
         if (!confirm("Delete this metric?")) return;
         await supabase.from("impact_metrics").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "impact_metrics", targetId: id });
         fetchAll();
     };
 
