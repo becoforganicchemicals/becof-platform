@@ -332,12 +332,12 @@ serve(async (req) => {
             </p>
             <p style="color:#475569;font-size:14px;">
               For further clarification, please contact our partnerships team at
-              <a href="mailto:partners@becoforganicchemicals.com" style="color:#16a34a;">partners@becoforganicchemicals.com</a>
+              <a href="mailto:info@becoforganic.com" style="color:#16a34a;">info@becoforganic.com</a>
             </p>
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     return new Response(JSON.stringify({ success: true }), {
