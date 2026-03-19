@@ -146,6 +146,7 @@ const AdminImpact = () => {
 
     const toggleReport = async (r: Report) => {
         await supabase.from("esg_reports").update({ published: !r.published }).eq("id", r.id);
+        logAdminActivity({ action: "UPDATE", targetTable: "esg_reports", targetId: r.id, afterData: { published: !r.published } });
         fetchAll();
     };
 
