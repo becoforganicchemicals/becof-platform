@@ -123,7 +123,8 @@ const AdminCareers = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, job) => {
+      logAdminActivity({ action: job.id ? "UPDATE" : "INSERT", targetTable: "job_positions", targetId: job.id || null, afterData: { title: job.title, type: job.type } });
       queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
       setJobDialogOpen(false);
       setJobForm(blankJob());
