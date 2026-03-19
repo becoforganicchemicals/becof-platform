@@ -234,6 +234,7 @@ const AdminLearn = () => {
 
     const togglePublish = async (article: Article) => {
         await supabase.from("learn_articles").update({ published: !article.published }).eq("id", article.id);
+        logAdminActivity({ action: "UPDATE", targetTable: "learn_articles", targetId: article.id, afterData: { published: !article.published } });
         fetchData();
     };
 
