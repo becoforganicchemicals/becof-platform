@@ -142,7 +142,10 @@ const AdminCareers = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-jobs"] }),
+    onSuccess: (_, { id, is_active }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "job_positions", targetId: id, afterData: { is_active } });
+      queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
+    },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
