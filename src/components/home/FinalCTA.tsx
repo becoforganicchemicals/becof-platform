@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Handshake, Users, ShoppingBag } from "lucide-react";
+import { ArrowRight, Handshake, ShoppingBag } from "lucide-react";
 
 const stats = [
   { value: "5,000+", label: "Farmers Served" },
