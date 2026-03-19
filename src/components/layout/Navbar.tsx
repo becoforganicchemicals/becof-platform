@@ -34,7 +34,7 @@ const getRoleConfig = (role: string | null) => {
     case "admin":
       return { label: "Admin", icon: Shield, portalPath: "/admin", portalLabel: "Admin Portal" };
     case "distributor":
-      return { label: "Distributor", icon: Truck, portalPath: "/profile", portalLabel: "Distributor Portal" };
+      return { label: "Distributor", icon: Truck, portalPath: "/distributor", portalLabel: "Distributor Dashboard" };
     case "farmer":
     default:
       return { label: "Farmer", icon: Tractor, portalPath: "/profile", portalLabel: "My Profile" };

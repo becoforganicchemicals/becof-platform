@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useLocation, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,7 +14,6 @@ import { ArrowLeft, CheckCircle, Smartphone, Loader2, RefreshCw } from "lucide-r
 type CheckoutStep = "details" | "mpesa" | "polling" | "success";
 
 const Checkout = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
@@ -29,7 +28,14 @@ const Checkout = () => {
   const [orderId, setOrderId] = useState("");
   const [orderRef, setOrderRef] = useState("");
   const [receipt, setReceipt] = useState("");
-  const [pollCount, setPollCount] = useState(0);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clear polling interval on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -112,18 +118,19 @@ const Checkout = () => {
     toast.success("Check your phone — enter your M-Pesa PIN to pay");
     setSubmitting(false);
     setStep("polling");
-    setPollCount(0);
     pollForPayment();
   };
 
   /* ── Step 3: Poll DB for payment confirmation ── */
   const pollForPayment = () => {
+    // Clear any existing interval before starting a new one
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+
     let attempts = 0;
     const maxAttempts = 20; // poll for ~60s
 
-    const interval = setInterval(async () => {
+    pollIntervalRef.current = setInterval(async () => {
       attempts++;
-      setPollCount(attempts);
 
       const { data } = await supabase
         .from("orders")
@@ -132,14 +139,14 @@ const Checkout = () => {
         .single();
 
       if (data?.payment_status === "paid") {
-        clearInterval(interval);
+        clearInterval(pollIntervalRef.current!);
+        pollIntervalRef.current = null;
         setReceipt(data.mpesa_receipt_number || "");
         await clearCart();
         setStep("success");
-      }
-
-      if (attempts >= maxAttempts) {
-        clearInterval(interval);
+      } else if (attempts >= maxAttempts) {
+        clearInterval(pollIntervalRef.current!);
+        pollIntervalRef.current = null;
         toast.error("Payment timeout. If you paid, check your orders in your profile.");
       }
     }, 3000);
@@ -167,17 +174,17 @@ const Checkout = () => {
   if (step === "success") return (
     <Layout>
       <div className="container py-20 max-w-lg mx-auto text-center">
-        <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-sm">
-          <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment Confirmed!</h1>
-          <p className="text-slate-500 mb-1">Order #{orderRef}</p>
-          {receipt && <p className="text-sm text-emerald-600 font-medium mb-4">M-Pesa Receipt: {receipt}</p>}
-          <p className="text-sm text-slate-500 mb-8">
+        <div className="bg-card rounded-2xl border border-border p-10 shadow-sm">
+          <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
+          <h1 className="text-3xl font-bold mb-2">Payment Confirmed!</h1>
+          <p className="text-muted-foreground mb-1">Order #{orderRef}</p>
+          {receipt && <p className="text-sm text-primary font-medium mb-4">M-Pesa Receipt: {receipt}</p>}
+          <p className="text-sm text-muted-foreground mb-8">
             A confirmation email has been sent to you. We'll notify you when your order is dispatched.
           </p>
           <div className="flex gap-3 justify-center">
             <Link to="/profile"><Button variant="outline">View My Orders</Button></Link>
-            <Link to="/products"><Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Continue Shopping</Button></Link>
+            <Link to="/products"><Button>Continue Shopping</Button></Link>
           </div>
         </div>
       </div>
@@ -188,35 +195,35 @@ const Checkout = () => {
   if (step === "polling") return (
     <Layout>
       <div className="container py-20 max-w-lg mx-auto text-center">
-        <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-sm">
-          <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Smartphone className="h-8 w-8 text-emerald-600" />
+        <div className="bg-card rounded-2xl border border-border p-10 shadow-sm">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Smartphone className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Enter Your PIN</h1>
-          <p className="text-slate-500 mb-6">
-            An M-Pesa prompt has been sent to <span className="font-semibold text-slate-700">{mpesaPhone}</span>.<br />
-            Please enter your PIN to complete payment of <span className="font-semibold text-emerald-600">KES {total.toLocaleString()}</span>.
+          <h1 className="text-2xl font-bold mb-2">Enter Your PIN</h1>
+          <p className="text-muted-foreground mb-6">
+            An M-Pesa prompt has been sent to <span className="font-semibold text-foreground">{mpesaPhone}</span>.<br />
+            Please enter your PIN to complete payment of <span className="font-semibold text-primary">KES {total.toLocaleString()}</span>.
           </p>
 
-          <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mb-6">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
             <Loader2 className="h-4 w-4 animate-spin" />
             Waiting for payment confirmation…
           </div>
 
-          <div className="bg-slate-50 rounded-xl p-4 mb-6 text-left text-sm">
-            <p className="font-medium text-slate-700 mb-1">Paying to:</p>
-            <p className="text-slate-600">Becof Organic Chemicals Limited</p>
-            <p className="text-slate-500 text-xs mt-1">Order #{orderRef}</p>
+          <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left text-sm">
+            <p className="font-medium text-foreground mb-1">Paying to:</p>
+            <p className="text-muted-foreground">Becof Organic Chemicals Limited</p>
+            <p className="text-muted-foreground text-xs mt-1">Order #{orderRef}</p>
           </div>
 
           <Button
             variant="outline"
             className="w-full gap-2"
-            onClick={() => { setPollCount(0); handleStkPush(); }}
+            onClick={() => handleStkPush()}
           >
             <RefreshCw className="h-4 w-4" /> Resend Payment Request
           </Button>
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-muted-foreground mt-3">
             Didn't receive a prompt? Check your phone is on and has M-Pesa enabled, then resend.
           </p>
         </div>
@@ -232,33 +239,31 @@ const Checkout = () => {
           <ArrowLeft className="h-4 w-4" /> Back to details
         </button>
 
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+        <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-              <Smartphone className="h-5 w-5 text-emerald-600" />
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+              <Smartphone className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Pay via M-Pesa</h1>
-              <p className="text-sm text-slate-500">Order #{orderRef}</p>
+              <h1 className="text-xl font-bold">Pay via M-Pesa</h1>
+              <p className="text-sm text-muted-foreground">Order #{orderRef}</p>
             </div>
           </div>
 
           {/* Amount summary */}
-          <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6">
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
             <div className="flex justify-between items-center">
-              <span className="text-slate-600 text-sm">Amount to Pay</span>
-              <span className="text-2xl font-bold text-emerald-700">KES {total.toLocaleString()}</span>
+              <span className="text-muted-foreground text-sm">Amount to Pay</span>
+              <span className="text-2xl font-bold text-primary">KES {total.toLocaleString()}</span>
             </div>
             {discount > 0 && (
-              <p className="text-xs text-emerald-600 mt-1">Includes discount of KES {discount.toLocaleString()}</p>
+              <p className="text-xs text-primary mt-1">Includes discount of KES {discount.toLocaleString()}</p>
             )}
           </div>
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="mpesaPhone" className="text-sm font-medium text-slate-700">
-                M-Pesa Phone Number
-              </Label>
+              <Label htmlFor="mpesaPhone">M-Pesa Phone Number</Label>
               <Input
                 id="mpesaPhone"
                 placeholder="07XX XXX XXX or 2547XX XXX XXX"
@@ -266,7 +271,7 @@ const Checkout = () => {
                 onChange={e => setMpesaPhone(e.target.value)}
                 className="mt-1"
               />
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 You will receive an STK push on this number to enter your PIN.
               </p>
             </div>
@@ -274,15 +279,15 @@ const Checkout = () => {
             <Button
               onClick={handleStkPush}
               disabled={submitting || !mpesaPhone}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-base gap-2"
+              className="w-full h-12 text-base gap-2"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
               {submitting ? "Sending request…" : "Send M-Pesa Request"}
             </Button>
           </div>
 
-          <div className="mt-6 p-4 bg-slate-50 rounded-xl text-xs text-slate-500 space-y-1">
-            <p className="font-medium text-slate-600">How it works:</p>
+          <div className="mt-6 p-4 bg-muted/50 rounded-xl text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">How it works:</p>
             <p>1. Click "Send M-Pesa Request"</p>
             <p>2. A pop-up will appear on your phone</p>
             <p>3. Enter your M-Pesa PIN to confirm payment</p>
@@ -332,7 +337,7 @@ const Checkout = () => {
                 <p className="font-medium mb-1">📦 Delivery Fee</p>
                 <p>Delivery is not free. Our sales team will contact you to confirm the delivery fee based on your location before dispatch.</p>
               </div>
-              <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="lg" disabled={submitting}>
+              <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Processing…</> : `Continue to Payment · KES ${total.toLocaleString()}`}
               </Button>
             </form>
@@ -350,10 +355,10 @@ const Checkout = () => {
               </div>
               <div className="border-t border-border pt-2 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
-                {discount > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-KES {discount.toLocaleString()}</span></div>}
-                <div className="flex justify-between font-bold text-lg pt-1"><span>Total</span><span className="text-emerald-600">KES {total.toLocaleString()}</span></div>
+                {discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-KES {discount.toLocaleString()}</span></div>}
+                <div className="flex justify-between font-bold text-lg pt-1"><span>Total</span><span className="text-primary">KES {total.toLocaleString()}</span></div>
               </div>
-              <p className="text-xs text-slate-400 pt-2">+ Delivery fee (confirmed by sales team)</p>
+              <p className="text-xs text-muted-foreground pt-2">+ Delivery fee (confirmed by sales team)</p>
             </div>
           </div>
         </div>

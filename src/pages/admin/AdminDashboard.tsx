@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -238,6 +238,17 @@ const AdminProfile = () => {
     phone: profile?.phone || "",
     bio: profile?.bio || "",
   });
+
+  // Sync form when profile data arrives from auth context
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        full_name: profile.full_name || "",
+        phone: profile.phone || "",
+        bio: profile.bio || "",
+      });
+    }
+  }, [profile]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [passwords, setPasswords] = useState({ new_password: "", confirm: "" });
   const [saving, setSaving] = useState(false);

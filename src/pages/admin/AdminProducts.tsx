@@ -270,30 +270,30 @@ const AdminProducts = () => {
       {/* ── Header ── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900">
-            <Package className="h-5 w-5 text-emerald-600" />
+          <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
+            <Package className="h-5 w-5 text-primary" />
             Products
           </h2>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {products.length} total · {featuredCount} featured · {products.filter(p => p.is_published).length} active
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => refetch()} className="gap-1.5 text-slate-500">
+          <Button variant="ghost" size="sm" onClick={() => refetch()} className="gap-1.5 text-muted-foreground">
             <RefreshCw className="h-4 w-4" />
           </Button>
           {/* view toggle */}
-          <div className="flex border border-slate-200 rounded-lg overflow-hidden">
+          <div className="flex border border-border rounded-lg overflow-hidden">
             <button
               onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 transition-colors ${viewMode === "list" ? "bg-emerald-600 text-white" : "text-slate-400 hover:bg-slate-50"}`}
+              className={`px-3 py-1.5 transition-colors ${viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/20"}`}
             >
               <List className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode("grid")}
-              className={`px-3 py-1.5 transition-colors ${viewMode === "grid" ? "bg-emerald-600 text-white" : "text-slate-400 hover:bg-slate-50"}`}
+              className={`px-3 py-1.5 transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/20"}`}
             >
               <LayoutGrid className="h-4 w-4" />
             </button>
@@ -303,7 +303,7 @@ const AdminProducts = () => {
             <DialogTrigger asChild>
               <Button
                 disabled={noCategoriesExist}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="gap-2"
               >
                 <Plus className="h-4 w-4" /> Add Product
               </Button>
@@ -312,8 +312,8 @@ const AdminProducts = () => {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   {editingProduct
-                    ? <><Edit className="h-4 w-4 text-emerald-600" /> Edit Product</>
-                    : <><Plus className="h-4 w-4 text-emerald-600" /> New Product</>
+                    ? <><Edit className="h-4 w-4 text-primary" /> Edit Product</>
+                    : <><Plus className="h-4 w-4 text-primary" /> New Product</>
                   }
                 </DialogTitle>
               </DialogHeader>
@@ -324,9 +324,9 @@ const AdminProducts = () => {
               >
                 {/* Section: Basic Info */}
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Basic Info</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Basic Info</p>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-500">Product Name *</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">Product Name *</Label>
                     <Input
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value, slug: generateSlug(e.target.value) }))}
@@ -336,17 +336,17 @@ const AdminProducts = () => {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-500">Slug</Label>
-                    <Input value={form.slug} readOnly className="mt-1 font-mono text-sm text-slate-400 bg-slate-50" />
+                    <Label className="text-xs font-semibold text-muted-foreground">Slug</Label>
+                    <Input value={form.slug} readOnly className="mt-1 font-mono text-sm text-muted-foreground bg-muted/30" />
                   </div>
                 </div>
 
                 {/* Section: Category */}
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Category</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Category</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold text-slate-500">Category *</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">Category *</Label>
                       <Select
                         value={form.parent_category_id}
                         onValueChange={v => setForm(f => ({ ...f, parent_category_id: v, subcategory_id: "" }))}
@@ -358,7 +358,7 @@ const AdminProducts = () => {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-slate-500">Subcategory</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">Subcategory</Label>
                       <Select
                         value={form.subcategory_id}
                         onValueChange={v => setForm(f => ({ ...f, subcategory_id: v }))}
@@ -377,10 +377,10 @@ const AdminProducts = () => {
 
                 {/* Section: Pricing & Stock */}
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pricing & Stock</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Pricing & Stock</p>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold text-slate-500">Price (KES) *</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">Price (KES) *</Label>
                       <Input
                         type="number" min="0" className="mt-1"
                         value={form.price}
@@ -389,7 +389,7 @@ const AdminProducts = () => {
                       />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-slate-500">Stock Qty *</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">Stock Qty *</Label>
                       <Input
                         type="number" min="0" className="mt-1"
                         value={form.stock_quantity}
@@ -398,17 +398,17 @@ const AdminProducts = () => {
                       />
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-slate-500">SKU</Label>
-                      <Input value={form.sku} readOnly className="mt-1 font-mono text-xs text-slate-400 bg-slate-50" />
+                      <Label className="text-xs font-semibold text-muted-foreground">SKU</Label>
+                      <Input value={form.sku} readOnly className="mt-1 font-mono text-xs text-muted-foreground bg-muted/30" />
                     </div>
                   </div>
                 </div>
 
                 {/* Section: Descriptions */}
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Descriptions</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Descriptions</p>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-500">Short Description</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">Short Description</Label>
                     <Input
                       className="mt-1" value={form.short_description}
                       onChange={e => setForm(f => ({ ...f, short_description: e.target.value }))}
@@ -416,14 +416,14 @@ const AdminProducts = () => {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-500">Full Description</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">Full Description</Label>
                     <Textarea
                       rows={3} className="mt-1 resize-none" value={form.long_description}
                       onChange={e => setForm(f => ({ ...f, long_description: e.target.value }))}
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-500">Usage Instructions</Label>
+                    <Label className="text-xs font-semibold text-muted-foreground">Usage Instructions</Label>
                     <Textarea
                       rows={3} className="mt-1 resize-none" value={form.usage_instructions}
                       onChange={e => setForm(f => ({ ...f, usage_instructions: e.target.value }))}
@@ -434,31 +434,31 @@ const AdminProducts = () => {
 
                 {/* Section: Media */}
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Media</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Media</p>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-emerald-400 transition-colors">
-                      <Upload className="h-5 w-5 text-slate-300 mx-auto mb-1.5" />
-                      <Label className="cursor-pointer text-xs text-slate-500">
+                    <div className="border border-dashed border-border rounded-xl p-4 text-center hover:border-primary/40 transition-colors">
+                      <Upload className="h-5 w-5 text-muted-foreground/40 mx-auto mb-1.5" />
+                      <Label className="cursor-pointer text-xs text-muted-foreground">
                         Product Image
                         <Input type="file" accept="image/*" className="hidden" onChange={e => setImageFile(e.target.files?.[0] || null)} />
                       </Label>
                       {imageFile
-                        ? <p className="text-xs text-emerald-600 mt-1 truncate">{imageFile.name}</p>
+                        ? <p className="text-xs text-primary mt-1 truncate">{imageFile.name}</p>
                         : editingProduct?.images?.[0]
-                          ? <p className="text-xs text-slate-400 mt-1">Current image set</p>
+                          ? <p className="text-xs text-muted-foreground mt-1">Current image set</p>
                           : null
                       }
                     </div>
-                    <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-emerald-400 transition-colors">
-                      <FileText className="h-5 w-5 text-slate-300 mx-auto mb-1.5" />
-                      <Label className="cursor-pointer text-xs text-slate-500">
+                    <div className="border border-dashed border-border rounded-xl p-4 text-center hover:border-primary/40 transition-colors">
+                      <FileText className="h-5 w-5 text-muted-foreground/40 mx-auto mb-1.5" />
+                      <Label className="cursor-pointer text-xs text-muted-foreground">
                         Safety Sheet (PDF)
                         <Input type="file" accept=".pdf" className="hidden" onChange={e => setPdfFile(e.target.files?.[0] || null)} />
                       </Label>
                       {pdfFile
-                        ? <p className="text-xs text-emerald-600 mt-1 truncate">{pdfFile.name}</p>
+                        ? <p className="text-xs text-primary mt-1 truncate">{pdfFile.name}</p>
                         : editingProduct?.safety_sheet_url
-                          ? <p className="text-xs text-slate-400 mt-1">Current PDF set</p>
+                          ? <p className="text-xs text-muted-foreground mt-1">Current PDF set</p>
                           : null
                       }
                     </div>
@@ -467,12 +467,12 @@ const AdminProducts = () => {
 
                 {/* Section: Visibility & Feature */}
                 <div className="space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Visibility</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Visibility</p>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-center justify-between py-3 px-4 bg-muted/30 rounded-xl border border-border/50">
                       <div>
-                        <p className="text-sm font-medium text-slate-800">Published</p>
-                        <p className="text-xs text-slate-400">Visible to customers in the store.</p>
+                        <p className="text-sm font-medium text-foreground">Published</p>
+                        <p className="text-xs text-muted-foreground">Visible to customers in the store.</p>
                       </div>
                       <Switch
                         checked={form.is_published}
@@ -483,8 +483,8 @@ const AdminProducts = () => {
                       <div className="flex items-start gap-2">
                         <Star className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-sm font-medium text-slate-800">Featured on Homepage</p>
-                          <p className="text-xs text-slate-400">Displays this product in the Featured Products section.</p>
+                          <p className="text-sm font-medium text-foreground">Featured on Homepage</p>
+                          <p className="text-xs text-muted-foreground">Displays this product in the Featured Products section.</p>
                         </div>
                       </div>
                       <Switch
@@ -498,7 +498,7 @@ const AdminProducts = () => {
                 <Button
                   type="submit"
                   disabled={upsertProduct.isPending || uploading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2 h-11"
+                  className="w-full gap-2 h-11"
                 >
                   {(upsertProduct.isPending || uploading)
                     ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
@@ -524,15 +524,15 @@ const AdminProducts = () => {
       {/* ── Stats bar ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total", value: products.length, color: "bg-slate-50 border-slate-200 text-slate-700", filter: "all" as const },
-          { label: "Active", value: products.filter(p => p.is_published).length, color: "bg-emerald-50 border-emerald-200 text-emerald-700", filter: "active" as const },
+          { label: "Total", value: products.length, color: "bg-muted/50 border-border text-foreground", filter: "all" as const },
+          { label: "Active", value: products.filter(p => p.is_published).length, color: "bg-primary/10 border-primary/30 text-primary", filter: "active" as const },
           { label: "Featured", value: featuredCount, color: "bg-amber-50 border-amber-200 text-amber-700", filter: "featured" as const },
           { label: "Low Stock", value: lowStockProducts.length, color: "bg-red-50 border-red-200 text-red-700", filter: "low_stock" as const },
         ].map(s => (
           <button
             key={s.label}
             onClick={() => setFilterStatus(filterStatus === s.filter ? "all" : s.filter)}
-            className={`rounded-xl border p-4 text-left transition-all hover:shadow-sm ${s.color} ${filterStatus === s.filter ? "ring-2 ring-offset-1 ring-emerald-400" : ""}`}
+            className={`rounded-xl border p-4 text-left transition-all hover:shadow-sm ${s.color} ${filterStatus === s.filter ? "ring-2 ring-offset-1 ring-primary/40" : ""}`}
           >
             <p className="text-2xl font-bold">{s.value}</p>
             <p className="text-xs font-medium mt-0.5">{s.label}</p>
@@ -542,7 +542,7 @@ const AdminProducts = () => {
 
       {/* ── Search ── */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search by name or SKU…"
           className="pl-9"
@@ -553,23 +553,23 @@ const AdminProducts = () => {
 
       {/* ══════════ LIST VIEW ══════════ */}
       {viewMode === "list" && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
           {/* table header */}
-          <div className="grid grid-cols-[2fr_1fr_1fr_80px_80px_80px_80px_100px] gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50">
+          <div className="grid grid-cols-[2fr_1fr_1fr_80px_80px_80px_80px_100px] gap-3 px-5 py-3 border-b border-border/50 bg-muted/30">
             {["Product", "Category", "SKU", "Price", "Stock", "Published", "Featured", "Actions"].map(h => (
-              <p key={h} className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{h}</p>
+              <p key={h} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{h}</p>
             ))}
           </div>
 
           {isLoading && (
-            <div className="flex items-center justify-center py-16 text-slate-400">
+            <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
               <span className="text-sm">Loading…</span>
             </div>
           )}
 
           {!isLoading && filtered.length === 0 && (
-            <div className="text-center py-16 text-slate-400">
+            <div className="text-center py-16 text-muted-foreground">
               <Package className="h-8 w-8 mx-auto mb-2 opacity-30" />
               <p className="text-sm">No products found.</p>
             </div>
@@ -584,19 +584,19 @@ const AdminProducts = () => {
             return (
               <div
                 key={p.id}
-                className="grid grid-cols-[2fr_1fr_1fr_80px_80px_80px_80px_100px] gap-3 items-center px-5 py-3.5 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors"
+                className="grid grid-cols-[2fr_1fr_1fr_80px_80px_80px_80px_100px] gap-3 items-center px-5 py-3.5 border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors"
               >
                 {/* Product */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-muted overflow-hidden shrink-0 flex items-center justify-center">
                     {p.images?.[0]
                       ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                      : <Package className="h-4 w-4 text-slate-300" />
+                      : <Package className="h-4 w-4 text-muted-foreground/40" />
                     }
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-800 text-sm truncate">{p.name}</p>
-                    {subName && <p className="text-xs text-slate-400 truncate">{subName}</p>}
+                    <p className="font-medium text-foreground text-sm truncate">{p.name}</p>
+                    {subName && <p className="text-xs text-muted-foreground truncate">{subName}</p>}
                     {p.is_featured && (
                       <span className="inline-flex items-center gap-0.5 text-xs text-amber-600 font-medium">
                         <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> Featured
@@ -606,18 +606,18 @@ const AdminProducts = () => {
                 </div>
 
                 {/* Category */}
-                <p className="text-sm text-slate-500 truncate">{parentName || "—"}</p>
+                <p className="text-sm text-muted-foreground truncate">{parentName || "—"}</p>
 
                 {/* SKU */}
-                <p className="font-mono text-xs text-slate-400 truncate">{p.sku || "—"}</p>
+                <p className="font-mono text-xs text-muted-foreground truncate">{p.sku || "—"}</p>
 
                 {/* Price */}
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-foreground">
                   KES {Number(p.price).toLocaleString()}
                 </p>
 
                 {/* Stock */}
-                <p className={`text-sm font-medium ${isLow ? "text-red-500" : "text-slate-600"}`}>
+                <p className={`text-sm font-medium ${isLow ? "text-red-500" : "text-muted-foreground"}`}>
                   {isLow && <AlertTriangle className="h-3 w-3 inline mr-0.5" />}
                   {p.stock_quantity}
                 </p>
@@ -633,7 +633,7 @@ const AdminProducts = () => {
                   onClick={() => toggleFeatured.mutate({ id: p.id, is_featured: !p.is_featured })}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${p.is_featured
                       ? "bg-amber-100 text-amber-500 hover:bg-amber-200"
-                      : "text-slate-300 hover:bg-slate-100 hover:text-amber-400"
+                      : "text-muted-foreground/40 hover:bg-muted hover:text-amber-400"
                     }`}
                   title={p.is_featured ? "Remove from featured" : "Add to featured"}
                 >
@@ -645,14 +645,14 @@ const AdminProducts = () => {
                   <Button
                     size="sm" variant="ghost"
                     onClick={() => openEdit(p)}
-                    className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                   >
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     size="sm" variant="ghost"
                     onClick={() => { if (confirm(`Delete "${p.name}"?`)) deleteProduct.mutate(p.id); }}
-                    className="h-8 w-8 p-0 text-slate-300 hover:text-red-500 hover:bg-red-50"
+                    className="h-8 w-8 p-0 text-muted-foreground/40 hover:text-red-500 hover:bg-red-50"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -666,20 +666,20 @@ const AdminProducts = () => {
       {/* ══════════ GRID VIEW ══════════ */}
       {viewMode === "grid" && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {isLoading && <p className="col-span-4 text-center text-slate-400 py-10 text-sm animate-pulse">Loading…</p>}
+          {isLoading && <p className="col-span-4 text-center text-muted-foreground py-10 text-sm animate-pulse">Loading…</p>}
           {!isLoading && filtered.length === 0 && (
-            <p className="col-span-4 text-center text-slate-400 py-10 text-sm">No products found.</p>
+            <p className="col-span-4 text-center text-muted-foreground py-10 text-sm">No products found.</p>
           )}
 
           {filtered.map(p => {
             const isLow = p.stock_quantity <= p.low_stock_threshold;
             return (
-              <div key={p.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all group">
+              <div key={p.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-all group">
                 {/* image */}
-                <div className="relative h-40 bg-slate-100">
+                <div className="relative h-40 bg-muted">
                   {p.images?.[0]
                     ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                    : <div className="flex items-center justify-center h-full"><Package className="h-10 w-10 text-slate-200" /></div>
+                    : <div className="flex items-center justify-center h-full"><Package className="h-10 w-10 text-muted-foreground/30" /></div>
                   }
                   {/* featured badge */}
                   {p.is_featured && (
@@ -688,7 +688,7 @@ const AdminProducts = () => {
                     </span>
                   )}
                   {!p.is_published && (
-                    <span className="absolute top-2 right-2 bg-slate-700/70 text-white text-xs px-2 py-0.5 rounded-full">Draft</span>
+                    <span className="absolute top-2 right-2 bg-foreground/70 text-background text-xs px-2 py-0.5 rounded-full">Draft</span>
                   )}
                   {isLow && (
                     <span className="absolute bottom-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">Low Stock</span>
@@ -696,15 +696,15 @@ const AdminProducts = () => {
                 </div>
 
                 <div className="p-4">
-                  <p className="font-semibold text-slate-800 text-sm leading-tight truncate">{p.name}</p>
-                  <p className="text-emerald-700 font-bold mt-1">KES {Number(p.price).toLocaleString()}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Stock: {p.stock_quantity}</p>
+                  <p className="font-semibold text-foreground text-sm leading-tight truncate">{p.name}</p>
+                  <p className="text-primary font-bold mt-1">KES {Number(p.price).toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Stock: {p.stock_quantity}</p>
 
-                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border/50">
                     {/* published */}
                     <button
                       onClick={() => togglePublished.mutate({ id: p.id, is_published: !p.is_published })}
-                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${p.is_published ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${p.is_published ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                         }`}
                     >
                       {p.is_published ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
@@ -714,7 +714,7 @@ const AdminProducts = () => {
                     {/* featured */}
                     <button
                       onClick={() => toggleFeatured.mutate({ id: p.id, is_featured: !p.is_featured })}
-                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${p.is_featured ? "bg-amber-50 text-amber-600" : "bg-slate-50 text-slate-400"
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg transition-colors ${p.is_featured ? "bg-amber-50 text-amber-600" : "bg-muted/30 text-muted-foreground"
                         }`}
                     >
                       <Star className={`h-3 w-3 ${p.is_featured ? "fill-amber-400" : ""}`} />
@@ -723,12 +723,12 @@ const AdminProducts = () => {
 
                     <div className="ml-auto flex gap-1">
                       <Button size="sm" variant="ghost" onClick={() => openEdit(p)} className="h-7 w-7 p-0">
-                        <Edit className="h-3.5 w-3.5 text-slate-400" />
+                        <Edit className="h-3.5 w-3.5 text-muted-foreground" />
                       </Button>
                       <Button
                         size="sm" variant="ghost"
                         onClick={() => { if (confirm(`Delete "${p.name}"?`)) deleteProduct.mutate(p.id); }}
-                        className="h-7 w-7 p-0 text-slate-300 hover:text-red-500 hover:bg-red-50"
+                        className="h-7 w-7 p-0 text-muted-foreground/40 hover:text-red-500 hover:bg-red-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

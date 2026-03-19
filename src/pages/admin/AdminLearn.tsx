@@ -53,8 +53,8 @@ const TB = ({
         className={`
       inline-flex items-center justify-center w-8 h-8 rounded-md text-sm transition-all duration-150
       ${active
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }
     `}
     >
@@ -63,7 +63,7 @@ const TB = ({
 );
 
 /* ─────────────────────────── separator ─────────────────────────── */
-const Sep = () => <div className="w-px h-5 bg-slate-200 mx-1 self-center" />;
+const Sep = () => <div className="w-px h-5 bg-border mx-1 self-center" />;
 
 /* ═══════════════════════════════════════════════════════════════ */
 const AdminLearn = () => {
@@ -98,7 +98,7 @@ const AdminLearn = () => {
         ],
         editorProps: {
             attributes: {
-                class: "focus:outline-none min-h-[320px] prose prose-slate max-w-none text-slate-800 leading-relaxed caret-emerald-600",
+                class: "focus:outline-none min-h-[320px] prose prose-slate max-w-none text-foreground leading-relaxed caret-primary",
             },
         },
         onUpdate: ({ editor }) => {
@@ -272,8 +272,8 @@ const AdminLearn = () => {
             type="button"
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${activeTab === id
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
         >
             {icon} {label}
@@ -286,22 +286,22 @@ const AdminLearn = () => {
             {/* page header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Learn Content</h1>
-                    <p className="text-sm text-slate-500 mt-0.5">{articles.length} articles across {categories.length} categories</p>
+                    <h1 className="text-2xl font-bold text-foreground">Learn Content</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">{articles.length} articles across {categories.length} categories</p>
                 </div>
-                <Button onClick={() => setDialogOpen(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button onClick={() => setDialogOpen(true)} className="gap-2">
                     <Plus className="h-4 w-4" /> New Article
                 </Button>
             </div>
 
             {/* articles list */}
-            <Card className="border border-slate-200 shadow-sm">
-                <CardHeader className="border-b border-slate-100 pb-4">
-                    <CardTitle className="text-base font-semibold text-slate-800">Articles</CardTitle>
+            <Card className="border border-border shadow-sm">
+                <CardHeader className="border-b border-border pb-4">
+                    <CardTitle className="text-base font-semibold text-foreground">Articles</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                     {articles.length === 0 && (
-                        <p className="text-center text-slate-400 py-12 text-sm">No articles yet. Create your first one!</p>
+                        <p className="text-center text-muted-foreground py-12 text-sm">No articles yet. Create your first one!</p>
                     )}
                     {articles.map((article, idx) => (
                         <div
@@ -311,23 +311,23 @@ const AdminLearn = () => {
                             onDragOver={e => handleDragOver(e, idx)}
                             onDrop={handleDrop}
                             className={`
-                flex items-center gap-3 px-5 py-4 border-b border-slate-100 last:border-0 transition-colors
-                ${dragOverIndex === idx ? "bg-emerald-50 border-emerald-300" : "hover:bg-slate-50"}
+                flex items-center gap-3 px-5 py-4 border-b border-border last:border-0 transition-colors
+                ${dragOverIndex === idx ? "bg-primary/10 border-primary/40" : "hover:bg-muted/50"}
                 cursor-grab active:cursor-grabbing
               `}
                         >
-                            <GripVertical className="h-4 w-4 text-slate-300 flex-shrink-0" />
+                            <GripVertical className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                                <p className="font-medium text-slate-900 truncate">{article.title}</p>
-                                <p className="text-xs text-slate-400 mt-0.5 truncate">
+                                <p className="font-medium text-foreground truncate">{article.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate">
                                     /{article.slug} · {categories.find(c => c.id === article.category_id)?.name || "—"}
                                 </p>
                             </div>
                             <Badge
                                 variant={article.published ? "default" : "secondary"}
                                 className={article.published
-                                    ? "bg-emerald-100 text-emerald-700 border-emerald-200 text-xs"
-                                    : "bg-slate-100 text-slate-500 text-xs"
+                                    ? "bg-primary/10 text-primary border-primary/30 text-xs"
+                                    : "bg-muted text-muted-foreground text-xs"
                                 }
                             >
                                 {article.published ? "Published" : "Draft"}
@@ -352,14 +352,14 @@ const AdminLearn = () => {
             <Dialog open={dialogOpen} onOpenChange={open => { if (!open) resetForm(); else setDialogOpen(true); }}>
                 <DialogContent className="max-w-4xl w-full max-h-[95vh] flex flex-col p-0 gap-0 overflow-hidden rounded-xl">
                     {/* dialog header */}
-                    <DialogHeader className="px-6 py-4 border-b border-slate-100 flex-shrink-0">
+                    <DialogHeader className="px-6 py-4 border-b border-border flex-shrink-0">
                         <div className="flex items-center justify-between">
-                            <DialogTitle className="text-lg font-semibold text-slate-900">
+                            <DialogTitle className="text-lg font-semibold text-foreground">
                                 {editingArticle ? "Edit Article" : "New Article"}
                             </DialogTitle>
                             <div className="flex items-center gap-2">
                                 {autoSavedAt && (
-                                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
                                         Auto-saved {autoSavedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                     </span>
@@ -367,7 +367,7 @@ const AdminLearn = () => {
                                 <Button size="sm" variant="outline" onClick={manualSaveDraft} className="h-8 gap-1.5 text-xs">
                                     <Save className="h-3.5 w-3.5" /> Save Draft
                                 </Button>
-                                <Button size="sm" onClick={saveArticle} className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs">
+                                <Button size="sm" onClick={saveArticle} className="h-8 gap-1.5 text-xs">
                                     {editingArticle ? "Update" : "Publish"}
                                 </Button>
                             </div>
@@ -378,7 +378,7 @@ const AdminLearn = () => {
                             <TabPill id="editor" label="Editor" icon={<Pencil className="h-3.5 w-3.5" />} />
                             <TabPill id="preview" label="Preview" icon={<Eye className="h-3.5 w-3.5" />} />
                             <TabPill id="seo" label="SEO" icon={<Search className="h-3.5 w-3.5" />} />
-                            <div className="ml-auto flex items-center gap-2 text-xs text-slate-400">
+                            <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
                                 <BarChart2 className="h-3.5 w-3.5" />
                                 {wordCount} words
                             </div>
@@ -392,24 +392,24 @@ const AdminLearn = () => {
                         {activeTab === "editor" && (
                             <div className="flex flex-col gap-0">
                                 {/* meta fields */}
-                                <div className="px-6 pt-5 pb-4 space-y-3 border-b border-slate-100 bg-slate-50/60">
+                                <div className="px-6 pt-5 pb-4 space-y-3 border-b border-border bg-muted/30">
                                     <Input
                                         placeholder="Article title…"
                                         value={form.title}
-                                        className="text-lg font-semibold border-0 bg-transparent shadow-none px-0 h-auto focus-visible:ring-0 placeholder:text-slate-300"
+                                        className="text-lg font-semibold border-0 bg-transparent shadow-none px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/40"
                                         onChange={e => setForm(prev => ({ ...prev, title: e.target.value, slug: slugify(e.target.value) }))}
                                     />
                                     <div className="grid grid-cols-2 gap-3">
                                         <Input placeholder="Slug (auto-generated)" value={form.slug}
                                             onChange={e => setForm({ ...form, slug: e.target.value })}
-                                            className="text-sm text-slate-500" />
+                                            className="text-sm text-muted-foreground" />
                                         <Input placeholder="Author" value={form.author}
                                             onChange={e => setForm({ ...form, author: e.target.value })}
-                                            className="text-sm text-slate-500" />
+                                            className="text-sm text-muted-foreground" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <select
-                                            className="border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                            className="border border-border rounded-md px-3 py-2 text-sm text-muted-foreground bg-card focus:outline-none focus:ring-2 focus:ring-primary"
                                             value={form.category_id}
                                             onChange={e => setForm({ ...form, category_id: e.target.value })}
                                         >
@@ -417,12 +417,12 @@ const AdminLearn = () => {
                                             {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                                         </select>
                                         <div className="flex items-center gap-2">
-                                            <label className="text-sm text-slate-500 flex items-center gap-2 cursor-pointer select-none">
+                                            <label className="text-sm text-muted-foreground flex items-center gap-2 cursor-pointer select-none">
                                                 <div
                                                     onClick={() => setForm(prev => ({ ...prev, published: !prev.published }))}
-                                                    className={`w-10 h-5 rounded-full transition-colors relative ${form.published ? "bg-emerald-500" : "bg-slate-300"}`}
+                                                    className={`w-10 h-5 rounded-full transition-colors relative ${form.published ? "bg-primary" : "bg-muted-foreground/30"}`}
                                                 >
-                                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.published ? "translate-x-5" : "translate-x-0.5"}`} />
+                                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-card shadow transition-transform ${form.published ? "translate-x-5" : "translate-x-0.5"}`} />
                                                 </div>
                                                 {form.published ? "Published" : "Draft"}
                                             </label>
@@ -438,7 +438,7 @@ const AdminLearn = () => {
                                 </div>
 
                                 {/* toolbar */}
-                                <div className="px-6 py-2 border-b border-slate-100 bg-white sticky top-0 z-10">
+                                <div className="px-6 py-2 border-b border-border bg-card sticky top-0 z-10">
                                     <div className="flex flex-wrap items-center gap-0.5">
                                         {/* text style */}
                                         <TB onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive("bold")} title="Bold (Ctrl+B)">
@@ -496,7 +496,7 @@ const AdminLearn = () => {
 
                                         {/* image align (visible when image selected) */}
                                         <Sep />
-                                        <span className="text-xs text-slate-400 px-1">Image:</span>
+                                        <span className="text-xs text-muted-foreground px-1">Image:</span>
                                         <TB onClick={() => setImageAlign("left")} title="Float image left"><AlignLeft className="h-3.5 w-3.5" /></TB>
                                         <TB onClick={() => setImageAlign("center")} title="Center image"><AlignCenter className="h-3.5 w-3.5" /></TB>
                                         <TB onClick={() => setImageAlign("right")} title="Float image right"><AlignRight className="h-3.5 w-3.5" /></TB>
@@ -514,24 +514,24 @@ const AdminLearn = () => {
                         {activeTab === "preview" && (
                             <div className="px-8 py-8">
                                 {/* SERP preview */}
-                                <div className="mb-6 p-4 border border-slate-200 rounded-lg bg-white">
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide mb-2 font-medium">SERP Preview</p>
+                                <div className="mb-6 p-4 border border-border rounded-lg bg-card">
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">SERP Preview</p>
                                     <p className="text-blue-700 text-lg font-medium leading-tight hover:underline cursor-pointer">
                                         {form.meta_title || form.title || "Article Title"}
                                     </p>
                                     <p className="text-green-700 text-xs mt-0.5">https://becoforganics.com/learn/{form.slug || "article-slug"}</p>
-                                    <p className="text-slate-600 text-sm mt-1 line-clamp-2">
+                                    <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
                                         {form.meta_description || form.excerpt || "No description set."}
                                     </p>
                                 </div>
 
                                 {/* rendered article */}
                                 <div className="max-w-2xl">
-                                    <h1 className="text-3xl font-bold text-slate-900 mb-3">{form.title || "Untitled Article"}</h1>
-                                    {form.excerpt && <p className="text-slate-500 text-lg mb-6 border-l-4 border-emerald-400 pl-4">{form.excerpt}</p>}
+                                    <h1 className="text-3xl font-bold text-foreground mb-3">{form.title || "Untitled Article"}</h1>
+                                    {form.excerpt && <p className="text-muted-foreground text-lg mb-6 border-l-4 border-emerald-400 pl-4">{form.excerpt}</p>}
                                     <div
-                                        className="prose prose-slate max-w-none prose-headings:font-bold prose-a:text-emerald-600 prose-img:rounded-lg"
-                                        dangerouslySetInnerHTML={{ __html: form.content || "<p class='text-slate-300 italic'>Nothing written yet…</p>" }}
+                                        className="prose prose-slate max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
+                                        dangerouslySetInnerHTML={{ __html: form.content || "<p class='text-muted-foreground/40 italic'>Nothing written yet…</p>" }}
                                     />
                                 </div>
                             </div>
@@ -541,27 +541,27 @@ const AdminLearn = () => {
                         {activeTab === "seo" && (
                             <div className="px-6 py-6 space-y-6 max-w-2xl">
                                 <div>
-                                    <h2 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                                        <Search className="h-4 w-4 text-emerald-600" /> SEO Settings
+                                    <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                                        <Search className="h-4 w-4 text-primary" /> SEO Settings
                                     </h2>
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="text-xs text-slate-500 font-medium block mb-1.5">Meta Title</label>
+                                            <label className="text-xs text-muted-foreground font-medium block mb-1.5">Meta Title</label>
                                             <Input
                                                 placeholder="Meta title (50–60 chars ideal)"
                                                 value={form.meta_title}
                                                 onChange={e => setForm({ ...form, meta_title: e.target.value })}
                                             />
                                             <div className="flex justify-between mt-1">
-                                                <span className="text-xs text-slate-400">Leave blank to use article title</span>
-                                                <span className={`text-xs ${form.meta_title.length > 60 ? "text-red-500" : "text-slate-400"}`}>
+                                                <span className="text-xs text-muted-foreground">Leave blank to use article title</span>
+                                                <span className={`text-xs ${form.meta_title.length > 60 ? "text-red-500" : "text-muted-foreground"}`}>
                                                     {form.meta_title.length}/60
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="text-xs text-slate-500 font-medium block mb-1.5">Meta Description</label>
+                                            <label className="text-xs text-muted-foreground font-medium block mb-1.5">Meta Description</label>
                                             <Textarea
                                                 placeholder="Meta description (150–160 chars ideal)"
                                                 value={form.meta_description}
@@ -570,15 +570,15 @@ const AdminLearn = () => {
                                                 className="resize-none"
                                             />
                                             <div className="flex justify-between mt-1">
-                                                <span className="text-xs text-slate-400">Shown in search results</span>
-                                                <span className={`text-xs ${form.meta_description.length > 160 ? "text-red-500" : "text-slate-400"}`}>
+                                                <span className="text-xs text-muted-foreground">Shown in search results</span>
+                                                <span className={`text-xs ${form.meta_description.length > 160 ? "text-red-500" : "text-muted-foreground"}`}>
                                                     {form.meta_description.length}/160
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="text-xs text-slate-500 font-medium block mb-1.5">Canonical Slug</label>
+                                            <label className="text-xs text-muted-foreground font-medium block mb-1.5">Canonical Slug</label>
                                             <Input
                                                 placeholder="article-url-slug"
                                                 value={form.slug}
@@ -593,9 +593,9 @@ const AdminLearn = () => {
                                                 { label: "Title length", value: `${form.title.length} chars` },
                                                 { label: "Read time", value: `~${Math.max(1, Math.ceil(wordCount / 200))} min` },
                                             ].map(stat => (
-                                                <div key={stat.label} className="bg-slate-50 rounded-lg p-3 text-center border border-slate-100">
-                                                    <p className="text-xl font-bold text-emerald-600">{stat.value}</p>
-                                                    <p className="text-xs text-slate-400 mt-0.5">{stat.label}</p>
+                                                <div key={stat.label} className="bg-muted/50 rounded-lg p-3 text-center border border-border">
+                                                    <p className="text-xl font-bold text-primary">{stat.value}</p>
+                                                    <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -603,13 +603,13 @@ const AdminLearn = () => {
                                 </div>
 
                                 {/* SERP live preview */}
-                                <div className="p-4 border border-slate-200 rounded-lg bg-white">
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide mb-3 font-medium">Live SERP Preview</p>
+                                <div className="p-4 border border-border rounded-lg bg-card">
+                                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 font-medium">Live SERP Preview</p>
                                     <p className="text-blue-700 text-base font-medium hover:underline cursor-pointer">
                                         {form.meta_title || form.title || "Article Title"}
                                     </p>
                                     <p className="text-green-700 text-xs mt-0.5">https://becoforganics.com/learn/{form.slug || "article-slug"}</p>
-                                    <p className="text-slate-600 text-sm mt-1">
+                                    <p className="text-muted-foreground text-sm mt-1">
                                         {form.meta_description || form.excerpt || "No description set."}
                                     </p>
                                 </div>

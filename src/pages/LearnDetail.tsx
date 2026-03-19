@@ -111,7 +111,7 @@ const SharePanel = ({
                 size="sm"
                 variant="outline"
                 onClick={() => setOpen(prev => !prev)}
-                className={`gap-1.5 h-8 text-xs transition-all ${open ? "border-emerald-500 text-emerald-700 bg-emerald-50" : ""}`}
+                className={`gap-1.5 h-8 text-xs transition-all ${open ? "border-primary text-primary bg-primary/10" : ""}`}
             >
                 <Share2 className="h-3.5 w-3.5" />
                 Share on
@@ -131,9 +131,9 @@ const SharePanel = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 8 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 top-11 z-50 w-68 bg-white border border-slate-200 rounded-2xl shadow-2xl p-5 min-w-[260px]"
+                        className="absolute right-0 top-11 z-50 w-68 bg-card border border-border rounded-2xl shadow-2xl p-5 min-w-[260px]"
                     >
-                        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-4">
                             Share this article
                         </p>
 
@@ -147,8 +147,8 @@ const SharePanel = ({
                                     rel="noopener noreferrer"
                                     title={s.note || `Share on ${s.label}`}
                                     className={`
-                                        flex flex-col items-center gap-1.5 py-3 rounded-xl border border-slate-200
-                                        text-slate-500 transition-all duration-150 select-none
+                                        flex flex-col items-center gap-1.5 py-3 rounded-xl border border-border
+                                        text-muted-foreground transition-all duration-150 select-none
                                         ${s.bg}
                                     `}
                                 >
@@ -160,27 +160,27 @@ const SharePanel = ({
 
                         {/* divider */}
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="flex-1 h-px bg-slate-100" />
-                            <span className="text-[11px] text-slate-400">or copy link</span>
-                            <div className="flex-1 h-px bg-slate-100" />
+                            <div className="flex-1 h-px bg-muted" />
+                            <span className="text-[11px] text-muted-foreground">or copy link</span>
+                            <div className="flex-1 h-px bg-muted" />
                         </div>
 
                         {/* copy link row */}
                         <button
                             onClick={copyLink}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/60 transition-all group text-left"
+                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all group text-left"
                         >
-                            <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${copied ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400 group-hover:bg-emerald-100 group-hover:text-emerald-600"}`}>
+                            <div className={`p-1.5 rounded-lg shrink-0 transition-colors ${copied ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"}`}>
                                 {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs font-semibold text-slate-700">{copied ? "Copied to clipboard!" : "Copy article link"}</p>
-                                <p className="text-[10px] text-slate-400 truncate">{url}</p>
+                                <p className="text-xs font-semibold text-foreground">{copied ? "Copied to clipboard!" : "Copy article link"}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{url}</p>
                             </div>
                         </button>
 
                         {/* Instagram note */}
-                        <p className="text-[10px] text-slate-400 mt-3 leading-relaxed">
+                        <p className="text-[10px] text-muted-foreground mt-3 leading-relaxed">
                             💡 Instagram doesn't support direct sharing — copy the link above and paste it in your post or story.
                         </p>
                     </motion.div>
@@ -303,7 +303,7 @@ const LearnDetail = () => {
                     <BookOpen className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold mb-2">Article not found</h1>
                     <p className="text-muted-foreground mb-6">This article may have been removed or the link is incorrect.</p>
-                    <Button onClick={() => navigate("/learn")} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <Button onClick={() => navigate("/learn")} className="gap-2">
                         <ArrowLeft className="h-4 w-4" /> Back to Learning Hub
                     </Button>
                 </div>
@@ -344,22 +344,22 @@ const LearnDetail = () => {
             </div>
 
             {/* Article hero */}
-            <section className="bg-gradient-to-br from-green-50 to-emerald-50 border-b border-green-100 py-12">
+            <section className="bg-gradient-to-br from-primary/5 to-primary/10 border-b border-primary/10 py-12">
                 <div className="container max-w-3xl">
                     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                         {category && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200 mb-4">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full border border-primary/20 mb-4">
                                 <CatIcon className="h-3.5 w-3.5" />
                                 {category.name}
                             </span>
                         )}
 
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 leading-tight">
+                        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
                             {article.title}
                         </h1>
 
                         {article.excerpt && (
-                            <p className="text-lg text-slate-600 mb-6 leading-relaxed">{article.excerpt}</p>
+                            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">{article.excerpt}</p>
                         )}
 
                         {/* Meta row */}
@@ -398,16 +398,16 @@ const LearnDetail = () => {
                         <div
                             className="
                                 prose prose-slate max-w-none
-                                prose-headings:font-bold prose-headings:text-slate-900
+                                prose-headings:font-bold prose-headings:text-foreground
                                 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                                prose-p:leading-relaxed prose-p:text-slate-700
-                                prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline
+                                prose-p:leading-relaxed prose-p:text-foreground
+                                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                                 prose-img:rounded-xl prose-img:shadow-md
-                                prose-blockquote:border-emerald-400 prose-blockquote:text-slate-600
-                                prose-code:bg-slate-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                                prose-blockquote:border-primary prose-blockquote:text-muted-foreground
+                                prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
                                 prose-pre:bg-slate-900 prose-pre:text-slate-100
-                                prose-ul:text-slate-700 prose-ol:text-slate-700
-                                prose-strong:text-slate-900
+                                prose-ul:text-foreground prose-ol:text-foreground
+                                prose-strong:text-foreground
                             "
                             dangerouslySetInnerHTML={{ __html: article.content }}
                         />
@@ -440,9 +440,9 @@ const LearnDetail = () => {
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     onClick={() => navigate(`/learn/${r.slug}`)}
-                                    className="group bg-card border border-border rounded-xl p-5 hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer"
+                                    className="group bg-card border border-border rounded-xl p-5 hover:shadow-md hover:border-primary/30 transition-all cursor-pointer"
                                 >
-                                    <h3 className="font-semibold text-base mb-2 group-hover:text-emerald-700 transition-colors leading-snug">
+                                    <h3 className="font-semibold text-base mb-2 group-hover:text-primary transition-colors leading-snug">
                                         {r.title}
                                     </h3>
                                     {r.excerpt && (
@@ -450,7 +450,7 @@ const LearnDetail = () => {
                                     )}
                                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                                         <span>{new Date(r.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
-                                        <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                        <span className="flex items-center gap-1 text-primary font-medium">
                                             Read <ArrowLeft className="h-3 w-3 rotate-180" />
                                         </span>
                                     </div>

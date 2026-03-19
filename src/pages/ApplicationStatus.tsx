@@ -24,7 +24,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   },
   approved: {
     label: "Approved",
-    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    color: "bg-primary/10 text-primary border-primary/20",
     icon: CheckCircle,
     description: "Congratulations! Your application has been approved. Check your email for login credentials.",
   },

@@ -78,7 +78,7 @@ const Learn = () => {
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-green-50 to-emerald-50 border-b border-green-100 py-16">
+      <section className="bg-gradient-to-br from-primary/5 to-primary/10 border-b border-primary/10 py-16">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="text-4xl font-bold mb-3">Learning Hub</h1>
@@ -100,8 +100,8 @@ const Learn = () => {
                 variant={activeTab === t.id ? "default" : "outline"}
                 onClick={() => setActiveTab(t.id)}
                 className={`gap-2 transition-all ${activeTab === t.id
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600"
-                  : "hover:border-emerald-300 hover:text-emerald-700"
+                  ? ""
+                  : "hover:border-primary/40 hover:text-primary"
                   }`}
               >
                 <t.icon className="h-4 w-4" /> {t.label}
@@ -152,15 +152,15 @@ const Learn = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08 }}
                     onClick={() => navigate(`/learn/${a.slug}`)}
-                    className="group bg-card rounded-xl border border-border p-6 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer flex flex-col"
+                    className="group bg-card rounded-xl border border-border p-6 hover:shadow-lg hover:border-primary/30 transition-all cursor-pointer flex flex-col"
                   >
                     {/* Category badge */}
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 rounded-full w-fit mb-3 border border-emerald-100">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full w-fit mb-3 border border-primary/20">
                       {activeCategory && <activeCategory.icon className="h-3 w-3" />}
                       {tabs.find((t) => t.id === categories.find((c) => c.id === a.category_id)?.slug)?.label || "Article"}
                     </span>
 
-                    <h3 className="text-xl font-semibold mb-2 group-hover:text-emerald-700 transition-colors leading-snug">
+                    <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors leading-snug">
                       {a.title}
                     </h3>
 
@@ -185,7 +185,7 @@ const Learn = () => {
                           {estimateReadTime(a.content)} min read
                         </span>
                       </div>
-                      <ArrowRight className="h-4 w-4 text-emerald-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
                   </motion.article>
                 ))

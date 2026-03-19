@@ -6,23 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Leaf, Mail, Lock, Tractor,
+  Leaf, Mail, Lock,
   Loader2, ArrowRight, Eye, EyeOff, CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleRedirect } from "@/App";
-
-// ── Only farmer self-registration allowed. Distributors go through the application flow. ──
-const ROLES = [
-  {
-    id: "farmer",
-    label: "Farmer",
-    icon: Tractor,
-    desc: "Buy products, learn sustainable farming, join the community.",
-  },
-];
 
 const SignIn = () => {
   const [mode, setMode] = useState<"login" | "register">("login");

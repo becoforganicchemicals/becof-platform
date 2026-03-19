@@ -27,17 +27,17 @@ const StatCard = ({ metric, index }: { metric: Metric; index: number }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: "easeOut" }}
-      className="relative group bg-white rounded-2xl border border-slate-100 p-7 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+      className="relative group bg-card rounded-2xl border border-border p-7 text-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
     >
       {/* subtle bg blob */}
-      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       <div className="relative z-10">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mb-4 group-hover:bg-emerald-100 transition-colors">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary mb-4 group-hover:bg-primary/15 transition-colors">
           <Icon className="h-7 w-7" />
         </div>
-        <div className="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight">{metric.value}</div>
-        <div className="text-sm text-slate-500 font-medium">{metric.label}</div>
+        <div className="text-3xl font-extrabold text-foreground mb-1 tracking-tight">{metric.value}</div>
+        <div className="text-sm text-muted-foreground font-medium">{metric.label}</div>
       </div>
     </motion.div>
   );
@@ -67,7 +67,7 @@ const Impact = () => {
 
   /* ─── skeleton ─── */
   const Skeleton = ({ className }: { className?: string }) => (
-    <div className={`animate-pulse bg-slate-100 rounded-xl ${className}`} />
+    <div className={`animate-pulse bg-muted rounded-xl ${className}`} />
   );
 
   return (
@@ -102,11 +102,11 @@ const Impact = () => {
       </section>
 
       {/* ── Metrics ── */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-muted/30">
         <div className="container">
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-900">By the Numbers</h2>
-            <p className="text-slate-500 mt-1 text-sm">Real progress, honestly measured.</p>
+            <h2 className="text-2xl font-bold text-foreground">By the Numbers</h2>
+            <p className="text-muted-foreground mt-1 text-sm">Real progress, honestly measured.</p>
           </motion.div>
 
           {loading ? (
@@ -150,7 +150,7 @@ const Impact = () => {
                       href={r.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-emerald-800 font-semibold text-sm rounded-xl hover:bg-emerald-50 transition-colors shadow-sm"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/90 text-foreground font-semibold text-sm rounded-xl hover:bg-white transition-colors shadow-sm"
                     >
                       <Download className="h-4 w-4" />
                       {r.title} {r.year}
@@ -164,11 +164,11 @@ const Impact = () => {
       </section>
 
       {/* ── Awards ── */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-muted/30">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-900">Awards & Recognition</h2>
-            <p className="text-slate-500 mt-1 text-sm">Milestones that keep us going.</p>
+            <h2 className="text-2xl font-bold text-foreground">Awards & Recognition</h2>
+            <p className="text-muted-foreground mt-1 text-sm">Milestones that keep us going.</p>
           </motion.div>
 
           {loading ? (
@@ -176,7 +176,7 @@ const Impact = () => {
               {[1, 2, 3].map(n => <Skeleton key={n} className="h-56" />)}
             </div>
           ) : awards.length === 0 ? (
-            <p className="text-center text-slate-400 py-10">Awards and recognitions will appear here.</p>
+            <p className="text-center text-muted-foreground py-10">Awards and recognitions will appear here.</p>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
               {awards.map((a, i) => (
@@ -186,7 +186,7 @@ const Impact = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* award image */}
                   <div className="h-36 bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden">
@@ -197,8 +197,8 @@ const Impact = () => {
                     )}
                   </div>
                   <div className="p-5">
-                    <h3 className="font-semibold text-slate-900 text-sm leading-snug mb-2">{a.name}</h3>
-                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
+                    <h3 className="font-semibold text-foreground text-sm leading-snug mb-2">{a.name}</h3>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
                       {new Date(a.awarded_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     </span>

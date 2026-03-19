@@ -112,18 +112,18 @@ const Contact = () => {
               transition={{ duration: 0.6 }}
               className="mb-16"
             >
-              <span className="inline-block text-xs font-semibold tracking-widest uppercase text-emerald-600 mb-3">
+              <span className="inline-block text-xs font-semibold tracking-widest uppercase text-primary mb-3">
                 Get in Touch
               </span>
               <h1
-                className="text-5xl sm:text-6xl font-bold text-slate-900 leading-tight mb-4"
+                className="text-5xl sm:text-6xl font-bold text-foreground leading-tight mb-4"
                 style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
               >
                 Let's Grow
                 <br />
-                <span className="text-emerald-700 italic">Together.</span>
+                <span className="text-primary italic">Together.</span>
               </h1>
-              <p className="text-slate-500 max-w-md text-lg leading-relaxed">
+              <p className="text-muted-foreground max-w-md text-lg leading-relaxed">
                 Whether you have a question about our products, a bulk order, or just want to say hello — we'd love to hear from you.
               </p>
             </motion.div>
@@ -144,15 +144,15 @@ const Contact = () => {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 + i * 0.08 }}
-                    className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                    className="flex items-start gap-4 p-5 bg-card rounded-2xl border border-border shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                   >
-                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-                      <c.icon className="h-5 w-5 text-emerald-600" />
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                      <c.icon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{c.label}</p>
-                      <p className="font-semibold text-slate-800 mt-0.5">{c.value}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{c.sub}</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{c.label}</p>
+                      <p className="font-semibold text-foreground mt-0.5">{c.value}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{c.sub}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -193,15 +193,15 @@ const Contact = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
 
                   {/* form header strip */}
-                  <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                  <div className="px-8 py-6 border-b border-border flex items-center justify-between">
                     <div>
-                      <h2 className="font-bold text-slate-900 text-xl" style={{ fontFamily: "'Georgia', serif" }}>
+                      <h2 className="font-bold text-foreground text-xl" style={{ fontFamily: "'Georgia', serif" }}>
                         Send Us a Message
                       </h2>
-                      <p className="text-slate-400 text-sm mt-0.5">We'll get back to you within 24 hours.</p>
+                      <p className="text-muted-foreground text-sm mt-0.5">We'll get back to you within 24 hours.</p>
                     </div>
                     <div className="hidden sm:flex gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-emerald-200" />
@@ -213,22 +213,22 @@ const Contact = () => {
                   {submitted ? (
                     <div className="px-8 py-16 text-center">
                       <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                          <CheckCircle className="h-8 w-8 text-emerald-600" />
+                        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
+                          <CheckCircle className="h-8 w-8 text-primary" />
                         </div>
                         <h3
-                          className="text-2xl font-bold text-slate-900 mb-2"
+                          className="text-2xl font-bold text-foreground mb-2"
                           style={{ fontFamily: "'Georgia', serif" }}
                         >
                           Message Sent!
                         </h3>
-                        <p className="text-slate-500 max-w-sm mx-auto">
+                        <p className="text-muted-foreground max-w-sm mx-auto">
                           Thank you, <strong>{form.name}</strong>. We've received your message and will reply to{" "}
                           <strong>{form.email}</strong> within 24 hours.
                         </p>
                         <button
                           onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", topic: "", message: "" }); }}
-                          className="mt-6 text-sm text-emerald-600 hover:text-emerald-700 underline underline-offset-2"
+                          className="mt-6 text-sm text-primary hover:text-primary underline underline-offset-2"
                         >
                           Send another message
                         </button>
@@ -239,8 +239,8 @@ const Contact = () => {
                       {/* Name + Email */}
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                            Full Name <span className="text-emerald-600">*</span>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Full Name <span className="text-primary">*</span>
                           </label>
                           <Input
                             name="name"
@@ -248,12 +248,12 @@ const Contact = () => {
                             onChange={handleChange}
                             required
                             placeholder="Jane Wanjiku"
-                            className="h-11 rounded-xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20"
+                            className="h-11 rounded-xl border-border focus:border-primary focus:ring-primary/20"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                            Email Address <span className="text-emerald-600">*</span>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Email Address <span className="text-primary">*</span>
                           </label>
                           <Input
                             name="email"
@@ -262,7 +262,7 @@ const Contact = () => {
                             onChange={handleChange}
                             required
                             placeholder="jane@example.com"
-                            className="h-11 rounded-xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20"
+                            className="h-11 rounded-xl border-border focus:border-primary focus:ring-primary/20"
                           />
                         </div>
                       </div>
@@ -270,26 +270,26 @@ const Contact = () => {
                       {/* Phone + Topic */}
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                            Phone Number <span className="text-slate-300">(optional)</span>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                            Phone Number <span className="text-muted-foreground/50">(optional)</span>
                           </label>
                           <Input
                             name="phone"
                             value={form.phone}
                             onChange={handleChange}
                             placeholder="+254 7XX XXX XXX"
-                            className="h-11 rounded-xl border-slate-200 focus:border-emerald-500"
+                            className="h-11 rounded-xl border-border focus:border-primary"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             Topic
                           </label>
                           <select
                             name="topic"
                             value={form.topic}
                             onChange={handleChange}
-                            className="w-full h-11 border border-slate-200 rounded-xl px-3 py-2 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            className="w-full h-11 border border-border rounded-xl px-3 py-2 bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                           >
                             <option value="">Select a topic…</option>
                             {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -299,8 +299,8 @@ const Contact = () => {
 
                       {/* Message */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                          Message <span className="text-emerald-600">*</span>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Message <span className="text-primary">*</span>
                         </label>
                         <Textarea
                           name="message"
@@ -309,7 +309,7 @@ const Contact = () => {
                           required
                           rows={5}
                           placeholder="Tell us how we can help you…"
-                          className="rounded-xl border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 resize-none"
+                          className="rounded-xl border-border focus:border-primary focus:ring-primary/20 resize-none"
                         />
                       </div>
 
@@ -323,7 +323,7 @@ const Contact = () => {
                         type="submit"
                         disabled={submitting}
                         size="lg"
-                        className="w-full h-12 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-base font-semibold gap-2 transition-all"
+                        className="w-full h-12 rounded-xl text-base font-semibold gap-2 transition-all"
                       >
                         {submitting ? (
                           <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
@@ -332,9 +332,9 @@ const Contact = () => {
                         )}
                       </Button>
 
-                      <p className="text-xs text-center text-slate-400">
+                      <p className="text-xs text-center text-muted-foreground">
                         Your message goes directly to our team at{" "}
-                        <span className="text-slate-600 font-medium">info@becoforganic.com</span>
+                        <span className="text-muted-foreground font-medium">info@becoforganic.com</span>
                       </p>
                     </form>
                   )}

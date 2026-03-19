@@ -119,18 +119,18 @@ const AdminCategories = () => {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900">
-            <FolderTree className="h-5 w-5 text-emerald-600" />
+          <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
+            <FolderTree className="h-5 w-5 text-primary" />
             Categories
           </h2>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {topLevel.length} categories · {subCount} subcategories
           </p>
         </div>
 
         <Dialog open={dialogOpen} onOpenChange={o => { setDialogOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button className="gap-2">
               <Plus className="h-4 w-4" /> Add Category
             </Button>
           </DialogTrigger>
@@ -138,10 +138,10 @@ const AdminCategories = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 {editing
-                  ? <><Edit className="h-4 w-4 text-emerald-600" /> Edit Category</>
+                  ? <><Edit className="h-4 w-4 text-primary" /> Edit Category</>
                   : form.parent_id
-                    ? <><Tag className="h-4 w-4 text-emerald-600" /> New Subcategory</>
-                    : <><Layers className="h-4 w-4 text-emerald-600" /> New Category</>
+                    ? <><Tag className="h-4 w-4 text-primary" /> New Subcategory</>
+                    : <><Layers className="h-4 w-4 text-primary" /> New Category</>
                 }
               </DialogTitle>
             </DialogHeader>
@@ -151,8 +151,8 @@ const AdminCategories = () => {
               className="space-y-4 pt-1"
             >
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                  Name <span className="text-emerald-600">*</span>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Name <span className="text-primary">*</span>
                 </Label>
                 <Input
                   value={form.name}
@@ -171,17 +171,17 @@ const AdminCategories = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Slug</Label>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Slug</Label>
                 <Input
                   value={form.slug}
                   onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
                   placeholder="Auto-generated"
-                  className="h-10 font-mono text-sm text-slate-500"
+                  className="h-10 font-mono text-sm text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</Label>
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Description</Label>
                 <Input
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -191,7 +191,7 @@ const AdminCategories = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Parent Category
                 </Label>
                 <Select
@@ -208,13 +208,13 @@ const AdminCategories = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-slate-400">Leave empty to create a top-level category.</p>
+                <p className="text-xs text-muted-foreground">Leave empty to create a top-level category.</p>
               </div>
 
-              <div className="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="text-sm font-medium text-slate-700">Active</p>
-                  <p className="text-xs text-slate-400">Inactive categories are hidden from the store.</p>
+                  <p className="text-sm font-medium text-foreground">Active</p>
+                  <p className="text-xs text-muted-foreground">Inactive categories are hidden from the store.</p>
                 </div>
                 <Switch
                   checked={form.is_active}
@@ -224,7 +224,7 @@ const AdminCategories = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                className="w-full gap-2"
                 disabled={upsert.isPending}
               >
                 {upsert.isPending
@@ -240,9 +240,9 @@ const AdminCategories = () => {
       {/* ── Stats ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total", value: categories.length, color: "bg-slate-50 border-slate-200 text-slate-700" },
-          { label: "Active", value: categories.filter(c => c.is_active).length, color: "bg-emerald-50 border-emerald-200 text-emerald-700" },
-          { label: "Inactive", value: categories.filter(c => !c.is_active).length, color: "bg-slate-50 border-slate-200 text-slate-500" },
+          { label: "Total", value: categories.length, color: "bg-muted/50 border-border text-foreground" },
+          { label: "Active", value: categories.filter(c => c.is_active).length, color: "bg-primary/10 border-primary/30 text-primary" },
+          { label: "Inactive", value: categories.filter(c => !c.is_active).length, color: "bg-muted/50 border-border text-muted-foreground" },
         ].map(s => (
           <div key={s.label} className={`rounded-xl border p-4 ${s.color}`}>
             <p className="text-2xl font-bold">{s.value}</p>
@@ -253,42 +253,42 @@ const AdminCategories = () => {
 
       {/* ── Category tree ── */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-slate-400">
+        <div className="flex items-center justify-center py-16 text-muted-foreground">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
           <span className="text-sm">Loading categories…</span>
         </div>
       ) : topLevel.length === 0 ? (
-        <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-          <FolderTree className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">No categories yet</p>
-          <p className="text-slate-400 text-sm mt-1">Create your first category to get started.</p>
+        <div className="text-center py-16 bg-muted/30 rounded-2xl border border-dashed border-border">
+          <FolderTree className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">No categories yet</p>
+          <p className="text-muted-foreground text-sm mt-1">Create your first category to get started.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {topLevel.map(cat => {
             const subs = getSubs(cat.id);
             return (
-              <div key={cat.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div key={cat.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
 
                 {/* ── Parent category row ── */}
                 <div className="flex items-center gap-4 px-5 py-4">
                   {/* icon */}
-                  <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-                    <Layers className="h-4 w-4 text-emerald-600" />
+                  <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                    <Layers className="h-4 w-4 text-primary" />
                   </div>
 
                   {/* name + meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-slate-900">{cat.name}</span>
-                      <span className="font-mono text-xs text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">
+                      <span className="font-semibold text-foreground">{cat.name}</span>
+                      <span className="font-mono text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                         /{cat.slug}
                       </span>
                     </div>
                     {cat.description && (
-                      <p className="text-xs text-slate-400 mt-0.5 truncate">{cat.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{cat.description}</p>
                     )}
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {subs.length} subcategor{subs.length === 1 ? "y" : "ies"}
                     </p>
                   </div>
@@ -298,8 +298,8 @@ const AdminCategories = () => {
                     <button
                       onClick={() => toggleActive.mutate({ id: cat.id, is_active: !cat.is_active })}
                       className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all ${cat.is_active
-                          ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                          ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
+                          : "bg-muted/50 border-border text-muted-foreground hover:bg-muted"
                         }`}
                     >
                       {cat.is_active
@@ -316,7 +316,7 @@ const AdminCategories = () => {
                       size="sm"
                       variant="ghost"
                       onClick={() => openCreateSub(cat.id)}
-                      className="h-8 gap-1.5 text-xs text-slate-500 hover:text-emerald-700 hover:bg-emerald-50"
+                      className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10"
                     >
                       <Plus className="h-3.5 w-3.5" /> Sub
                     </Button>
@@ -324,7 +324,7 @@ const AdminCategories = () => {
                       size="sm"
                       variant="ghost"
                       onClick={() => openEdit(cat)}
-                      className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                     >
                       <Edit className="h-3.5 w-3.5" />
                     </Button>
@@ -332,7 +332,7 @@ const AdminCategories = () => {
                       size="sm"
                       variant="ghost"
                       onClick={() => confirmDelete(cat.id, cat.name)}
-                      className="h-8 w-8 p-0 text-slate-300 hover:text-red-500 hover:bg-red-50"
+                      className="h-8 w-8 p-0 text-muted-foreground/50 hover:text-red-500 hover:bg-red-50"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -341,34 +341,34 @@ const AdminCategories = () => {
 
                 {/* ── Subcategory rows ── */}
                 {subs.length > 0 && (
-                  <div className="border-t border-slate-100 divide-y divide-slate-50">
+                  <div className="border-t border-border divide-y divide-border">
                     {subs.map(sub => (
                       <div
                         key={sub.id}
-                        className="flex items-center gap-4 px-5 py-3 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                        className="flex items-center gap-4 px-5 py-3 bg-muted/20 hover:bg-muted/40 transition-colors"
                       >
                         {/* indent indicator */}
                         <div className="w-9 flex items-center justify-center shrink-0">
-                          <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-slate-700">{sub.name}</span>
-                            <span className="font-mono text-xs text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-100">
+                            <span className="text-sm font-medium text-foreground">{sub.name}</span>
+                            <span className="font-mono text-xs text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border">
                               /{sub.slug}
                             </span>
                           </div>
                           {sub.description && (
-                            <p className="text-xs text-slate-400 mt-0.5 truncate">{sub.description}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{sub.description}</p>
                           )}
                         </div>
 
                         <button
                           onClick={() => toggleActive.mutate({ id: sub.id, is_active: !sub.is_active })}
                           className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all shrink-0 ${sub.is_active
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                              : "bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200"
+                              ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
+                              : "bg-muted border-border text-muted-foreground hover:bg-muted/80"
                             }`}
                         >
                           {sub.is_active
@@ -383,7 +383,7 @@ const AdminCategories = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => openEdit(sub)}
-                            className="h-7 w-7 p-0 text-slate-400 hover:text-slate-700"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                           >
                             <Edit className="h-3.5 w-3.5" />
                           </Button>
@@ -391,7 +391,7 @@ const AdminCategories = () => {
                             size="sm"
                             variant="ghost"
                             onClick={() => confirmDelete(sub.id, sub.name)}
-                            className="h-7 w-7 p-0 text-slate-300 hover:text-red-500 hover:bg-red-50"
+                            className="h-7 w-7 p-0 text-muted-foreground/50 hover:text-red-500 hover:bg-red-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

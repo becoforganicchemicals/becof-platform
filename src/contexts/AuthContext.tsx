@@ -48,27 +48,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // Initialise from persisted session first, then subscribe to changes.
+    // We only set loading=false AFTER user data (role/profile) has been fetched,
+    // preventing a flash where loading=false but role=null causes wrong redirects.
+    let initialised = false;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0);
+          await fetchUserData(session.user.id);
         } else {
           setRole(null);
           setProfile(null);
         }
-        setLoading(false);
+        // Only set loading false once (first resolution)
+        if (!initialised) {
+          initialised = true;
+          setLoading(false);
+        }
       }
     );
 
+    // getSession resolves immediately from localStorage and fires onAuthStateChange
+    // above, so we don't need to call fetchUserData again here. Just ensure
+    // loading is released if the subscription never fires (no session).
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserData(session.user.id);
+      if (!session && !initialised) {
+        initialised = true;
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

@@ -202,13 +202,13 @@ const AdminImpact = () => {
         <button
             onClick={() => setSection(id)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${section === id
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-background border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
                 }`}
         >
             <Icon className="h-4 w-4" />
             {label}
-            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${section === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${section === id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                 {count}
             </span>
         </button>
@@ -219,8 +219,8 @@ const AdminImpact = () => {
         <div className="space-y-6">
             {/* header */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-900">Impact Management</h1>
-                <p className="text-sm text-slate-500 mt-0.5">Manage metrics, ESG reports, and awards shown on the Impact page.</p>
+                <h1 className="text-2xl font-bold text-foreground">Impact Management</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Manage metrics, ESG reports, and awards shown on the Impact page.</p>
             </div>
 
             {/* section nav */}
@@ -234,23 +234,23 @@ const AdminImpact = () => {
             {section === "metrics" && (
                 <>
                     <div className="flex justify-end">
-                        <Button onClick={() => setMetricDialog(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button onClick={() => setMetricDialog(true)} className="gap-2">
                             <Plus className="h-4 w-4" /> Add Metric
                         </Button>
                     </div>
 
-                    <Card className="border-slate-200">
-                        <CardHeader className="border-b border-slate-100 py-4">
+                    <Card className="border-border">
+                        <CardHeader className="border-b border-border/50 py-4">
                             <CardTitle className="text-base">Impact Metrics</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {metrics.length === 0 && <p className="text-center text-slate-400 py-10 text-sm">No metrics yet.</p>}
+                            {metrics.length === 0 && <p className="text-center text-muted-foreground py-10 text-sm">No metrics yet.</p>}
                             {metrics.map((m) => (
-                                <div key={m.id} className="flex items-center gap-4 px-5 py-3.5 border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                                    <GripVertical className="h-4 w-4 text-slate-300 flex-shrink-0" />
+                                <div key={m.id} className="flex items-center gap-4 px-5 py-3.5 border-b border-border/50 last:border-0 hover:bg-muted/20">
+                                    <GripVertical className="h-4 w-4 text-muted-foreground/40 flex-shrink-0" />
                                     <div className="flex-1">
-                                        <p className="font-semibold text-slate-800">{m.value}</p>
-                                        <p className="text-xs text-slate-400">{m.label} · icon: {m.icon}</p>
+                                        <p className="font-semibold text-foreground">{m.value}</p>
+                                        <p className="text-xs text-muted-foreground">{m.label} · icon: {m.icon}</p>
                                     </div>
                                     <div className="flex gap-1">
                                         <Button size="sm" variant="ghost" onClick={() => openEditMetric(m)} className="h-8 w-8 p-0">
@@ -273,9 +273,9 @@ const AdminImpact = () => {
                             </DialogHeader>
                             <div className="space-y-3 pt-2">
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Icon</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Icon</label>
                                     <select
-                                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                         value={metricForm.icon}
                                         onChange={e => setMetricForm({ ...metricForm, icon: e.target.value })}
                                     >
@@ -283,21 +283,21 @@ const AdminImpact = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Label</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Label</label>
                                     <Input placeholder="e.g. Farmers Empowered" value={metricForm.label}
                                         onChange={e => setMetricForm({ ...metricForm, label: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Value</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Value</label>
                                     <Input placeholder="e.g. 500+" value={metricForm.value}
                                         onChange={e => setMetricForm({ ...metricForm, value: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Sort Order</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Sort Order</label>
                                     <Input type="number" value={metricForm.sort_order}
                                         onChange={e => setMetricForm({ ...metricForm, sort_order: Number(e.target.value) })} />
                                 </div>
-                                <Button onClick={saveMetric} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                                <Button onClick={saveMetric} className="w-full">
                                     {editingMetric ? "Update" : "Create"} Metric
                                 </Button>
                             </div>
@@ -310,24 +310,24 @@ const AdminImpact = () => {
             {section === "reports" && (
                 <>
                     <div className="flex justify-end">
-                        <Button onClick={() => setReportDialog(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button onClick={() => setReportDialog(true)} className="gap-2">
                             <Plus className="h-4 w-4" /> Add ESG Report
                         </Button>
                     </div>
 
-                    <Card className="border-slate-200">
-                        <CardHeader className="border-b border-slate-100 py-4">
+                    <Card className="border-border">
+                        <CardHeader className="border-b border-border/50 py-4">
                             <CardTitle className="text-base">ESG Reports</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {reports.length === 0 && <p className="text-center text-slate-400 py-10 text-sm">No reports yet.</p>}
+                            {reports.length === 0 && <p className="text-center text-muted-foreground py-10 text-sm">No reports yet.</p>}
                             {reports.map((r) => (
-                                <div key={r.id} className="flex items-center gap-4 px-5 py-4 border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                                <div key={r.id} className="flex items-center gap-4 px-5 py-4 border-b border-border/50 last:border-0 hover:bg-muted/20">
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-slate-800">{r.title} <span className="text-slate-400 font-normal">({r.year})</span></p>
-                                        {r.description && <p className="text-xs text-slate-400 truncate mt-0.5">{r.description}</p>}
+                                        <p className="font-semibold text-foreground">{r.title} <span className="text-muted-foreground font-normal">({r.year})</span></p>
+                                        {r.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{r.description}</p>}
                                     </div>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.published ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.published ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                                         {r.published ? "Published" : "Hidden"}
                                     </span>
                                     <div className="flex gap-1">
@@ -359,30 +359,30 @@ const AdminImpact = () => {
                             </DialogHeader>
                             <div className="space-y-3 pt-2">
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Title</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Title</label>
                                     <Input placeholder="e.g. ESG Report" value={reportForm.title}
                                         onChange={e => setReportForm({ ...reportForm, title: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Year</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Year</label>
                                     <Input type="number" value={reportForm.year}
                                         onChange={e => setReportForm({ ...reportForm, year: Number(e.target.value) })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Description (optional)</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Description (optional)</label>
                                     <Textarea rows={2} placeholder="Brief summary of the report…" value={reportForm.description}
                                         onChange={e => setReportForm({ ...reportForm, description: e.target.value })} className="resize-none" />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Upload PDF</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Upload PDF</label>
                                     <input
                                         type="file"
                                         accept=".pdf"
                                         onChange={e => setReportFile(e.target.files?.[0] || null)}
-                                        className="block w-full text-sm text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                                        className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                                     />
                                     {reportForm.file_url && !reportFile && (
-                                        <a href={reportForm.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-600 hover:underline mt-1 flex items-center gap-1">
+                                        <a href={reportForm.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 flex items-center gap-1">
                                             <Download className="h-3 w-3" /> Current file
                                         </a>
                                     )}
@@ -390,13 +390,13 @@ const AdminImpact = () => {
                                 <div className="flex items-center gap-2 pt-1">
                                     <div
                                         onClick={() => setReportForm(prev => ({ ...prev, published: !prev.published }))}
-                                        className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${reportForm.published ? "bg-emerald-500" : "bg-slate-300"}`}
+                                        className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${reportForm.published ? "bg-primary" : "bg-muted-foreground/40"}`}
                                     >
-                                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${reportForm.published ? "translate-x-5" : "translate-x-0.5"}`} />
+                                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-card shadow transition-transform ${reportForm.published ? "translate-x-5" : "translate-x-0.5"}`} />
                                     </div>
-                                    <span className="text-sm text-slate-600">{reportForm.published ? "Published" : "Hidden"}</span>
+                                    <span className="text-sm text-muted-foreground">{reportForm.published ? "Published" : "Hidden"}</span>
                                 </div>
-                                <Button onClick={saveReport} disabled={uploading} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                                <Button onClick={saveReport} disabled={uploading} className="w-full">
                                     {uploading ? "Uploading…" : editingReport ? "Update Report" : "Publish Report"}
                                 </Button>
                             </div>
@@ -409,17 +409,17 @@ const AdminImpact = () => {
             {section === "awards" && (
                 <>
                     <div className="flex justify-end">
-                        <Button onClick={() => setAwardDialog(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button onClick={() => setAwardDialog(true)} className="gap-2">
                             <Plus className="h-4 w-4" /> Add Award
                         </Button>
                     </div>
 
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {awards.length === 0 && (
-                            <p className="col-span-3 text-center text-slate-400 py-10 text-sm">No awards yet.</p>
+                            <p className="col-span-3 text-center text-muted-foreground py-10 text-sm">No awards yet.</p>
                         )}
                         {awards.map((a) => (
-                            <div key={a.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all group">
+                            <div key={a.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-all group">
                                 <div className="h-36 bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden relative">
                                     {a.image_url
                                         ? <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" />
@@ -436,8 +436,8 @@ const AdminImpact = () => {
                                     </div>
                                 </div>
                                 <div className="p-4">
-                                    <p className="font-semibold text-slate-800 text-sm leading-snug">{a.name}</p>
-                                    <p className="text-xs text-slate-400 mt-1">
+                                    <p className="font-semibold text-foreground text-sm leading-snug">{a.name}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
                                         {new Date(a.awarded_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                                     </p>
                                 </div>
@@ -453,28 +453,28 @@ const AdminImpact = () => {
                             </DialogHeader>
                             <div className="space-y-3 pt-2">
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Award / Recognition Name</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Award / Recognition Name</label>
                                     <Input placeholder="e.g. Kenya Green Innovation Award 2025" value={awardForm.name}
                                         onChange={e => setAwardForm({ ...awardForm, name: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Date Awarded</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Date Awarded</label>
                                     <Input type="date" value={awardForm.awarded_date}
                                         onChange={e => setAwardForm({ ...awardForm, awarded_date: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-slate-500 font-medium block mb-1">Award Image / Badge</label>
+                                    <label className="text-xs text-muted-foreground font-medium block mb-1">Award Image / Badge</label>
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={e => setAwardImageFile(e.target.files?.[0] || null)}
-                                        className="block w-full text-sm text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                                        className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                                     />
                                     {awardForm.image_url && !awardImageFile && (
                                         <img src={awardForm.image_url} alt="current" className="mt-2 h-20 rounded-lg object-cover border" />
                                     )}
                                 </div>
-                                <Button onClick={saveAward} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                                <Button onClick={saveAward} className="w-full">
                                     {editingAward ? "Update Award" : "Save Award"}
                                 </Button>
                             </div>

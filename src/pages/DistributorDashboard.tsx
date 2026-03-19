@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
@@ -11,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Truck, Building2, ShoppingBag, Package, BarChart3,
-  MapPin, Phone, Mail, Globe, Loader2, ExternalLink,
+  MapPin, Phone, Mail, Loader2,
   TrendingUp, DollarSign, Clock, CheckCircle,
 } from "lucide-react";
 import SEO from "@/components/SEO";
@@ -109,7 +108,7 @@ const DistributorDashboard = () => {
     { label: "Total Orders", value: totalOrders, icon: ShoppingBag, color: "text-primary" },
     { label: "Total Spent", value: `KES ${totalSpent.toLocaleString()}`, icon: DollarSign, color: "text-secondary" },
     { label: "Pending", value: pendingOrders, icon: Clock, color: "text-amber-600" },
-    { label: "Delivered", value: deliveredOrders, icon: CheckCircle, color: "text-emerald-600" },
+    { label: "Delivered", value: deliveredOrders, icon: CheckCircle, color: "text-primary" },
   ];
 
   return (
@@ -133,10 +132,10 @@ const DistributorDashboard = () => {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" asChild>
-                  <a href="/products">Browse Products</a>
+                  <Link to="/products">Browse Products</Link>
                 </Button>
                 <Button size="sm" asChild>
-                  <a href="/custom-order">Place Custom Order</a>
+                  <Link to="/custom-order">Place Custom Order</Link>
                 </Button>
               </div>
             </div>
@@ -197,9 +196,9 @@ const DistributorDashboard = () => {
                             Your distributor account is ready. Here's how to get started:
                           </p>
                           <div className="space-y-2 text-sm text-muted-foreground">
-                            <p>✓ <a href="/profile" className="text-primary hover:underline">Complete your profile</a> with business details</p>
-                            <p>✓ <a href="/products" className="text-primary hover:underline">Browse our product catalog</a> and place your first order</p>
-                            <p>✓ Need bulk quantities? <a href="/custom-order" className="text-primary hover:underline">Place a custom order</a></p>
+                            <p>✓ <Link to="/profile" className="text-primary hover:underline">Complete your profile</Link> with business details</p>
+                            <p>✓ <Link to="/products" className="text-primary hover:underline">Browse our product catalog</Link> and place your first order</p>
+                            <p>✓ Need bulk quantities? <Link to="/custom-order" className="text-primary hover:underline">Place a custom order</Link></p>
                           </div>
                         </div>
                       </div>
@@ -215,7 +214,7 @@ const DistributorDashboard = () => {
                   <CardContent>
                     {orders.length === 0 ? (
                       <p className="text-sm text-muted-foreground py-4 text-center">
-                        No orders yet. <a href="/products" className="text-primary hover:underline">Browse products</a> to get started.
+                        No orders yet. <Link to="/products" className="text-primary hover:underline">Browse products</Link> to get started.
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -292,7 +291,7 @@ const DistributorDashboard = () => {
                       <div className="text-center py-4">
                         <p className="text-sm text-muted-foreground mb-2">No custom orders yet.</p>
                         <Button variant="outline" size="sm" asChild>
-                          <a href="/custom-order">Place a Custom Order</a>
+                          <Link to="/custom-order">Place a Custom Order</Link>
                         </Button>
                       </div>
                     ) : (
@@ -334,9 +333,9 @@ const DistributorDashboard = () => {
                     ) : (
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {products.map((product: any) => (
-                          <a
+                          <Link
                             key={product.id}
-                            href={`/products/${product.slug}`}
+                            to={`/products/${product.slug}`}
                             className="border border-border rounded-lg overflow-hidden hover:border-primary/30 hover:shadow-sm transition-all group"
                           >
                             <div className="aspect-[4/3] bg-muted overflow-hidden">
@@ -364,7 +363,7 @@ const DistributorDashboard = () => {
                                 </Badge>
                               </div>
                             </div>
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     )}
@@ -475,7 +474,7 @@ const DistributorDashboard = () => {
                     </div>
                     <div className="mt-4 pt-4 border-t border-border">
                       <Button variant="outline" size="sm" asChild>
-                        <a href="/profile">Edit Profile →</a>
+                        <Link to="/profile">Edit Profile →</Link>
                       </Button>
                     </div>
                   </CardContent>

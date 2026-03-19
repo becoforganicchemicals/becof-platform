@@ -19,14 +19,14 @@ const TYPE_CONFIG: Record<string, {
   new_order: { icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50", label: "New Order" },
   low_stock: { icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-50", label: "Low Stock" },
   out_of_stock: { icon: Package, color: "text-red-600", bg: "bg-red-50", label: "Out of Stock" },
-  payment_received: { icon: Check, color: "text-emerald-600", bg: "bg-emerald-50", label: "Payment" },
+  payment_received: { icon: Check, color: "text-primary", bg: "bg-primary/10", label: "Payment" },
   order_ready: { icon: Star, color: "text-violet-600", bg: "bg-violet-50", label: "Order Ready" },
-  order_updated: { icon: Info, color: "text-slate-600", bg: "bg-slate-50", label: "Order Update" },
+  order_updated: { icon: Info, color: "text-muted-foreground", bg: "bg-muted/50", label: "Order Update" },
   new_application: { icon: Users, color: "text-teal-600", bg: "bg-teal-50", label: "Application" },
   new_message: { icon: Mail, color: "text-indigo-600", bg: "bg-indigo-50", label: "Message" },
 };
 
-const DEFAULT_CONFIG = { icon: Bell, color: "text-slate-600", bg: "bg-slate-50", label: "Alert" };
+const DEFAULT_CONFIG = { icon: Bell, color: "text-muted-foreground", bg: "bg-muted/50", label: "Alert" };
 
 type FilterTab = "all" | "unread" | "orders" | "stock" | "other";
 
@@ -146,13 +146,13 @@ const AdminNotifications = () => {
     <button
       onClick={() => { setFilter(id); setSelected(new Set()); }}
       className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === id
-          ? "bg-emerald-600 text-white shadow-sm"
-          : "bg-white border border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-700"
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "bg-background border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
         }`}
     >
       {label}
       {count !== undefined && count > 0 && (
-        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${filter === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${filter === id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
           {count}
         </span>
       )}
@@ -166,16 +166,16 @@ const AdminNotifications = () => {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Bell className="h-5 w-5 text-emerald-600" />
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary" />
             Alerts & Notifications
             {unreadCount > 0 && (
-              <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
                 {unreadCount} new
               </span>
             )}
           </h2>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {notifications.length} total · auto-refreshes every 30s
           </p>
         </div>
@@ -183,7 +183,7 @@ const AdminNotifications = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => refetch()}
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-emerald-50 border border-slate-200"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-primary/10 border border-border"
           >
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </button>
@@ -205,8 +205,8 @@ const AdminNotifications = () => {
       {/* ── Stats bar ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total", value: notifications.length, color: "bg-slate-50 border-slate-200 text-slate-700" },
-          { label: "Unread", value: unreadCount, color: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+          { label: "Total", value: notifications.length, color: "bg-muted/50 border-border text-foreground" },
+          { label: "Unread", value: unreadCount, color: "bg-primary/10 border-primary/30 text-primary" },
           { label: "Orders", value: notifications.filter(n => ["new_order", "payment_received", "order_ready", "order_updated"].includes(n.type)).length, color: "bg-blue-50 border-blue-200 text-blue-700" },
           { label: "Stock", value: notifications.filter(n => ["low_stock", "out_of_stock"].includes(n.type)).length, color: "bg-amber-50 border-amber-200 text-amber-700" },
         ].map(s => (
@@ -219,7 +219,7 @@ const AdminNotifications = () => {
 
       {/* ── Filter tabs ── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Filter className="h-3.5 w-3.5 text-slate-400" />
+        <Filter className="h-3.5 w-3.5 text-muted-foreground" />
         <TabPill id="all" label="All" count={notifications.length} />
         <TabPill id="unread" label="Unread" count={unreadCount} />
         <TabPill id="orders" label="Orders" />
@@ -229,14 +229,14 @@ const AdminNotifications = () => {
 
       {/* ── Bulk action bar ── */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
-          <p className="text-sm font-medium text-emerald-700 flex-1">
+        <div className="flex items-center gap-3 bg-primary/10 border border-primary/30 rounded-xl px-4 py-2.5">
+          <p className="text-sm font-medium text-primary flex-1">
             {selected.size} selected
           </p>
           <Button
             size="sm"
             variant="outline"
-            className="gap-1.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+            className="gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10"
             onClick={() => markSelectedRead.mutate([...selected])}
             disabled={markSelectedRead.isPending}
           >
@@ -253,25 +253,25 @@ const AdminNotifications = () => {
           >
             <Trash2 className="h-3.5 w-3.5" /> Delete
           </Button>
-          <button onClick={() => setSelected(new Set())} className="text-xs text-slate-400 hover:text-slate-600">
+          <button onClick={() => setSelected(new Set())} className="text-xs text-muted-foreground hover:text-foreground">
             Cancel
           </button>
         </div>
       )}
 
       {/* ── Notifications feed ── */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
 
         {/* select-all header */}
         {filtered.length > 0 && (
-          <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/60">
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-muted/30">
             <input
               type="checkbox"
               checked={selected.size === filtered.length && filtered.length > 0}
               onChange={toggleSelectAll}
-              className="w-4 h-4 accent-emerald-600 rounded"
+              className="w-4 h-4 accent-primary rounded"
             />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               {filtered.length} notification{filtered.length !== 1 ? "s" : ""}
               {filter !== "all" ? ` in "${filter}"` : ""}
             </p>
@@ -279,14 +279,14 @@ const AdminNotifications = () => {
         )}
 
         {isLoading && (
-          <div className="py-16 text-center text-slate-400 text-sm animate-pulse">Loading…</div>
+          <div className="py-16 text-center text-muted-foreground text-sm animate-pulse">Loading…</div>
         )}
 
         {!isLoading && filtered.length === 0 && (
           <div className="py-20 text-center">
-            <BellOff className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-            <p className="text-slate-400 text-sm font-medium">No notifications here</p>
-            <p className="text-slate-300 text-xs mt-1">
+            <BellOff className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm font-medium">No notifications here</p>
+            <p className="text-muted-foreground/40 text-xs mt-1">
               {filter !== "all" ? "Try switching to a different filter." : "You're all caught up!"}
             </p>
           </div>
@@ -300,15 +300,15 @@ const AdminNotifications = () => {
           return (
             <div
               key={n.id}
-              className={`flex items-start gap-4 px-5 py-4 border-b border-slate-50 last:border-0 transition-colors ${!n.is_read ? "bg-emerald-50/30" : "hover:bg-slate-50/40"
-                } ${isSelected ? "bg-emerald-50" : ""}`}
+              className={`flex items-start gap-4 px-5 py-4 border-b border-border/50 last:border-0 transition-colors ${!n.is_read ? "bg-primary/5" : "hover:bg-muted/20"
+                } ${isSelected ? "bg-primary/10" : ""}`}
             >
               {/* checkbox */}
               <input
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => toggleSelect(n.id)}
-                className="w-4 h-4 accent-emerald-600 rounded mt-1 shrink-0"
+                className="w-4 h-4 accent-primary rounded mt-1 shrink-0"
               />
 
               {/* icon */}
@@ -319,18 +319,18 @@ const AdminNotifications = () => {
               {/* content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className={`text-sm font-semibold ${n.is_read ? "text-slate-700" : "text-slate-900"}`}>
+                  <p className={`text-sm font-semibold ${n.is_read ? "text-foreground" : "text-foreground"}`}>
                     {n.title}
                   </p>
                   <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${cfg.bg} ${cfg.color}`}>
                     {cfg.label}
                   </span>
                   {!n.is_read && (
-                    <Circle className="h-2 w-2 fill-emerald-500 text-emerald-500 shrink-0" />
+                    <Circle className="h-2 w-2 fill-primary text-primary shrink-0" />
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{n.message}</p>
-                <p className="text-xs text-slate-300 mt-1.5">{formatTime(n.created_at)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                <p className="text-xs text-muted-foreground/40 mt-1.5">{formatTime(n.created_at)}</p>
               </div>
 
               {/* mark read button */}
@@ -338,7 +338,7 @@ const AdminNotifications = () => {
                 <button
                   onClick={() => markRead.mutate(n.id)}
                   title="Mark as read"
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-colors shrink-0 mt-0.5"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 mt-0.5"
                 >
                   <Check className="h-3.5 w-3.5" />
                 </button>

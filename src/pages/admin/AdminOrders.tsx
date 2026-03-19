@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +41,7 @@ const statusColor = (s: string) => {
   const map: Record<string, string> = {
     received: "bg-blue-100 text-blue-800",
     processing: "bg-yellow-100 text-yellow-800",
-    confirmed: "bg-emerald-100 text-emerald-800",
+    confirmed: "bg-primary/10 text-primary",
     dispatched: "bg-purple-100 text-purple-800",
     out_for_delivery: "bg-orange-100 text-orange-800",
     delivered: "bg-green-100 text-green-800",
@@ -53,11 +52,11 @@ const statusColor = (s: string) => {
     reviewing: "bg-orange-100 text-orange-700",
     ready: "bg-teal-100 text-teal-700",
     deposit_paid: "bg-cyan-100 text-cyan-700",
-    fulfilled: "bg-emerald-100 text-emerald-700",
-    paid: "bg-emerald-100 text-emerald-700",
+    fulfilled: "bg-primary/10 text-primary",
+    paid: "bg-primary/10 text-primary",
     awaiting_pin: "bg-yellow-100 text-yellow-700",
   };
-  return map[s] || "bg-slate-100 text-slate-600";
+  return map[s] || "bg-muted text-muted-foreground";
 };
 
 /* ═══════════════════════════════════════════════════════════════ */
@@ -213,13 +212,13 @@ const AdminOrders = () => {
     <button
       onClick={() => { setTab(id); setExpandedId(null); }}
       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === id
-        ? "bg-emerald-600 text-white shadow-sm"
-        : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
+        ? "bg-primary text-primary-foreground shadow-sm"
+        : "bg-background border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
         }`}
     >
       <Icon className="h-4 w-4" />
       {label}
-      <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${tab === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+      <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${tab === id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
         {count}
       </span>
     </button>
@@ -234,7 +233,7 @@ const AdminOrders = () => {
           <h2 className="text-xl font-bold flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" /> Orders
           </h2>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {orders.length} standard · {customOrders.length} custom
           </p>
         </div>
@@ -251,7 +250,7 @@ const AdminOrders = () => {
 
       {/* search */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search by name, phone, order ID…"
           className="pl-9"
@@ -262,28 +261,28 @@ const AdminOrders = () => {
 
       {/* ═══════════════ STANDARD ORDERS ═══════════════ */}
       {tab === "standard" && (
-        <Card className="border-slate-200">
-          <CardHeader className="border-b border-slate-100 py-4">
+        <Card className="border-border">
+          <CardHeader className="border-b border-border py-4">
             <CardTitle className="text-base">Standard Orders ({filteredOrders.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {ordersLoading && <p className="text-center text-slate-400 py-10 text-sm animate-pulse">Loading…</p>}
+            {ordersLoading && <p className="text-center text-muted-foreground py-10 text-sm animate-pulse">Loading…</p>}
             {!ordersLoading && filteredOrders.length === 0 && (
-              <p className="text-center text-slate-400 py-10 text-sm">No orders found.</p>
+              <p className="text-center text-muted-foreground py-10 text-sm">No orders found.</p>
             )}
 
             {filteredOrders.map(order => {
               const addr = order.shipping_address as any;
               return (
-                <div key={order.id} className="border-b border-slate-100 last:border-0">
+                <div key={order.id} className="border-b border-border last:border-0">
                   {/* summary row */}
                   <div
-                    className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-muted/50 cursor-pointer"
                     onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-sm font-semibold text-slate-700">#{orderRef(order.id)}</span>
+                        <span className="font-mono text-sm font-semibold text-foreground">#{orderRef(order.id)}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(order.status)}`}>
                           {order.status?.replace(/_/g, " ")}
                         </span>
@@ -293,38 +292,38 @@ const AdminOrders = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-500 mt-0.5">
+                      <p className="text-sm text-muted-foreground mt-0.5">
                         {addr?.full_name} · {addr?.phone}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-semibold text-slate-800">KES {order.total_amount?.toLocaleString()}</p>
-                      <p className="text-xs text-slate-400">{new Date(order.created_at).toLocaleDateString("en-GB")}</p>
+                      <p className="font-semibold text-foreground">KES {order.total_amount?.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString("en-GB")}</p>
                     </div>
                     {expandedId === order.id
-                      ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
-                      : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                      ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                      : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                     }
                   </div>
 
                   {/* expanded detail */}
                   {expandedId === order.id && (
-                    <div className="px-5 pb-5 bg-slate-50/60 border-t border-slate-100 space-y-4">
+                    <div className="px-5 pb-5 bg-muted/30 border-t border-border space-y-4">
                       <div className="grid sm:grid-cols-2 gap-4 pt-4">
                         {/* shipping info */}
                         <div>
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Shipping</p>
-                          <div className="space-y-1.5 text-sm text-slate-600">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Shipping</p>
+                          <div className="space-y-1.5 text-sm text-muted-foreground">
                             <p className="flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                               {addr?.address}, {addr?.city}
                             </p>
                             <p className="flex items-center gap-1.5">
-                              <Phone className="h-3.5 w-3.5 text-slate-400" />
+                              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                               {addr?.phone}
                             </p>
                             {(order as any).mpesa_receipt_number && (
-                              <p className="text-emerald-600 font-medium text-xs">
+                              <p className="text-primary font-medium text-xs">
                                 M-Pesa: {(order as any).mpesa_receipt_number}
                               </p>
                             )}
@@ -333,12 +332,12 @@ const AdminOrders = () => {
 
                         {/* items */}
                         <div>
-                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                             Items ({(order as any).order_items?.length || 0})
                           </p>
                           <div className="space-y-1">
                             {(order as any).order_items?.map((item: any) => (
-                              <div key={item.id} className="flex justify-between text-sm text-slate-600">
+                              <div key={item.id} className="flex justify-between text-sm text-muted-foreground">
                                 <span>{item.product_name} × {item.quantity}</span>
                                 <span>KES {item.total_price?.toLocaleString()}</span>
                               </div>
@@ -348,12 +347,12 @@ const AdminOrders = () => {
                       </div>
 
                       {order.notes && (
-                        <p className="text-xs text-slate-500 italic">Notes: {order.notes}</p>
+                        <p className="text-xs text-muted-foreground italic">Notes: {order.notes}</p>
                       )}
 
                       {/* Status update — keeps your original Select pattern */}
                       <div className="flex items-center gap-3 pt-2 flex-wrap">
-                        <label className="text-xs font-medium text-slate-500">Update Status:</label>
+                        <label className="text-xs font-medium text-muted-foreground">Update Status:</label>
                         <Select
                           value={order.status}
                           onValueChange={v => updateOrderStatus.mutate({ id: order.id, status: v as OrderStatus })}
@@ -369,7 +368,7 @@ const AdminOrders = () => {
                             ))}
                           </SelectContent>
                         </Select>
-                        <span className="text-xs text-slate-400">Customer is emailed on every change.</span>
+                        <span className="text-xs text-muted-foreground">Customer is emailed on every change.</span>
                       </div>
                     </div>
                   )}
@@ -382,78 +381,78 @@ const AdminOrders = () => {
 
       {/* ═══════════════ CUSTOM ORDERS ═══════════════ */}
       {tab === "custom" && (
-        <Card className="border-slate-200">
-          <CardHeader className="border-b border-slate-100 py-4">
+        <Card className="border-border">
+          <CardHeader className="border-b border-border py-4">
             <CardTitle className="text-base">Custom Orders ({filteredCustom.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {customLoading && <p className="text-center text-slate-400 py-10 text-sm animate-pulse">Loading…</p>}
+            {customLoading && <p className="text-center text-muted-foreground py-10 text-sm animate-pulse">Loading…</p>}
             {!customLoading && filteredCustom.length === 0 && (
-              <p className="text-center text-slate-400 py-10 text-sm">No custom orders yet.</p>
+              <p className="text-center text-muted-foreground py-10 text-sm">No custom orders yet.</p>
             )}
 
             {filteredCustom.map(order => (
-              <div key={order.id} className="border-b border-slate-100 last:border-0">
+              <div key={order.id} className="border-b border-border last:border-0">
                 <div
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 cursor-pointer"
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-muted/50 cursor-pointer"
                   onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-sm font-semibold text-slate-700">#{orderRef(order.id)}</span>
+                      <span className="font-mono text-sm font-semibold text-foreground">#{orderRef(order.id)}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(order.status)}`}>
                         {order.status.replace(/_/g, " ")}
                       </span>
                       {order.deposit_paid && (
-                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-700">
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-primary/10 text-primary">
                           Deposit Paid
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {order.full_name} · {order.product_name} × {order.quantity} {order.unit}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
                     {order.deposit_amount && (
-                      <p className="font-semibold text-slate-800">
+                      <p className="font-semibold text-foreground">
                         Deposit: KES {Number(order.deposit_amount).toLocaleString()}
                       </p>
                     )}
-                    <p className="text-xs text-slate-400">{new Date(order.created_at).toLocaleDateString("en-GB")}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString("en-GB")}</p>
                   </div>
                   {expandedId === order.id
-                    ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
-                    : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                    ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                    : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                   }
                 </div>
 
                 {expandedId === order.id && (
-                  <div className="px-5 pb-5 bg-slate-50/60 border-t border-slate-100 space-y-4">
+                  <div className="px-5 pb-5 bg-muted/30 border-t border-border space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4 pt-4">
                       <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Customer</p>
-                        <div className="space-y-1.5 text-sm text-slate-600">
-                          <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-slate-400" />{order.phone}</p>
-                          {order.email && <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-slate-400" />{order.email}</p>}
-                          <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-400" />{order.delivery_address}, {order.city}</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Customer</p>
+                        <div className="space-y-1.5 text-sm text-muted-foreground">
+                          <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-muted-foreground" />{order.phone}</p>
+                          {order.email && <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-muted-foreground" />{order.email}</p>}
+                          <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />{order.delivery_address}, {order.city}</p>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Product</p>
-                        <div className="space-y-1 text-sm text-slate-600">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Product</p>
+                        <div className="space-y-1 text-sm text-muted-foreground">
                           <p className="flex items-center gap-1.5">
-                            <Package className="h-3.5 w-3.5 text-slate-400" />
+                            <Package className="h-3.5 w-3.5 text-muted-foreground" />
                             {order.product_name} × {order.quantity} {order.unit}
                           </p>
                           {order.mpesa_receipt_number && (
-                            <p className="text-emerald-600 font-medium text-xs">M-Pesa: {order.mpesa_receipt_number}</p>
+                            <p className="text-primary font-medium text-xs">M-Pesa: {order.mpesa_receipt_number}</p>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {order.notes && <p className="text-xs text-slate-500 italic">Customer notes: {order.notes}</p>}
+                    {order.notes && <p className="text-xs text-muted-foreground italic">Customer notes: {order.notes}</p>}
 
                     {order.admin_notes && (
                       <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
@@ -465,7 +464,7 @@ const AdminOrders = () => {
                       <Button
                         size="sm"
                         onClick={() => openCustomUpdate(order)}
-                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        className="gap-1.5"
                       >
                         <Eye className="h-4 w-4" /> Update Order
                       </Button>
@@ -496,7 +495,7 @@ const AdminOrders = () => {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
-              <label className="text-xs font-medium text-slate-500 block mb-1">Status</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">Status</label>
               <Select value={newCustomStatus} onValueChange={setNewCustomStatus}>
                 <SelectTrigger>
                   <SelectValue />
@@ -514,7 +513,7 @@ const AdminOrders = () => {
             {/* Deposit — only shown when marking as ready */}
             {newCustomStatus === "ready" && (
               <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
                   Deposit Amount (KES) *
                 </label>
                 <Input
@@ -523,14 +522,14 @@ const AdminOrders = () => {
                   value={depositAmount}
                   onChange={e => setDepositAmount(e.target.value)}
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Customer will be emailed to pay this deposit via M-Pesa.
                 </p>
               </div>
             )}
 
             <div>
-              <label className="text-xs font-medium text-slate-500 block mb-1">Admin Notes (internal only)</label>
+              <label className="text-xs font-medium text-muted-foreground block mb-1">Admin Notes (internal only)</label>
               <Textarea
                 rows={3}
                 placeholder="Internal notes not visible to customer…"
@@ -547,7 +546,7 @@ const AdminOrders = () => {
             <Button
               onClick={saveCustomUpdate}
               disabled={notifying}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+              className="w-full gap-2"
             >
               {notifying
                 ? <><RefreshCw className="h-4 w-4 animate-spin" /> Saving & Notifying…</>

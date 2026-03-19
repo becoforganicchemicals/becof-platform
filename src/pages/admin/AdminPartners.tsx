@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logAdminActivity } from "@/lib/audit-logger";
@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
     Users, Building2, ChevronDown, ChevronUp, Search, RefreshCw,
     CheckCircle, XCircle, Clock, Eye, Mail, Plus, Pencil, Trash2,
-    Phone, MapPin, FileText, Star, EyeOff, Upload, Globe,
+    Phone, MapPin, FileText, Star, EyeOff, Upload,
 } from "lucide-react";
 
 /* ─── types ─── */
@@ -44,9 +44,9 @@ const PRODUCT_OPTIONS = ["fertilizers", "pesticides", "herbicides", "soil_booste
 const statusStyle = (s: string) => ({
     pending: { class: "bg-yellow-100 text-yellow-700", icon: Clock },
     reviewing: { class: "bg-blue-100 text-blue-700", icon: Eye },
-    approved: { class: "bg-emerald-100 text-emerald-700", icon: CheckCircle },
+    approved: { class: "bg-primary/10 text-primary", icon: CheckCircle },
     rejected: { class: "bg-red-100 text-red-700", icon: XCircle },
-}[s] || { class: "bg-slate-100 text-slate-600", icon: Clock });
+}[s] || { class: "bg-muted text-muted-foreground", icon: Clock });
 
 /* ══════════════════════════════════════════════════════════════════ */
 const AdminPartners = () => {
@@ -277,7 +277,7 @@ const AdminPartners = () => {
                     <h2 className="text-xl font-bold flex items-center gap-2">
                         <Users className="h-5 w-5" /> Partner Management
                     </h2>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                         {stats.total} applications · {profiles.length} profiles published
                     </p>
                 </div>
@@ -291,7 +291,7 @@ const AdminPartners = () => {
                 {[
                     { label: "Pending", count: stats.pending, color: "bg-yellow-50 border-yellow-200 text-yellow-700" },
                     { label: "Reviewing", count: stats.reviewing, color: "bg-blue-50 border-blue-200 text-blue-700" },
-                    { label: "Approved", count: stats.approved, color: "bg-emerald-50 border-emerald-200 text-emerald-700" },
+                    { label: "Approved", count: stats.approved, color: "bg-primary/10 border-primary/30 text-primary" },
                     { label: "Rejected", count: stats.rejected, color: "bg-red-50 border-red-200 text-red-700" },
                 ].map(s => (
                     <div key={s.label} className={`rounded-xl border p-4 ${s.color}`}>
@@ -309,12 +309,12 @@ const AdminPartners = () => {
                 ] as any[]).map(({ id, label, Icon, count }) => (
                     <button key={id} onClick={() => setTab(id as Tab)}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${tab === id
-                                ? "bg-emerald-600 text-white shadow-sm"
-                                : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300"
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-background border border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
                             }`}>
                         <Icon className="h-4 w-4" />
                         {label}
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${tab === id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${tab === id ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                             {count}
                         </span>
                     </button>
@@ -327,7 +327,7 @@ const AdminPartners = () => {
                     {/* filters */}
                     <div className="flex gap-3 flex-wrap">
                         <div className="relative flex-1 min-w-48">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input placeholder="Search by name, email, county…" className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
                         </div>
                         <Select value={statusFilter} onValueChange={v => setStatusFilter(v as AppStatus)}>
@@ -343,72 +343,72 @@ const AdminPartners = () => {
                         </Select>
                     </div>
 
-                    <Card className="border-slate-200">
-                        <CardHeader className="border-b border-slate-100 py-4">
+                    <Card className="border-border">
+                        <CardHeader className="border-b border-border py-4">
                             <CardTitle className="text-base">Distributor Applications ({filteredApps.length})</CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            {appsLoading && <p className="text-center text-slate-400 py-10 text-sm animate-pulse">Loading…</p>}
+                            {appsLoading && <p className="text-center text-muted-foreground py-10 text-sm animate-pulse">Loading…</p>}
                             {!appsLoading && filteredApps.length === 0 && (
-                                <p className="text-center text-slate-400 py-10 text-sm">No applications found.</p>
+                                <p className="text-center text-muted-foreground py-10 text-sm">No applications found.</p>
                             )}
 
                             {filteredApps.map(app => {
                                 const style = statusStyle(app.status);
                                 const Icon = style.icon;
                                 return (
-                                    <div key={app.id} className="border-b border-slate-100 last:border-0">
-                                        <div className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 cursor-pointer"
+                                    <div key={app.id} className="border-b border-border last:border-0">
+                                        <div className="flex items-center gap-4 px-5 py-4 hover:bg-muted/50 cursor-pointer"
                                             onClick={() => setExpandedId(expandedId === app.id ? null : app.id)}>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="font-mono text-xs text-slate-400">#{appRef(app.id)}</span>
+                                                    <span className="font-mono text-xs text-muted-foreground">#{appRef(app.id)}</span>
                                                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 ${style.class}`}>
                                                         <Icon className="h-3 w-3" />
                                                         {app.status}
                                                     </span>
                                                 </div>
-                                                <p className="font-semibold text-slate-800 mt-0.5">{app.full_name}</p>
-                                                <p className="text-sm text-slate-500">
+                                                <p className="font-semibold text-foreground mt-0.5">{app.full_name}</p>
+                                                <p className="text-sm text-muted-foreground">
                                                     {app.business_name && <span>{app.business_name} · </span>}
                                                     {app?.applicant_type?.replace(/_/g, " ")} · {app.county}
                                                 </p>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <p className="text-xs text-slate-400">{new Date(app.created_at).toLocaleDateString("en-GB")}</p>
+                                                <p className="text-xs text-muted-foreground">{new Date(app.created_at).toLocaleDateString("en-GB")}</p>
                                             </div>
                                             {expandedId === app.id
-                                                ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
-                                                : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                                                ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                                                : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                                             }
                                         </div>
 
                                         {expandedId === app.id && (
-                                            <div className="px-5 pb-5 bg-slate-50/60 border-t border-slate-100 space-y-4">
+                                            <div className="px-5 pb-5 bg-muted/30 border-t border-border space-y-4">
                                                 <div className="grid sm:grid-cols-3 gap-4 pt-4">
                                                     <div>
-                                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Contact</p>
-                                                        <div className="space-y-1.5 text-sm text-slate-600">
-                                                            <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-slate-400" />{app.email}</p>
-                                                            <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-slate-400" />{app.phone}</p>
-                                                            <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-400" />{[app.town, app.county].filter(Boolean).join(", ")}</p>
+                                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Contact</p>
+                                                        <div className="space-y-1.5 text-sm text-muted-foreground">
+                                                            <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-muted-foreground" />{app.email}</p>
+                                                            <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-muted-foreground" />{app.phone}</p>
+                                                            <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-muted-foreground" />{[app.town, app.county].filter(Boolean).join(", ")}</p>
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Business</p>
-                                                        <div className="space-y-1 text-sm text-slate-600">
+                                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Business</p>
+                                                        <div className="space-y-1 text-sm text-muted-foreground">
                                                             {app.business_reg_number && <p>Reg: {app.business_reg_number}</p>}
                                                             {app.kra_pin && <p>KRA: {app.kra_pin}</p>}
                                                             {app.years_in_business && <p>Years: {app.years_in_business}</p>}
                                                             {app.expected_monthly_volume && <p>Volume: {app.expected_monthly_volume.replace(/_/g, " ")}</p>}
-                                                            {app.has_storage_facility && <p className="text-emerald-600">✓ Has storage facility</p>}
+                                                            {app.has_storage_facility && <p className="text-primary">✓ Has storage facility</p>}
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Products Interest</p>
+                                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Products Interest</p>
                                                         <div className="flex flex-wrap gap-1">
                                                             {app.products_interest?.filter(Boolean).map(p => (
-                                                                <span key={p} className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full capitalize">
+                                                                <span key={p} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full capitalize">
                                                                     {p?.replace(/_/g, " ")}
                                                                 </span>
                                                             ))}
@@ -417,13 +417,13 @@ const AdminPartners = () => {
                                                 </div>
 
                                                 <div>
-                                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Motivation</p>
-                                                    <p className="text-sm text-slate-600 bg-white border border-slate-100 rounded-lg p-3">{app.motivation}</p>
+                                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Motivation</p>
+                                                    <p className="text-sm text-muted-foreground bg-muted/30 border border-border rounded-lg p-3">{app.motivation}</p>
                                                 </div>
 
                                                 {app.business_reg_cert_url && (
                                                     <a href={app.business_reg_cert_url} target="_blank" rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:underline">
+                                                        className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
                                                         <FileText className="h-3.5 w-3.5" /> View Business Registration Certificate
                                                     </a>
                                                 )}
@@ -441,7 +441,7 @@ const AdminPartners = () => {
 
                                                 <div className="flex gap-2 flex-wrap pt-2">
                                                     <Button size="sm" onClick={() => openReview(app)}
-                                                        className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
+                                                        className="gap-1.5">
                                                         <Eye className="h-4 w-4" /> Review / Update Status
                                                     </Button>
                                                     {app.status === "approved" && app.portal_account_created && (
@@ -450,7 +450,7 @@ const AdminPartners = () => {
                                                         </Button>
                                                     )}
                                                     {app.status === "approved" && app.portal_account_created && (
-                                                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium px-2 py-1 bg-emerald-50 rounded-full">
+                                                        <span className="inline-flex items-center gap-1 text-xs text-primary font-medium px-2 py-1 bg-primary/10 rounded-full">
                                                             <CheckCircle className="h-3 w-3" /> Account Created · Profile Auto-generated
                                                         </span>
                                                     )}
@@ -469,20 +469,20 @@ const AdminPartners = () => {
             {tab === "profiles" && (
                 <>
                     <div className="flex justify-end">
-                        <Button onClick={() => openProfileDialog()} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Button onClick={() => openProfileDialog()} className="gap-2">
                             <Plus className="h-4 w-4" /> New Partner Profile
                         </Button>
                     </div>
 
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {profilesLoading && <p className="col-span-3 text-center text-slate-400 py-10 text-sm animate-pulse">Loading…</p>}
+                        {profilesLoading && <p className="col-span-3 text-center text-muted-foreground py-10 text-sm animate-pulse">Loading…</p>}
                         {!profilesLoading && profiles.length === 0 && (
-                            <p className="col-span-3 text-center text-slate-400 py-10 text-sm">No partner profiles yet. Create one from an approved application.</p>
+                            <p className="col-span-3 text-center text-muted-foreground py-10 text-sm">No partner profiles yet. Create one from an approved application.</p>
                         )}
 
                         {profiles.map(profile => (
-                            <div key={profile.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition-all">
-                                <div className="h-16 bg-gradient-to-br from-emerald-600 to-green-700 relative">
+                            <div key={profile.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-all">
+                                <div className="h-16 bg-gradient-to-br from-primary to-secondary relative">
                                     {profile.featured && (
                                         <span className="absolute top-2 right-2 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                             <Star className="h-3 w-3" /> Featured
@@ -490,22 +490,22 @@ const AdminPartners = () => {
                                     )}
                                 </div>
                                 <div className="px-4 -mt-6 mb-2">
-                                    <div className="w-12 h-12 rounded-xl border-2 border-white shadow bg-white flex items-center justify-center overflow-hidden">
+                                    <div className="w-12 h-12 rounded-xl border-2 border-background shadow bg-background flex items-center justify-center overflow-hidden">
                                         {profile.logo_url
                                             ? <img src={profile.logo_url} alt={profile.display_name} className="w-full h-full object-cover" />
-                                            : <Building2 className="h-6 w-6 text-slate-300" />
+                                            : <Building2 className="h-6 w-6 text-muted-foreground/40" />
                                         }
                                     </div>
                                 </div>
                                 <div className="px-4 pb-4">
-                                    <h3 className="font-bold text-slate-800">{profile.display_name}</h3>
-                                    {profile.tagline && <p className="text-xs text-emerald-600 mt-0.5">{profile.tagline}</p>}
+                                    <h3 className="font-bold text-foreground">{profile.display_name}</h3>
+                                    {profile.tagline && <p className="text-xs text-primary mt-0.5">{profile.tagline}</p>}
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${profile.published ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${profile.published ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                                             {profile.published ? "Published" : "Draft"}
                                         </span>
                                         {profile.county && (
-                                            <span className="text-xs text-slate-400 flex items-center gap-0.5">
+                                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                                                 <MapPin className="h-3 w-3" />{profile.county}
                                             </span>
                                         )}
@@ -542,15 +542,15 @@ const AdminPartners = () => {
                     </DialogHeader>
                     <div className="space-y-4 pt-2">
                         {selectedApp && (
-                            <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 space-y-0.5">
-                                <p className="font-medium text-slate-800">{selectedApp.full_name}</p>
+                            <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground space-y-0.5">
+                                <p className="font-medium text-foreground">{selectedApp.full_name}</p>
                                 <p>{selectedApp.email} · {selectedApp.phone}</p>
                                 <p>{selectedApp.business_name} · {selectedApp.county}</p>
                             </div>
                         )}
 
                         <div>
-                            <label className="text-xs font-medium text-slate-500 block mb-1">Decision</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Decision</label>
                             <Select value={newStatus} onValueChange={setNewStatus}>
                                 <SelectTrigger>
                                     <SelectValue />
@@ -565,9 +565,9 @@ const AdminPartners = () => {
 
                         {newStatus === "approved" && (
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Temporary Password</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Temporary Password</label>
                                 <Input value={tempPassword} onChange={e => setTempPassword(e.target.value)} />
-                                <p className="text-xs text-slate-400 mt-1">
+                                <p className="text-xs text-muted-foreground mt-1">
                                     This will be emailed to the applicant along with their portal login link. They must change it on first login.
                                 </p>
                             </div>
@@ -575,14 +575,14 @@ const AdminPartners = () => {
 
                         {newStatus === "rejected" && (
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Rejection Reason *</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Rejection Reason *</label>
                                 <Textarea rows={2} value={rejectionReason} onChange={e => setRejectionReason(e.target.value)}
                                     placeholder="Explain why the application was rejected…" className="resize-none" />
                             </div>
                         )}
 
                         <div>
-                            <label className="text-xs font-medium text-slate-500 block mb-1">Admin Notes (internal)</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Admin Notes (internal)</label>
                             <Textarea rows={2} value={adminNotes} onChange={e => setAdminNotes(e.target.value)}
                                 placeholder="Internal notes not visible to applicant…" className="resize-none" />
                         </div>
@@ -593,7 +593,7 @@ const AdminPartners = () => {
                         </div>
 
                         <Button onClick={saveReview} disabled={reviewing}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+                            className="w-full gap-2">
                             {reviewing
                                 ? <><RefreshCw className="h-4 w-4 animate-spin" /> Saving…</>
                                 : "Save Decision & Notify Applicant"
@@ -612,14 +612,14 @@ const AdminPartners = () => {
                     <div className="space-y-4 pt-2">
                         {/* Logo */}
                         <div>
-                            <label className="text-xs font-medium text-slate-500 block mb-1">Logo / Profile Picture</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">Logo / Profile Picture</label>
                             <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                                <div className="w-14 h-14 rounded-xl border border-border bg-muted/50 flex items-center justify-center overflow-hidden">
                                     {logoFile
                                         ? <img src={URL.createObjectURL(logoFile)} alt="" className="w-full h-full object-cover" />
                                         : profileForm.logo_url
                                             ? <img src={profileForm.logo_url} alt="" className="w-full h-full object-cover" />
-                                            : <Building2 className="h-6 w-6 text-slate-300" />
+                                            : <Building2 className="h-6 w-6 text-muted-foreground/40" />
                                     }
                                 </div>
                                 <div>
@@ -636,49 +636,49 @@ const AdminPartners = () => {
 
                         <div className="grid sm:grid-cols-2 gap-3">
                             <div className="sm:col-span-2">
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Display Name *</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Display Name *</label>
                                 <Input value={profileForm.display_name || ""} onChange={e => setProfileForm(p => ({ ...p, display_name: e.target.value }))} placeholder="e.g. Kamau Agrovet Ltd" />
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Tagline</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Tagline</label>
                                 <Input value={profileForm.tagline || ""} onChange={e => setProfileForm(p => ({ ...p, tagline: e.target.value }))} placeholder="e.g. Your trusted agrovet in Thika" />
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Description</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Description</label>
                                 <Textarea rows={2} value={profileForm.description || ""} onChange={e => setProfileForm(p => ({ ...p, description: e.target.value }))} className="resize-none" placeholder="Brief profile description…" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Phone</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Phone</label>
                                 <Input value={profileForm.phone || ""} onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))} placeholder="+254 7XX XXX XXX" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Email</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Email</label>
                                 <Input value={profileForm.email || ""} onChange={e => setProfileForm(p => ({ ...p, email: e.target.value }))} />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">County</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">County</label>
                                 <Input value={profileForm.county || ""} onChange={e => setProfileForm(p => ({ ...p, county: e.target.value }))} />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Town</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Town</label>
                                 <Input value={profileForm.town || ""} onChange={e => setProfileForm(p => ({ ...p, town: e.target.value }))} />
                             </div>
                             <div className="sm:col-span-2">
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Website</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Website</label>
                                 <Input value={profileForm.website || ""} onChange={e => setProfileForm(p => ({ ...p, website: e.target.value }))} placeholder="https://…" />
                             </div>
                         </div>
 
                         {/* Products */}
                         <div>
-                            <label className="text-xs font-medium text-slate-500 block mb-2">Products Distributed</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-2">Products Distributed</label>
                             <div className="flex flex-wrap gap-2">
                                 {PRODUCT_OPTIONS.map(p => (
                                     <button key={p} type="button"
                                         onClick={() => setSelectedProducts(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
                                         className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${selectedProducts.includes(p)
-                                                ? "bg-emerald-600 text-white border-emerald-600"
-                                                : "bg-white text-slate-600 border-slate-200 hover:border-emerald-400"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "bg-background text-muted-foreground border-border hover:border-primary/50"
                                             }`}>
                                         {p.replace(/_/g, " ")}
                                     </button>
@@ -689,15 +689,15 @@ const AdminPartners = () => {
                         {/* Social */}
                         <div className="grid sm:grid-cols-3 gap-3">
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Facebook URL</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Facebook URL</label>
                                 <Input value={profileForm.facebook_url || ""} onChange={e => setProfileForm(p => ({ ...p, facebook_url: e.target.value }))} placeholder="https://facebook.com/…" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Instagram URL</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Instagram URL</label>
                                 <Input value={profileForm.instagram_url || ""} onChange={e => setProfileForm(p => ({ ...p, instagram_url: e.target.value }))} placeholder="https://instagram.com/…" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-slate-500 block mb-1">Twitter/X URL</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Twitter/X URL</label>
                                 <Input value={profileForm.twitter_url || ""} onChange={e => setProfileForm(p => ({ ...p, twitter_url: e.target.value }))} placeholder="https://twitter.com/…" />
                             </div>
                         </div>
@@ -705,20 +705,20 @@ const AdminPartners = () => {
                         {/* Visibility toggles */}
                         <div className="flex gap-4">
                             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setProfileForm(p => ({ ...p, published: !p.published }))}>
-                                <div className={`w-9 h-5 rounded-full relative transition-colors ${profileForm.published ? "bg-emerald-500" : "bg-slate-300"}`}>
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${profileForm.published ? "translate-x-4" : "translate-x-0.5"}`} />
+                                <div className={`w-9 h-5 rounded-full relative transition-colors ${profileForm.published ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                                    <div className={`absolute top-0.5 w-4 h-4 bg-background rounded-full shadow transition-transform ${profileForm.published ? "translate-x-4" : "translate-x-0.5"}`} />
                                 </div>
-                                <span className="text-sm text-slate-600">Published</span>
+                                <span className="text-sm text-muted-foreground">Published</span>
                             </div>
                             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setProfileForm(p => ({ ...p, featured: !p.featured }))}>
-                                <div className={`w-9 h-5 rounded-full relative transition-colors ${profileForm.featured ? "bg-amber-500" : "bg-slate-300"}`}>
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${profileForm.featured ? "translate-x-4" : "translate-x-0.5"}`} />
+                                <div className={`w-9 h-5 rounded-full relative transition-colors ${profileForm.featured ? "bg-amber-500" : "bg-muted-foreground/30"}`}>
+                                    <div className={`absolute top-0.5 w-4 h-4 bg-background rounded-full shadow transition-transform ${profileForm.featured ? "translate-x-4" : "translate-x-0.5"}`} />
                                 </div>
-                                <span className="text-sm text-slate-600">Featured</span>
+                                <span className="text-sm text-muted-foreground">Featured</span>
                             </div>
                         </div>
 
-                        <Button onClick={saveProfile} disabled={savingProfile} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+                        <Button onClick={saveProfile} disabled={savingProfile} className="w-full gap-2">
                             {savingProfile ? <><RefreshCw className="h-4 w-4 animate-spin" /> Saving…</> : editingProfile ? "Update Profile" : "Create Profile"}
                         </Button>
                     </div>

@@ -82,7 +82,7 @@ const CustomOrder = () => {
                 <PackageSearch className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold mb-2">Sign in to place an order</h1>
                 <p className="text-muted-foreground mb-6">You need an account to submit a custom order request.</p>
-                <Link to="/signin"><Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Sign In</Button></Link>
+                <Link to="/signin"><Button className="">Sign In</Button></Link>
             </div>
         </Layout>
     );
@@ -90,17 +90,17 @@ const CustomOrder = () => {
     if (submitted) return (
         <Layout>
             <div className="container py-20 max-w-lg mx-auto text-center">
-                <div className="bg-white rounded-2xl border border-slate-200 p-10 shadow-sm">
-                    <CheckCircle className="h-16 w-16 text-emerald-500 mx-auto mb-4" />
-                    <h1 className="text-2xl font-bold text-slate-900 mb-2">Order Request Submitted!</h1>
-                    <p className="text-slate-500 mb-1">Reference #{orderId}</p>
-                    <p className="text-sm text-slate-500 mt-3 mb-8">
+                <div className="bg-card rounded-2xl border border-border p-10 shadow-sm">
+                    <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
+                    <h1 className="text-2xl font-bold text-foreground mb-2">Order Request Submitted!</h1>
+                    <p className="text-muted-foreground mb-1">Reference #{orderId}</p>
+                    <p className="text-sm text-muted-foreground mt-3 mb-8">
                         Our sales team will review your request and contact you on <strong>{form.phone}</strong> to confirm availability, pricing, delivery fee, and deposit amount.
                         You'll also receive a confirmation email.
                     </p>
                     <div className="flex gap-3 justify-center">
                         <Link to="/products"><Button variant="outline">Back to Products</Button></Link>
-                        <Link to="/profile"><Button className="bg-emerald-600 hover:bg-emerald-700 text-white">View My Orders</Button></Link>
+                        <Link to="/profile"><Button className="">View My Orders</Button></Link>
                     </div>
                 </div>
             </div>
@@ -121,12 +121,12 @@ const CustomOrder = () => {
                     </button>
 
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-                            <ClipboardList className="h-5 w-5 text-emerald-600" />
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                            <ClipboardList className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Make a Custom Order</h1>
-                            <p className="text-sm text-slate-500">Our sales team will confirm availability and contact you.</p>
+                            <h1 className="text-2xl font-bold text-foreground">Make a Custom Order</h1>
+                            <p className="text-sm text-muted-foreground">Our sales team will confirm availability and contact you.</p>
                         </div>
                     </div>
 
@@ -141,10 +141,10 @@ const CustomOrder = () => {
                         </ol>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm space-y-5">
+                    <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-border p-8 shadow-sm space-y-5">
                         {/* Product */}
                         <div>
-                            <h2 className="text-base font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Product Details</h2>
+                            <h2 className="text-base font-semibold text-foreground mb-4 pb-2 border-b border-border">Product Details</h2>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div className="sm:col-span-2">
                                     <Label htmlFor="product_name">Product Name *</Label>
@@ -159,7 +159,7 @@ const CustomOrder = () => {
                                 <div>
                                     <Label htmlFor="unit">Unit</Label>
                                     <select id="unit" name="unit" value={form.unit} onChange={handleChange}
-                                        className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 mt-1">
+                                        className="w-full border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary mt-1 bg-background">
                                         <option value="kg">Kilograms (kg)</option>
                                         <option value="litres">Litres (L)</option>
                                         <option value="bags">Bags</option>
@@ -172,7 +172,7 @@ const CustomOrder = () => {
 
                         {/* Contact */}
                         <div>
-                            <h2 className="text-base font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Your Details</h2>
+                            <h2 className="text-base font-semibold text-foreground mb-4 pb-2 border-b border-border">Your Details</h2>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="full_name">Full Name *</Label>
@@ -194,7 +194,7 @@ const CustomOrder = () => {
 
                         {/* Delivery */}
                         <div>
-                            <h2 className="text-base font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Delivery Address</h2>
+                            <h2 className="text-base font-semibold text-foreground mb-4 pb-2 border-b border-border">Delivery Address</h2>
                             <div className="grid sm:grid-cols-2 gap-4">
                                 <div className="sm:col-span-2">
                                     <Label htmlFor="delivery_address">Street / Area *</Label>
@@ -207,7 +207,7 @@ const CustomOrder = () => {
                                         onChange={handleChange} required placeholder="e.g. Nairobi" />
                                 </div>
                             </div>
-                            <p className="text-xs text-slate-400 mt-2">
+                            <p className="text-xs text-muted-foreground mt-2">
                                 Delivery is not free. Our sales team will confirm the delivery fee when your order is ready.
                             </p>
                         </div>
@@ -220,7 +220,7 @@ const CustomOrder = () => {
                         </div>
 
                         <Button type="submit" disabled={submitting}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-base gap-2">
+                            className="w-full h-12 text-base gap-2">
                             {submitting
                                 ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
                                 : <><ClipboardList className="h-4 w-4" /> Submit Custom Order</>

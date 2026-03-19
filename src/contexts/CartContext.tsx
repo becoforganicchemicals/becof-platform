@@ -54,7 +54,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       .select("id, product_id, quantity, products(id, name, price, images, stock_quantity, slug)")
       .eq("user_id", user.id);
     if (data) {
-      setItems(data.map((d: any) => ({ ...d, product: d.products })));
+      // Filter out cart items whose product has been deleted (products join returns null)
+      setItems(
+        data
+          .filter((d: any) => d.products != null)
+          .map((d: any) => ({ ...d, product: d.products }))
+      );
     }
     setLoading(false);
   }, [user]);
