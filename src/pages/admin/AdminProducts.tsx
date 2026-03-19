@@ -208,7 +208,10 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").update({ is_published }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-products"] }),
+    onSuccess: (_, { id, is_published }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "products", targetId: id, afterData: { is_published } });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
   });
 
   /* ─── Delete ─── */
