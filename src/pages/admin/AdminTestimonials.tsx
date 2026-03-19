@@ -83,6 +83,7 @@ const AdminTestimonials = () => {
             toast.error("Failed to update testimonial");
         } else {
             toast.success(status === "approved" ? "Testimonial approved and featured" : "Testimonial rejected");
+            logAdminActivity({ action: "UPDATE", targetTable: "testimonials", targetId: id, afterData: { status, featured: status === "approved" } });
             fetchTestimonials();
         }
         setActionId(null);
