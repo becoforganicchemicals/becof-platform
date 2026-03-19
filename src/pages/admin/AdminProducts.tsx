@@ -220,7 +220,8 @@ const AdminProducts = () => {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      logAdminActivity({ action: "DELETE", targetTable: "products", targetId: id });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({ title: "Product deleted" });
     },
