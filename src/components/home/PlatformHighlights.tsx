@@ -128,16 +128,6 @@ const PlatformHighlights = () => (
         ))}
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="text-center mt-12"
-      >
-        <Link to="/products">
-          <Button className="gap-2">Explore the Platform</Button>
-        </Link>
-      </motion.div>
     </div>
   </section>
 );

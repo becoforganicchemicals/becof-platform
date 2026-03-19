@@ -77,14 +77,6 @@ const FinalCTA = () => (
                 <Handshake className="h-4 w-4" /> Become a Distributor
               </Button>
             </Link>
-            <Link to="/community">
-              <Button
-                size="lg"
-                className="gap-2 font-semibold bg-transparent text-white border border-white/60 hover:bg-white/15 hover:border-white transition-all duration-300"
-              >
-                <Users className="h-4 w-4" /> Join Community
-              </Button>
-            </Link>
           </div>
         </div>
       </motion.div>
