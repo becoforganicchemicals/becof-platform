@@ -292,8 +292,8 @@ const Partners = () => {
                       <Input name="town" value={form.town} onChange={handleChange} placeholder="e.g. Thika Town" />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="text-xs font-medium text-slate-500 block mb-1">Business Registration Certificate</label>
-                      <div className="border border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-emerald-400 transition-colors">
+                      <label className="text-xs font-medium text-slate-500 block mb-1">Business Registration Certificate / Certificate of Incorporation *</label>
+                      <div className={`border border-dashed ${certFile ? 'border-emerald-400' : 'border-slate-300'} rounded-lg p-4 text-center hover:border-emerald-400 transition-colors`}>
                         <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="certUpload"
                           onChange={e => setCertFile(e.target.files?.[0] || null)} className="hidden" />
                         <label htmlFor="certUpload" className="cursor-pointer flex flex-col items-center gap-2">
