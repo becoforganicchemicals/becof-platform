@@ -273,14 +273,9 @@ const Partners = () => {
                       <Input name="business_name" value={form.business_name} onChange={handleChange} placeholder="e.g. Kamau Agrovet Ltd" />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">Business Reg. Number</label>
-                      <Input name="business_reg_number" value={form.business_reg_number} onChange={handleChange} placeholder="e.g. CPR/2020/123456" />
+                      <label className="text-xs font-medium text-slate-500 block mb-1">Years in Business</label>
+                      <Input name="years_in_business" type="number" min={0} value={form.years_in_business} onChange={handleChange} placeholder="e.g. 5" />
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">KRA PIN</label>
-                      <Input name="kra_pin" value={form.kra_pin} onChange={handleChange} placeholder="e.g. P051234567X" />
-                    </div>
-                    <div>
                       <label className="text-xs font-medium text-slate-500 block mb-1">Years in Business</label>
                       <Input name="years_in_business" type="number" min={0} value={form.years_in_business} onChange={handleChange} placeholder="e.g. 5" />
                     </div>
