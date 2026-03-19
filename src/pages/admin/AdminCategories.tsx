@@ -80,7 +80,8 @@ const AdminCategories = () => {
       const { error } = await supabase.from("categories").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      logAdminActivity({ action: "DELETE", targetTable: "categories", targetId: id });
       queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] });
       toast({ title: "Category deleted" });
     },
