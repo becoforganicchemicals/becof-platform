@@ -74,7 +74,7 @@ const Partners = () => {
 
   const [form, setForm] = useState({
     full_name: "", email: "", phone: "", business_name: "",
-    applicant_type: "", business_reg_number: "", kra_pin: "",
+    applicant_type: "",
     years_in_business: "", county: "", town: "",
     expected_monthly_volume: "", has_storage_facility: false,
     storage_capacity: "", motivation: "",
@@ -111,8 +111,8 @@ const Partners = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.full_name || !form.email || !form.phone || !form.applicant_type || !form.county || !form.motivation) {
-      toast.error("Please fill all required fields"); return;
+    if (!form.full_name || !form.email || !form.phone || !form.applicant_type || !form.county || !form.motivation || !certFile) {
+      toast.error("Please fill all required fields and upload your business registration certificate"); return;
     }
     setSubmitting(true);
 
@@ -273,14 +273,6 @@ const Partners = () => {
                       <Input name="business_name" value={form.business_name} onChange={handleChange} placeholder="e.g. Kamau Agrovet Ltd" />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">Business Reg. Number</label>
-                      <Input name="business_reg_number" value={form.business_reg_number} onChange={handleChange} placeholder="e.g. CPR/2020/123456" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-slate-500 block mb-1">KRA PIN</label>
-                      <Input name="kra_pin" value={form.kra_pin} onChange={handleChange} placeholder="e.g. P051234567X" />
-                    </div>
-                    <div>
                       <label className="text-xs font-medium text-slate-500 block mb-1">Years in Business</label>
                       <Input name="years_in_business" type="number" min={0} value={form.years_in_business} onChange={handleChange} placeholder="e.g. 5" />
                     </div>
@@ -297,8 +289,8 @@ const Partners = () => {
                       <Input name="town" value={form.town} onChange={handleChange} placeholder="e.g. Thika Town" />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="text-xs font-medium text-slate-500 block mb-1">Business Registration Certificate</label>
-                      <div className="border border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-emerald-400 transition-colors">
+                      <label className="text-xs font-medium text-slate-500 block mb-1">Business Registration Certificate / Certificate of Incorporation *</label>
+                      <div className={`border border-dashed ${certFile ? 'border-emerald-400' : 'border-slate-300'} rounded-lg p-4 text-center hover:border-emerald-400 transition-colors`}>
                         <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="certUpload"
                           onChange={e => setCertFile(e.target.files?.[0] || null)} className="hidden" />
                         <label htmlFor="certUpload" className="cursor-pointer flex flex-col items-center gap-2">

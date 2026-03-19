@@ -7,26 +7,29 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "Becof Organic Chemicals <partners@becoforganicchemicals.com>";
+const FROM_EMAIL = "Becof Organic Chemicals Limited <info@becoforganic.com>";
+const CC_EMAIL = "mweri@becoforganic.com";
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@becoforganicchemicals.com";
 const SITE_URL = "https://www.becoforganicchemicals.com";
 
-const sendEmail = async (to: string, subject: string, html: string) => {
+const sendEmail = async (to: string, subject: string, html: string, cc?: string | string[]) => {
   if (!RESEND_API_KEY) {
-    console.log("[MOCK EMAIL] To:", to, "Subject:", subject);
+    console.log("[MOCK EMAIL] To:", to, "CC:", cc, "Subject:", subject);
     return;
   }
+  const payload: Record<string, unknown> = { from: FROM_EMAIL, to, subject, html };
+  if (cc) payload.cc = Array.isArray(cc) ? cc : [cc];
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) console.error("Resend error:", await res.text());
 };
 
 const brandHeader = `
   <div style="background:#166534;padding:24px 32px;border-radius:12px 12px 0 0;">
-    <h1 style="color:#fff;margin:0;font-size:20px;font-family:sans-serif;">Becof Organic Chemicals</h1>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:sans-serif;">Becof Organic Chemicals Limited</h1>
     <p style="color:#bbf7d0;margin:4px 0 0;font-size:13px;font-family:sans-serif;">Distributor Partnership Programme</p>
   </div>
 `;
@@ -89,12 +92,12 @@ serve(async (req) => {
             </p>
             <p style="color:#475569;font-size:14px;">
               If you have any questions, contact us at
-              <a href="mailto:partners@becoforganicchemicals.com" style="color:#16a34a;">partners@becoforganicchemicals.com</a>
+              <a href="mailto:info@becoforganic.com" style="color:#16a34a;">info@becoforganic.com</a>
             </p>
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
 
       // Notify admin
       await sendEmail(ADMIN_EMAIL, `New Distributor Application #${appRef} – ${app.full_name}`, `
@@ -132,12 +135,12 @@ serve(async (req) => {
             </p>
             <p style="color:#475569;font-size:14px;">
               For any questions, contact us at
-              <a href="mailto:partners@becoforganicchemicals.com" style="color:#16a34a;">partners@becoforganicchemicals.com</a>
+              <a href="mailto:info@becoforganic.com" style="color:#16a34a;">info@becoforganic.com</a>
             </p>
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     // ── Application Approved ──
@@ -250,7 +253,7 @@ serve(async (req) => {
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     // ── Resend Credentials (does NOT create a new user) ──
@@ -298,7 +301,7 @@ serve(async (req) => {
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     // ── Application Rejected ──
@@ -329,12 +332,12 @@ serve(async (req) => {
             </p>
             <p style="color:#475569;font-size:14px;">
               For further clarification, please contact our partnerships team at
-              <a href="mailto:partners@becoforganicchemicals.com" style="color:#16a34a;">partners@becoforganicchemicals.com</a>
+              <a href="mailto:info@becoforganic.com" style="color:#16a34a;">info@becoforganic.com</a>
             </p>
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     return new Response(JSON.stringify({ success: true }), {
