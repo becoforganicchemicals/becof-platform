@@ -244,6 +244,7 @@ const AdminPartners = () => {
     const deleteProfile = async (id: string) => {
         if (!confirm("Delete this partner profile? This cannot be undone.")) return;
         await supabase.from("partner_profiles").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "partner_profiles", targetId: id });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
         toast({ title: "Profile deleted" });
     };
