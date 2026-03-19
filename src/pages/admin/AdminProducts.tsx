@@ -174,7 +174,13 @@ const AdminProducts = () => {
         setUploading(false);
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, product) => {
+      logAdminActivity({
+        action: product.id ? "UPDATE" : "INSERT",
+        targetTable: "products",
+        targetId: product.id || null,
+        afterData: { name: product.name, price: product.price, is_published: product.is_published },
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       setDialogOpen(false);
       resetForm();
