@@ -67,9 +67,11 @@ const AdminImpact = () => {
         }
         if (editingMetric) {
             await supabase.from("impact_metrics").update(metricForm).eq("id", editingMetric.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "impact_metrics", targetId: editingMetric.id, afterData: metricForm });
             toast({ title: "Metric updated" });
         } else {
-            await supabase.from("impact_metrics").insert(metricForm);
+            const { data } = await supabase.from("impact_metrics").insert(metricForm).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "impact_metrics", targetId: data?.id || null, afterData: metricForm });
             toast({ title: "Metric created" });
         }
         setMetricDialog(false);
