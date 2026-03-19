@@ -1,39 +1,11 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Handshake, ShoppingBag } from "lucide-react";
-
-const stats = [
-  { value: "5,000+", label: "Farmers Served" },
-  { value: "30+", label: "Certified Products" },
-  { value: "8", label: "Counties Covered" },
-  { value: "98%", label: "Customer Satisfaction" },
-];
+import { Handshake, ShoppingBag } from "lucide-react";
 
 const FinalCTA = () => (
   <section className="py-24 bg-background">
     <div className="container">
-      {/* Stats row */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
-      >
-        {stats.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
-            className="text-center"
-          >
-            <div className="text-3xl md:text-4xl font-bold text-primary mb-1">{s.value}</div>
-            <div className="text-sm text-muted-foreground">{s.label}</div>
-          </motion.div>
-        ))}
-      </motion.div>
 
       {/* CTA card */}
       <motion.div
