@@ -140,6 +140,7 @@ const AdminImpact = () => {
     const deleteReport = async (id: string) => {
         if (!confirm("Delete this ESG report?")) return;
         await supabase.from("esg_reports").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "esg_reports", targetId: id });
         fetchAll();
     };
 
