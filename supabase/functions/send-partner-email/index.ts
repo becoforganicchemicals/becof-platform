@@ -29,7 +29,7 @@ const sendEmail = async (to: string, subject: string, html: string, cc?: string 
 
 const brandHeader = `
   <div style="background:#166534;padding:24px 32px;border-radius:12px 12px 0 0;">
-    <h1 style="color:#fff;margin:0;font-size:20px;font-family:sans-serif;">Becof Organic Chemicals</h1>
+    <h1 style="color:#fff;margin:0;font-size:20px;font-family:sans-serif;">Becof Organic Chemicals Limited</h1>
     <p style="color:#bbf7d0;margin:4px 0 0;font-size:13px;font-family:sans-serif;">Distributor Partnership Programme</p>
   </div>
 `;
