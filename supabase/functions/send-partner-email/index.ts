@@ -253,7 +253,7 @@ serve(async (req) => {
           </div>
           ${brandFooter}
         </div>
-      `);
+      `, CC_EMAIL);
     }
 
     // ── Resend Credentials (does NOT create a new user) ──
