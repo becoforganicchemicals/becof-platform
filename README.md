@@ -300,12 +300,6 @@ Never commit `.env` to version control.
 npm run dev
 ```
 
-App runs at:
-
-```
-http://localhost:5173
-```
-
 ---
 
 # 🗄 Supabase
