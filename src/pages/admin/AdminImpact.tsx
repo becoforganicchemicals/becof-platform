@@ -170,9 +170,11 @@ const AdminImpact = () => {
         const payload = { ...awardForm, image_url };
         if (editingAward) {
             await supabase.from("impact_awards").update(payload).eq("id", editingAward.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "impact_awards", targetId: editingAward.id, afterData: { name: awardForm.name } });
             toast({ title: "Award updated" });
         } else {
-            await supabase.from("impact_awards").insert(payload);
+            const { data } = await supabase.from("impact_awards").insert(payload).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "impact_awards", targetId: data?.id || null, afterData: { name: awardForm.name } });
             toast({ title: "Award created" });
         }
         setAwardDialog(false);
