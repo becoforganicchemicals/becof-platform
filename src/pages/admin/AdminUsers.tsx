@@ -85,7 +85,8 @@ const AdminUsers = () => {
       const { error } = await supabase.from("user_roles").update({ role }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, { id, role }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "user_roles", targetId: id, afterData: { role } });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast({ title: "Role updated successfully" });
     },
