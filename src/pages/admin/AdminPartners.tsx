@@ -252,6 +252,7 @@ const AdminPartners = () => {
     /* ─── Toggle published/featured ─── */
     const toggleField = async (id: string, field: "published" | "featured", current: boolean) => {
         await supabase.from("partner_profiles").update({ [field]: !current }).eq("id", id);
+        logAdminActivity({ action: "UPDATE", targetTable: "partner_profiles", targetId: id, afterData: { [field]: !current } });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };
 
