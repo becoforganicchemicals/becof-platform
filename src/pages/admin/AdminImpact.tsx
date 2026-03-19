@@ -122,9 +122,11 @@ const AdminImpact = () => {
         const payload = { ...reportForm, file_url };
         if (editingReport) {
             await supabase.from("esg_reports").update(payload).eq("id", editingReport.id);
+            logAdminActivity({ action: "UPDATE", targetTable: "esg_reports", targetId: editingReport.id, afterData: { title: reportForm.title } });
             toast({ title: "Report updated" });
         } else {
-            await supabase.from("esg_reports").insert(payload);
+            const { data } = await supabase.from("esg_reports").insert(payload).select("id").single();
+            logAdminActivity({ action: "INSERT", targetTable: "esg_reports", targetId: data?.id || null, afterData: { title: reportForm.title } });
             toast({ title: "Report published" });
         }
         setUploading(false);
