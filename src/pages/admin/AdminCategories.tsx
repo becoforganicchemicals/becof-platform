@@ -53,7 +53,8 @@ const AdminCategories = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, cat) => {
+      logAdminActivity({ action: cat.id ? "UPDATE" : "INSERT", targetTable: "categories", targetId: cat.id || null, afterData: { name: cat.name, slug: cat.slug } });
       queryClient.invalidateQueries({ queryKey: ["admin-all-categories"] });
       queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       setDialogOpen(false);
