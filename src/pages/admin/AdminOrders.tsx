@@ -191,6 +191,7 @@ const AdminOrders = () => {
       });
     }
 
+    logAdminActivity({ action: "UPDATE", targetTable: "custom_orders", targetId: selectedCustom.id, afterData: { status: newCustomStatus, admin_notes: adminNotes } });
     toast({ title: "Custom order updated & customer notified ✓" });
     setNotifying(false);
     setUpdateDialog(false);
