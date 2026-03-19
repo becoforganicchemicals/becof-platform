@@ -74,7 +74,7 @@ const Partners = () => {
 
   const [form, setForm] = useState({
     full_name: "", email: "", phone: "", business_name: "",
-    applicant_type: "", business_reg_number: "", kra_pin: "",
+    applicant_type: "",
     years_in_business: "", county: "", town: "",
     expected_monthly_volume: "", has_storage_facility: false,
     storage_capacity: "", motivation: "",
