@@ -241,6 +241,7 @@ const AdminLearn = () => {
     const deleteArticle = async (id: string) => {
         if (!confirm("Delete this article? This cannot be undone.")) return;
         await supabase.from("learn_articles").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "learn_articles", targetId: id });
         fetchData();
     };
 
