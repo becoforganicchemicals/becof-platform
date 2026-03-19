@@ -187,6 +187,7 @@ const AdminImpact = () => {
     const deleteAward = async (id: string) => {
         if (!confirm("Delete this award?")) return;
         await supabase.from("impact_awards").delete().eq("id", id);
+        logAdminActivity({ action: "DELETE", targetTable: "impact_awards", targetId: id });
         fetchAll();
     };
 
