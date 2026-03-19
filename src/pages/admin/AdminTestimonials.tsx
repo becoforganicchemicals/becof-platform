@@ -100,6 +100,7 @@ const AdminTestimonials = () => {
             .eq("id", t.id);
 
         if (!error) {
+            logAdminActivity({ action: "UPDATE", targetTable: "testimonials", targetId: t.id, afterData: { featured: !t.featured } });
             toast.success(t.featured ? "Removed from landing page" : "Now featured on landing page");
             fetchTestimonials();
         }
