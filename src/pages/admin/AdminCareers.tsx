@@ -157,7 +157,8 @@ const AdminCareers = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, { id, status }) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "career_applications", targetId: id, afterData: { status } });
       queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
       toast({ title: "Status updated" });
     },

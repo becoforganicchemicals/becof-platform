@@ -102,6 +102,7 @@ const AdminUsers = () => {
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
+      logAdminActivity({ action: "UPDATE", targetTable: "profiles", targetId: vars.userId, afterData: { status: vars.suspend ? "suspended" : "active" } });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast({ title: vars.suspend ? "User suspended" : "User reactivated" });
     },

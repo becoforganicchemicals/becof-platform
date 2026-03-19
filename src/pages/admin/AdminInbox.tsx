@@ -76,7 +76,8 @@ const AdminInbox = () => {
         mutationFn: async (id: string) => {
             await supabase.from("contact_messages").delete().eq("id", id);
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
+            logAdminActivity({ action: "DELETE", targetTable: "contact_messages", targetId: id });
             queryClient.invalidateQueries({ queryKey: ["admin-inbox"] });
             if (selectedId === selectedMessage?.id) setSelectedId(null);
             toast({ title: "Message deleted" });
