@@ -111,8 +111,8 @@ const Partners = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.full_name || !form.email || !form.phone || !form.applicant_type || !form.county || !form.motivation) {
-      toast.error("Please fill all required fields"); return;
+    if (!form.full_name || !form.email || !form.phone || !form.applicant_type || !form.county || !form.motivation || !certFile) {
+      toast.error("Please fill all required fields and upload your business registration certificate"); return;
     }
     setSubmitting(true);
 
