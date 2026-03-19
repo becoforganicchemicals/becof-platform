@@ -12,15 +12,17 @@ const CC_EMAIL = "mweri@becoforganic.com";
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@becoforganicchemicals.com";
 const SITE_URL = "https://www.becoforganicchemicals.com";
 
-const sendEmail = async (to: string, subject: string, html: string) => {
+const sendEmail = async (to: string, subject: string, html: string, cc?: string | string[]) => {
   if (!RESEND_API_KEY) {
-    console.log("[MOCK EMAIL] To:", to, "Subject:", subject);
+    console.log("[MOCK EMAIL] To:", to, "CC:", cc, "Subject:", subject);
     return;
   }
+  const payload: Record<string, unknown> = { from: FROM_EMAIL, to, subject, html };
+  if (cc) payload.cc = Array.isArray(cc) ? cc : [cc];
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) console.error("Resend error:", await res.text());
 };
