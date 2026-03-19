@@ -7,7 +7,8 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "Becof Organic Chemicals <partners@becoforganicchemicals.com>";
+const FROM_EMAIL = "Becof Organic Chemicals Limited <info@becoforganic.com>";
+const CC_EMAIL = "mweri@becoforganic.com";
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@becoforganicchemicals.com";
 const SITE_URL = "https://www.becoforganicchemicals.com";
 
