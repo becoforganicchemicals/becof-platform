@@ -167,6 +167,7 @@ const AdminPartners = () => {
             },
         });
 
+        logAdminActivity({ action: "UPDATE", targetTable: "distributor_applications", targetId: selectedApp.id, afterData: { status: newStatus } });
         toast({ title: `Application ${newStatus} — customer notified ✓` });
         setReviewing(false);
         setReviewDialog(false);
