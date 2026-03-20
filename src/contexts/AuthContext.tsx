@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -49,62 +49,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<AppRole | null>(null);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
 
-  // Guard against concurrent fetchUserData executions (e.g. INITIAL_SESSION + TOKEN_REFRESHED racing)
-  const isFetchingRef = useRef(false);
-
   const fetchUserData = async (userId: string) => {
-    if (isFetchingRef.current) {
-      console.debug("[Auth] fetchUserData skipped — already in progress for", userId);
-      return;
-    }
-    isFetchingRef.current = true;
+    // NOTE: No concurrency guard here intentionally.
+    //
+    // A previous "isFetchingRef" guard caused a critical bug: when the guard
+    // triggered an early return, setRole() was never called but setLoading(false)
+    // still ran → permanent state of (user=set, role=null, loading=false) → Navbar
+    // defaulted to "Farmer", AdminDashboard bounced to /signin, GuestOnly spun forever.
+    //
+    // Concurrent calls are harmless: both DB queries return identical data and the
+    // last setRole() call wins with the same value. pickHighestRole() keeps it correct.
     console.debug("[Auth] fetchUserData started for user:", userId);
 
-    try {
-      const [roleRes, profileRes] = await Promise.all([
-        // Fetch ALL role rows — DB triggers in some environments insert a default
-        // "farmer" row on every sign-in/refresh. We pick the highest-privilege role
-        // so a stale "farmer" row can never shadow a legitimate "super_admin" row.
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId),
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", userId)
-          .maybeSingle(),
-      ]);
+    const [roleRes, profileRes] = await Promise.all([
+      // Fetch ALL role rows — DB triggers in some setups insert a "farmer" row
+      // on every sign-in/refresh. pickHighestRole() ensures super_admin always wins.
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId),
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
 
-      // ── Role ─────────────────────────────────────────────────────────────────
-      if (roleRes.error) {
-        console.error("[Auth] Error fetching roles:", roleRes.error.message, roleRes.error);
-        // Leave role at its current value — do NOT assign a fallback
-      } else if (roleRes.data && roleRes.data.length > 0) {
-        const allRoles = roleRes.data.map((r) => r.role);
-        const best = pickHighestRole(allRoles);
-        console.debug("[Auth] Roles in DB:", allRoles, "→ using:", best);
-        setRole(best);
-      } else {
-        console.warn("[Auth] No role rows found in user_roles for user:", userId);
-        // No row at all — leave role null; do NOT assign "farmer" as fallback
-      }
+    // ── Role ───────────────────────────────────────────────────────────────────
+    if (roleRes.error) {
+      console.error("[Auth] Error fetching roles:", roleRes.error.message, roleRes.error);
+      // Leave role at its current value — do NOT assign a fallback
+    } else if (roleRes.data && roleRes.data.length > 0) {
+      const allRoles = roleRes.data.map((r) => r.role);
+      const best = pickHighestRole(allRoles);
+      console.debug("[Auth] Roles in DB:", allRoles, "→ using:", best);
+      setRole(best);
+    } else {
+      console.warn("[Auth] No role rows found in user_roles for user:", userId);
+      // No row at all — leave role null; do NOT assign "farmer" as fallback
+    }
 
-      // ── Profile ──────────────────────────────────────────────────────────────
-      if (profileRes.error) {
-        console.error("[Auth] Error fetching profile:", profileRes.error.message);
-      } else if (profileRes.data) {
-        setProfile(profileRes.data);
-      }
-    } finally {
-      isFetchingRef.current = false;
+    // ── Profile ────────────────────────────────────────────────────────────────
+    if (profileRes.error) {
+      console.error("[Auth] Error fetching profile:", profileRes.error.message);
+    } else if (profileRes.data) {
+      setProfile(profileRes.data);
     }
   };
 
   useEffect(() => {
-    // loading=false is set ONLY after role/profile have been fetched so that
-    // route guards never see (user=set, role=null, loading=false) simultaneously
-    // on the initial page load.
+    // `loading` stays true until the first auth event fully resolves (including
+    // the role fetch). This prevents route guards from ever seeing the broken
+    // state: (user=set, role=null, loading=false).
     let initialised = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -115,38 +111,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Always fetch role on every event that carries a user.
-          //
-          // Rationale: when an access token expires, Supabase fires
-          // INITIAL_SESSION with session=null (token not yet refreshed),
-          // then TOKEN_REFRESHED with the new valid session. If we skip
-          // TOKEN_REFRESHED, the role is never re-fetched → role=null forever.
-          //
-          // pickHighestRole() makes this safe even if a DB trigger inserted a
-          // new "farmer" row during the refresh — super_admin still wins.
+          // Fetch role on every event that carries a user — this covers the
+          // expired-token scenario where Supabase fires INITIAL_SESSION(null)
+          // then TOKEN_REFRESHED(valid session). Skipping TOKEN_REFRESHED would
+          // leave role=null forever after a token expiry.
           try {
             await fetchUserData(session.user.id);
           } catch (err) {
             console.error("[Auth] fetchUserData threw:", err);
-            // Continue — do not let an error freeze loading=true
+            // Don't let a network error freeze loading=true
           }
         } else {
           setRole(null);
           setProfile(null);
         }
 
-        // Release the loading gate on the first event only
+        // Release loading gate on the first event only. Subsequent events
+        // (TOKEN_REFRESHED etc.) update state without touching loading.
         if (!initialised) {
           initialised = true;
-          console.debug("[Auth] loading → false (initial resolution via event:", event + ")");
+          console.debug("[Auth] loading → false (event:", event + ")");
           setLoading(false);
         }
       }
     );
 
-    // Fallback: if the very first auth event is TOKEN_REFRESHED (meaning
-    // INITIAL_SESSION fired with null and resolved before our subscription was
-    // set up), getSession() ensures loading is released for the no-session case.
+    // Safety fallback: release loading if there is no session and the
+    // subscription somehow never fires the initial event.
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && !initialised) {
         initialised = true;
@@ -162,12 +153,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.debug("[Auth] signOut initiated");
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("[Auth] signOut error:", error.message);
-      }
+      if (error) console.error("[Auth] signOut error:", error.message);
     } finally {
-      // Always clear local state regardless of whether the Supabase call succeeded
-      isFetchingRef.current = false;
+      // Always clear local state — even if the Supabase call fails
       setUser(null);
       setSession(null);
       setRole(null);

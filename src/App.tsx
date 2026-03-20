@@ -54,9 +54,12 @@ const AuthSpinner = () => (
 
 // ── Requires any logged-in user ───────────────────────────────────────────────
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
   if (loading) return <AuthSpinner />;
   if (!user) return <Navigate to="/signin" replace />;
+  // User is set but role hasn't been fetched yet — hold rendering until stable.
+  // This prevents protected pages from running their own queries with a null role.
+  if (role === null) return <AuthSpinner />;
   return <>{children}</>;
 };
 

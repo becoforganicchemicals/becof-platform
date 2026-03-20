@@ -26,7 +26,9 @@ const navLinks = [
   { name: "Careers", path: "/careers" },
 ];
 
-// Role-specific portal config
+// Returns null when role is not yet resolved — callers must guard against null.
+// This prevents the default branch from silently displaying "Farmer" for a
+// super_admin whose role hasn't been fetched yet.
 const getRoleConfig = (role: string | null) => {
   switch (role) {
     case "super_admin":
@@ -36,8 +38,9 @@ const getRoleConfig = (role: string | null) => {
     case "distributor":
       return { label: "Distributor", icon: Truck, portalPath: "/distributor", portalLabel: "Distributor Dashboard" };
     case "farmer":
-    default:
       return { label: "Farmer", icon: Tractor, portalPath: "/profile", portalLabel: "My Profile" };
+    default:
+      return null; // role not yet resolved — do not assume Farmer
   }
 };
 
@@ -53,8 +56,11 @@ const Navbar = () => {
     navigate("/");
   };
 
+  // Only derive role-based config once the role is confirmed.
+  // While role=null (still being fetched), roleConfig is null and the
+  // role-specific parts of the navbar are not rendered.
   const roleConfig = getRoleConfig(role);
-  const RoleIcon = roleConfig.icon;
+
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.charAt(0).toUpperCase() || "U";
@@ -112,57 +118,64 @@ const Navbar = () => {
 
           {user ? (
             <>
-              {/* User avatar dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="hidden sm:flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50">
-                    <Avatar className="h-8 w-8 border-2 border-primary/20 hover:border-primary/60 transition-colors">
-                      <AvatarImage src={profile?.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-semibold text-sm truncate">
-                        {profile?.full_name || "User"}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <RoleIcon className="h-3 w-3 text-primary" />
-                        <span className="text-xs text-primary font-medium">{roleConfig.label}</span>
+              {/* User avatar dropdown — only rendered once role is confirmed.
+                  While role=null (still being fetched), show a skeleton avatar
+                  so no role-based labels or links are visible prematurely. */}
+              {roleConfig ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="hidden sm:flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50">
+                      <Avatar className="h-8 w-8 border-2 border-primary/20 hover:border-primary/60 transition-colors">
+                        <AvatarImage src={profile?.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col gap-1">
+                        <p className="font-semibold text-sm truncate">
+                          {profile?.full_name || "User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <roleConfig.icon className="h-3 w-3 text-primary" />
+                          <span className="text-xs text-primary font-medium">{roleConfig.label}</span>
+                        </div>
                       </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to={roleConfig.portalPath} className="flex items-center gap-2 cursor-pointer">
-                      <RoleIcon className="h-4 w-4" />
-                      {roleConfig.portalLabel}
-                    </Link>
-                  </DropdownMenuItem>
-                  {/* Always show profile link for farmers/distributors */}
-                  {(role === "farmer" || role === "distributor") && (
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
-                        <User className="h-4 w-4" />
-                        My Profile
+                      <Link to={roleConfig.portalPath} className="flex items-center gap-2 cursor-pointer">
+                        <roleConfig.icon className="h-4 w-4" />
+                        {roleConfig.portalLabel}
                       </Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    {/* Show profile link for farmers/distributors */}
+                    {(role === "farmer" || role === "distributor") && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                          <User className="h-4 w-4" />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="text-destructive focus:text-destructive flex items-center gap-2 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                // Role not yet resolved — show non-interactive avatar placeholder
+                <div className="hidden sm:block h-8 w-8 rounded-full bg-primary/10 animate-pulse" />
+              )}
             </>
           ) : (
             <Link to="/signin">
@@ -200,8 +213,8 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {/* Mobile user section */}
-          {user && (
+          {/* Mobile user section — only shown when role is confirmed */}
+          {user && roleConfig && (
             <div className="pt-2 border-t border-border mt-2">
               <div className="flex items-center gap-3 px-3 py-2 mb-2">
                 <Avatar className="h-8 w-8">
@@ -213,7 +226,7 @@ const Navbar = () => {
                 <div>
                   <p className="text-sm font-medium">{profile?.full_name || "User"}</p>
                   <div className="flex items-center gap-1">
-                    <RoleIcon className="h-3 w-3 text-primary" />
+                    <roleConfig.icon className="h-3 w-3 text-primary" />
                     <span className="text-xs text-primary">{roleConfig.label}</span>
                   </div>
                 </div>
@@ -224,12 +237,14 @@ const Navbar = () => {
           <div className="flex gap-2 pt-2">
             {user ? (
               <>
-                <Link to={roleConfig.portalPath} className="flex-1" onClick={() => setOpen(false)}>
-                  <Button variant="outline" className="w-full gap-2">
-                    <RoleIcon className="h-4 w-4" />
-                    {roleConfig.portalLabel}
-                  </Button>
-                </Link>
+                {roleConfig && (
+                  <Link to={roleConfig.portalPath} className="flex-1" onClick={() => setOpen(false)}>
+                    <Button variant="outline" className="w-full gap-2">
+                      <roleConfig.icon className="h-4 w-4" />
+                      {roleConfig.portalLabel}
+                    </Button>
+                  </Link>
+                )}
                 <Button
                   variant="outline"
                   className="flex-1"
