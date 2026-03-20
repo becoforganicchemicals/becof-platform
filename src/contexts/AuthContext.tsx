@@ -6,12 +6,12 @@ import type { Database } from "@/integrations/supabase/types";
 type AppRole = Database["public"]["Enums"]["app_role"];
 
 // Highest-privilege role wins when a user has multiple rows in user_roles.
-// This makes the system resilient to DB triggers that insert "farmer" rows.
+// This makes the system resilient to DB triggers that insert duplicate "farmer" rows.
 const ROLE_PRIORITY: AppRole[] = ["super_admin", "admin", "distributor", "farmer"];
 
 const pickHighestRole = (roles: AppRole[]): AppRole | null => {
   if (!roles.length) return null;
-  return roles.sort(
+  return [...roles].sort(
     (a, b) => ROLE_PRIORITY.indexOf(a) - ROLE_PRIORITY.indexOf(b)
   )[0];
 };
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<AppRole | null>(null);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
 
-  // Guard against concurrent fetchUserData executions
+  // Guard against concurrent fetchUserData executions (e.g. INITIAL_SESSION + TOKEN_REFRESHED racing)
   const isFetchingRef = useRef(false);
 
   const fetchUserData = async (userId: string) => {
@@ -62,10 +62,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const [roleRes, profileRes] = await Promise.all([
-        // Fetch ALL role rows — some environments have a trigger that inserts a
-        // default "farmer" row on every sign-in or token event. We pick the
-        // highest-privilege role rather than the most-recent one so that a
-        // stale "farmer" row can never shadow a legitimate "super_admin" row.
+        // Fetch ALL role rows — DB triggers in some environments insert a default
+        // "farmer" row on every sign-in/refresh. We pick the highest-privilege role
+        // so a stale "farmer" row can never shadow a legitimate "super_admin" row.
         supabase
           .from("user_roles")
           .select("role")
@@ -80,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // ── Role ─────────────────────────────────────────────────────────────────
       if (roleRes.error) {
         console.error("[Auth] Error fetching roles:", roleRes.error.message, roleRes.error);
-        // Do NOT assign a fallback — leave role at its current value
+        // Leave role at its current value — do NOT assign a fallback
       } else if (roleRes.data && roleRes.data.length > 0) {
         const allRoles = roleRes.data.map((r) => r.role);
         const best = pickHighestRole(allRoles);
@@ -104,7 +103,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // loading=false is set ONLY after role/profile have been fetched so that
-    // route guards never see (user=set, role=null, loading=false) simultaneously.
+    // route guards never see (user=set, role=null, loading=false) simultaneously
+    // on the initial page load.
     let initialised = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -115,17 +115,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Only re-fetch role on events that could change it.
-          // TOKEN_REFRESHED is deliberately excluded: it does not change the
-          // user's role in the database, and some environments have triggers that
-          // insert a new "farmer" row on every refresh — re-fetching here would
-          // immediately overwrite a legitimate super_admin role with "farmer".
-          const shouldFetchRole = event === "INITIAL_SESSION" || event === "SIGNED_IN";
-
-          if (shouldFetchRole) {
+          // Always fetch role on every event that carries a user.
+          //
+          // Rationale: when an access token expires, Supabase fires
+          // INITIAL_SESSION with session=null (token not yet refreshed),
+          // then TOKEN_REFRESHED with the new valid session. If we skip
+          // TOKEN_REFRESHED, the role is never re-fetched → role=null forever.
+          //
+          // pickHighestRole() makes this safe even if a DB trigger inserted a
+          // new "farmer" row during the refresh — super_admin still wins.
+          try {
             await fetchUserData(session.user.id);
-          } else {
-            console.debug("[Auth] Skipping role re-fetch for event:", event);
+          } catch (err) {
+            console.error("[Auth] fetchUserData threw:", err);
+            // Continue — do not let an error freeze loading=true
           }
         } else {
           setRole(null);
@@ -141,8 +144,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Fallback: if no session exists in storage, onAuthStateChange may not fire
-    // with INITIAL_SESSION quickly enough; release loading immediately.
+    // Fallback: if the very first auth event is TOKEN_REFRESHED (meaning
+    // INITIAL_SESSION fired with null and resolved before our subscription was
+    // set up), getSession() ensures loading is released for the no-session case.
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && !initialised) {
         initialised = true;
