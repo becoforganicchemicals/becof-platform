@@ -64,6 +64,9 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 const GuestOnly = ({ children }: { children: React.ReactNode }) => {
   const { user, role, loading } = useAuth();
   if (loading) return <AuthSpinner />;
+  // User is authenticated but role is still being resolved (fetchUserData in flight).
+  // Spin here instead of redirecting with role=null → /products (farmer experience).
+  if (user && role === null) return <AuthSpinner />;
   if (user) return <Navigate to={getRoleRedirect(role)} replace />;
   return <>{children}</>;
 };

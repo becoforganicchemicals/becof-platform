@@ -5,6 +5,17 @@ import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
+// Highest-privilege role wins when a user has multiple rows in user_roles.
+// This makes the system resilient to DB triggers that insert "farmer" rows.
+const ROLE_PRIORITY: AppRole[] = ["super_admin", "admin", "distributor", "farmer"];
+
+const pickHighestRole = (roles: AppRole[]): AppRole | null => {
+  if (!roles.length) return null;
+  return roles.sort(
+    (a, b) => ROLE_PRIORITY.indexOf(a) - ROLE_PRIORITY.indexOf(b)
+  )[0];
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -38,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<AppRole | null>(null);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
 
-  // Guard against concurrent fetchUserData executions (e.g. INITIAL_SESSION + TOKEN_REFRESHED firing together)
+  // Guard against concurrent fetchUserData executions
   const isFetchingRef = useRef(false);
 
   const fetchUserData = async (userId: string) => {
@@ -51,30 +62,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const [roleRes, profileRes] = await Promise.all([
+        // Fetch ALL role rows — some environments have a trigger that inserts a
+        // default "farmer" row on every sign-in or token event. We pick the
+        // highest-privilege role rather than the most-recent one so that a
+        // stale "farmer" row can never shadow a legitimate "super_admin" row.
         supabase
           .from("user_roles")
           .select("role")
+          .eq("user_id", userId),
+        supabase
+          .from("profiles")
+          .select("*")
           .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
           .maybeSingle(),
-        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       ]);
 
-      // Role — explicit error handling, no silent fallback
+      // ── Role ─────────────────────────────────────────────────────────────────
       if (roleRes.error) {
-        console.error("[Auth] Error fetching role:", roleRes.error.message, roleRes.error);
-        // Do NOT assign a fallback role — leave role as null and surface the error
-      } else if (roleRes.data) {
-        console.debug("[Auth] Role fetched:", roleRes.data.role);
-        setRole(roleRes.data.role);
+        console.error("[Auth] Error fetching roles:", roleRes.error.message, roleRes.error);
+        // Do NOT assign a fallback — leave role at its current value
+      } else if (roleRes.data && roleRes.data.length > 0) {
+        const allRoles = roleRes.data.map((r) => r.role);
+        const best = pickHighestRole(allRoles);
+        console.debug("[Auth] Roles in DB:", allRoles, "→ using:", best);
+        setRole(best);
       } else {
-        // No row found — user has no assigned role yet
-        console.warn("[Auth] No role row found in user_roles for user:", userId);
-        // Still do NOT assign a fallback — leave role null so UI can show appropriate state
+        console.warn("[Auth] No role rows found in user_roles for user:", userId);
+        // No row at all — leave role null; do NOT assign "farmer" as fallback
       }
 
-      // Profile
+      // ── Profile ──────────────────────────────────────────────────────────────
       if (profileRes.error) {
         console.error("[Auth] Error fetching profile:", profileRes.error.message);
       } else if (profileRes.data) {
@@ -86,9 +103,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Initialise from persisted session first, then subscribe to changes.
-    // loading=false is set ONLY after role/profile have been fetched,
-    // preventing the flash where loading=false but role=null causes wrong redirects.
+    // loading=false is set ONLY after role/profile have been fetched so that
+    // route guards never see (user=set, role=null, loading=false) simultaneously.
     let initialised = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -99,23 +115,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          await fetchUserData(session.user.id);
+          // Only re-fetch role on events that could change it.
+          // TOKEN_REFRESHED is deliberately excluded: it does not change the
+          // user's role in the database, and some environments have triggers that
+          // insert a new "farmer" row on every refresh — re-fetching here would
+          // immediately overwrite a legitimate super_admin role with "farmer".
+          const shouldFetchRole = event === "INITIAL_SESSION" || event === "SIGNED_IN";
+
+          if (shouldFetchRole) {
+            await fetchUserData(session.user.id);
+          } else {
+            console.debug("[Auth] Skipping role re-fetch for event:", event);
+          }
         } else {
           setRole(null);
           setProfile(null);
         }
 
-        // Only flip loading once (first event resolution)
+        // Release the loading gate on the first event only
         if (!initialised) {
           initialised = true;
-          console.debug("[Auth] loading → false (initial resolution)");
+          console.debug("[Auth] loading → false (initial resolution via event:", event + ")");
           setLoading(false);
         }
       }
     );
 
-    // getSession resolves immediately from localStorage and triggers onAuthStateChange above.
-    // Only needed as a fallback to release loading if the subscription never fires (truly no session).
+    // Fallback: if no session exists in storage, onAuthStateChange may not fire
+    // with INITIAL_SESSION quickly enough; release loading immediately.
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && !initialised) {
         initialised = true;

@@ -52,13 +52,16 @@ const SignIn = () => {
 
         // Handle auto-confirmed users (dev env)
         if (data.user) {
-          const { data: existingRole } = await supabase
+          // Use limit(1) NOT maybeSingle(): maybeSingle() errors when multiple
+          // rows exist (e.g. from a DB trigger), which would make existingRole=null
+          // and cause a duplicate "farmer" row to be inserted on top of a real role.
+          const { data: existingRoles } = await supabase
             .from("user_roles")
             .select("id")
             .eq("user_id", data.user.id)
-            .maybeSingle();
+            .limit(1);
 
-          if (!existingRole) {
+          if (!existingRoles || existingRoles.length === 0) {
             await supabase.from("user_roles").insert([{
               user_id: data.user.id,
               role: selectedRole as "farmer",
@@ -100,14 +103,11 @@ const SignIn = () => {
           return;
         }
 
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .maybeSingle();
-
+        // Navigation is handled by the useEffect below once AuthContext resolves
+        // the role from the DB. Do NOT query user_roles here — maybeSingle() will
+        // error when duplicate rows exist (e.g. from a DB trigger), causing the
+        // wrong redirect. AuthContext's fetchUserData picks the highest-priority role.
         toast({ title: "Welcome back!" });
-        navigate(getRoleRedirect(roleData?.role ?? null), { replace: true });
       }
     } catch (error: any) {
       toast({
