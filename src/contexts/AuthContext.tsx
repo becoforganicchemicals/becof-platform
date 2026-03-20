@@ -34,7 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   role: null,
   profile: null,
-  signOut: async () => {},
+  signOut: async () => { },
   isAdmin: false,
   isSuperAdmin: false,
   isSuspended: false,
@@ -50,51 +50,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
 
   const fetchUserData = async (userId: string) => {
-    // NOTE: No concurrency guard here intentionally.
-    //
-    // A previous "isFetchingRef" guard caused a critical bug: when the guard
-    // triggered an early return, setRole() was never called but setLoading(false)
-    // still ran → permanent state of (user=set, role=null, loading=false) → Navbar
-    // defaulted to "Farmer", AdminDashboard bounced to /signin, GuestOnly spun forever.
-    //
-    // Concurrent calls are harmless: both DB queries return identical data and the
-    // last setRole() call wins with the same value. pickHighestRole() keeps it correct.
     console.debug("[Auth] fetchUserData started for user:", userId);
 
-    const [roleRes, profileRes] = await Promise.all([
-      // Fetch ALL role rows — DB triggers in some setups insert a "farmer" row
-      // on every sign-in/refresh. pickHighestRole() ensures super_admin always wins.
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId),
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle(),
-    ]);
+    // Await role fetch — critical for app routing logic
+    const roleRes = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
 
-    // ── Role ───────────────────────────────────────────────────────────────────
     if (roleRes.error) {
-      console.error("[Auth] Error fetching roles:", roleRes.error.message, roleRes.error);
-      // Leave role at its current value — do NOT assign a fallback
+      console.error("[Auth] Role fetch error:", roleRes.error.message);
     } else if (roleRes.data && roleRes.data.length > 0) {
-      const allRoles = roleRes.data.map((r) => r.role);
-      const best = pickHighestRole(allRoles);
-      console.debug("[Auth] Roles in DB:", allRoles, "→ using:", best);
+      const roles = roleRes.data.map((r) => r.role);
+      const best = pickHighestRole(roles);
+      console.debug("[Auth] Roles in DB:", roles, "→ using:", best);
       setRole(best);
     } else {
-      console.warn("[Auth] No role rows found in user_roles for user:", userId);
-      // No row at all — leave role null; do NOT assign "farmer" as fallback
+      console.warn("[Auth] No role rows found for user:", userId);
     }
 
-    // ── Profile ────────────────────────────────────────────────────────────────
-    if (profileRes.error) {
-      console.error("[Auth] Error fetching profile:", profileRes.error.message);
-    } else if (profileRes.data) {
-      setProfile(profileRes.data);
-    }
+    // Fire-and-forget profile fetch — does not block loading
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Auth] Profile fetch error:", error.message);
+        } else if (data) {
+          setProfile(data);
+        }
+      });
   };
 
   useEffect(() => {
