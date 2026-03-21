@@ -85,50 +85,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // `loading` stays true until the first auth event fully resolves (including
-    // the role fetch). This prevents route guards from ever seeing the broken
-    // state: (user=set, role=null, loading=false).
     let initialised = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.debug("[Auth] onAuthStateChange event:", event, "user:", session?.user?.id ?? "none");
-
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch role on every event that carries a user — this covers the
-          // expired-token scenario where Supabase fires INITIAL_SESSION(null)
-          // then TOKEN_REFRESHED(valid session). Skipping TOKEN_REFRESHED would
-          // leave role=null forever after a token expiry.
-          try {
-            await fetchUserData(session.user.id);
-          } catch (err) {
-            console.error("[Auth] fetchUserData threw:", err);
-            // Don't let a network error freeze loading=true
-          }
+          // Defer DB queries via setTimeout so Supabase has time to set auth
+          // headers before the query runs. Without this, INITIAL_SESSION fires
+          // before headers are ready, RLS blocks the query, and role stays null.
+          const uid = session.user.id;
+          setTimeout(() => fetchUserData(uid), 0);
         } else {
           setRole(null);
           setProfile(null);
         }
 
-        // Release loading gate on the first event only. Subsequent events
-        // (TOKEN_REFRESHED etc.) update state without touching loading.
+        // Release loading on the first event. Subsequent events (TOKEN_REFRESHED
+        // etc.) update state but don't touch loading.
         if (!initialised) {
           initialised = true;
-          console.debug("[Auth] loading → false (event:", event + ")");
           setLoading(false);
         }
       }
     );
 
-    // Safety fallback: release loading if there is no session and the
-    // subscription somehow never fires the initial event.
+    // Fallback: if the subscription hasn't fired yet (edge case), resolve
+    // loading from getSession so the app doesn't spin forever.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session && !initialised) {
+      if (!initialised) {
         initialised = true;
-        console.debug("[Auth] loading → false (no session fallback)");
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchUserData(session.user.id);
+        }
         setLoading(false);
       }
     });
