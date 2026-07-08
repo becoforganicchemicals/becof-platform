@@ -3,6 +3,7 @@ import HeroSection from "@/components/home/HeroSection";
 import WhatWeDo from "@/components/home/WhatWeDo";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import PlatformHighlights from "@/components/home/PlatformHighlights";
+import FeaturedPartners from "@/components/home/FeaturedPartners";
 import FinalCTA from "@/components/home/FinalCTA";
 import SEO from "@/components/SEO";
 
@@ -17,6 +18,7 @@ const Index = () => (
     <WhatWeDo />
     <FeaturedProducts />
     <PlatformHighlights />
+    <FeaturedPartners />
     <FinalCTA />
   </Layout>
 );

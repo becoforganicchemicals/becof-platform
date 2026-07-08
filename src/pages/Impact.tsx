@@ -189,9 +189,9 @@ const Impact = () => {
                   className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* award image */}
-                  <div className="h-36 bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden">
+                  <div className="h-36 bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden p-4">
                     {a.image_url ? (
-                      <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" />
+                      <img src={a.image_url} alt={a.name} className="max-w-full max-h-full object-contain" />
                     ) : (
                       <Award className="h-14 w-14 text-amber-400" />
                     )}

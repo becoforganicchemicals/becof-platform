@@ -380,8 +380,8 @@ const Partners = () => {
           <div className="container">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-foreground mb-2">Our Distributor Network</h2>
-              <p className="text-muted-foreground">Trusted partners distributing Becof products across Kenya.</p>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Our Partners</h2>
+              <p className="text-muted-foreground">Trusted organisations supporting Becof's mission across Kenya.</p>
             </motion.div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -400,9 +400,9 @@ const Partners = () => {
                   </div>
                   {/* logo */}
                   <div className="px-5 -mt-8 mb-3">
-                    <div className="w-16 h-16 rounded-xl border-2 border-background shadow-md bg-background overflow-hidden flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-xl border-2 border-background shadow-md bg-background overflow-hidden flex items-center justify-center p-2">
                       {p.logo_url
-                        ? <img src={p.logo_url} alt={p.display_name} className="w-full h-full object-cover" />
+                        ? <img src={p.logo_url} alt={p.display_name} className="max-w-full max-h-full object-contain" />
                         : <Building2 className="h-8 w-8 text-muted-foreground/40" />
                       }
                     </div>

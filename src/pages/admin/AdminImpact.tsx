@@ -420,9 +420,9 @@ const AdminImpact = () => {
                         )}
                         {awards.map((a) => (
                             <div key={a.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md transition-all group">
-                                <div className="h-36 bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden relative">
+                                <div className="h-36 bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden relative p-4">
                                     {a.image_url
-                                        ? <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" />
+                                        ? <img src={a.image_url} alt={a.name} className="max-w-full max-h-full object-contain" />
                                         : <Award className="h-12 w-12 text-amber-400" />
                                     }
                                     {/* action overlay */}
@@ -471,7 +471,9 @@ const AdminImpact = () => {
                                         className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                                     />
                                     {awardForm.image_url && !awardImageFile && (
-                                        <img src={awardForm.image_url} alt="current" className="mt-2 h-20 rounded-lg object-cover border" />
+                                        <div className="mt-2 h-20 rounded-lg border bg-gradient-to-br from-amber-50 to-yellow-100 flex items-center justify-center overflow-hidden p-2">
+                                            <img src={awardForm.image_url} alt="current" className="max-w-full max-h-full object-contain" />
+                                        </div>
                                     )}
                                 </div>
                                 <Button onClick={saveAward} className="w-full">

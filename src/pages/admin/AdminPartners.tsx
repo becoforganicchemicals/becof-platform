@@ -40,6 +40,20 @@ type AppStatus = "all" | "pending" | "reviewing" | "approved" | "rejected";
 
 const STATUS_OPTIONS = ["pending", "reviewing", "approved", "rejected"];
 const PRODUCT_OPTIONS = ["fertilizers", "pesticides", "herbicides", "soil_boosters", "seeds"];
+const PARTNER_TYPE_OPTIONS = [
+    { value: "agrovet", label: "Agrovet / Agricultural Input Shop" },
+    { value: "cooperative", label: "Farmer Cooperative / SACCO" },
+    { value: "wholesale_distributor", label: "Wholesale Agricultural Distributor" },
+    { value: "farming_company", label: "Farming Company / Large-scale Farm" },
+    { value: "general_trader", label: "General Trader (Agricultural Focus)" },
+    { value: "individual_farmer", label: "Individual Farmer" },
+    { value: "ngo", label: "NGO / Development Partner" },
+    { value: "technical_partner", label: "Technical / Research Partner" },
+    { value: "corporate_partner", label: "Corporate Partner" },
+    { value: "logistics_partner", label: "Logistics Partner" },
+    { value: "supplier", label: "Supplier" },
+    { value: "sponsor", label: "Sponsor" },
+];
 
 const statusStyle = (s: string) => ({
     pending: { class: "bg-yellow-100 text-yellow-700", icon: Clock },
@@ -490,9 +504,9 @@ const AdminPartners = () => {
                                     )}
                                 </div>
                                 <div className="px-4 -mt-6 mb-2">
-                                    <div className="w-12 h-12 rounded-xl border-2 border-background shadow bg-background flex items-center justify-center overflow-hidden">
+                                    <div className="w-12 h-12 rounded-xl border-2 border-background shadow bg-background flex items-center justify-center overflow-hidden p-1.5">
                                         {profile.logo_url
-                                            ? <img src={profile.logo_url} alt={profile.display_name} className="w-full h-full object-cover" />
+                                            ? <img src={profile.logo_url} alt={profile.display_name} className="max-w-full max-h-full object-contain" />
                                             : <Building2 className="h-6 w-6 text-muted-foreground/40" />
                                         }
                                     </div>
@@ -614,11 +628,11 @@ const AdminPartners = () => {
                         <div>
                             <label className="text-xs font-medium text-muted-foreground block mb-1">Logo / Profile Picture</label>
                             <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-xl border border-border bg-muted/50 flex items-center justify-center overflow-hidden">
+                                <div className="w-14 h-14 rounded-xl border border-border bg-muted/50 flex items-center justify-center overflow-hidden p-1.5">
                                     {logoFile
-                                        ? <img src={URL.createObjectURL(logoFile)} alt="" className="w-full h-full object-cover" />
+                                        ? <img src={URL.createObjectURL(logoFile)} alt="" className="max-w-full max-h-full object-contain" />
                                         : profileForm.logo_url
-                                            ? <img src={profileForm.logo_url} alt="" className="w-full h-full object-cover" />
+                                            ? <img src={profileForm.logo_url} alt="" className="max-w-full max-h-full object-contain" />
                                             : <Building2 className="h-6 w-6 text-muted-foreground/40" />
                                     }
                                 </div>
@@ -642,6 +656,19 @@ const AdminPartners = () => {
                             <div className="sm:col-span-2">
                                 <label className="text-xs font-medium text-muted-foreground block mb-1">Tagline</label>
                                 <Input value={profileForm.tagline || ""} onChange={e => setProfileForm(p => ({ ...p, tagline: e.target.value }))} placeholder="e.g. Your trusted agrovet in Thika" />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Partner Type</label>
+                                <Select value={profileForm.partner_type || ""} onValueChange={v => setProfileForm(p => ({ ...p, partner_type: v }))}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select partner type…" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {PARTNER_TYPE_OPTIONS.map(t => (
+                                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="sm:col-span-2">
                                 <label className="text-xs font-medium text-muted-foreground block mb-1">Description</label>
