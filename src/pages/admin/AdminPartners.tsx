@@ -503,7 +503,7 @@ const AdminPartners = () => {
                                         </span>
                                     )}
                                 </div>
-                                <div className="px-4 -mt-6 mb-2">
+                                <div className="relative z-10 px-4 -mt-6 mb-2">
                                     <div className="w-12 h-12 rounded-xl border-2 border-background shadow bg-background flex items-center justify-center overflow-hidden p-1.5">
                                         {profile.logo_url
                                             ? <img src={profile.logo_url} alt={profile.display_name} className="max-w-full max-h-full object-contain" />

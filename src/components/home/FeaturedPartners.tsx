@@ -69,10 +69,10 @@ const FeaturedPartners = () => {
               variants={cardVariants}
               className="group bg-card rounded-2xl p-6 border border-border hover:border-primary/30 hover:shadow-lg transition-all duration-300 flex flex-col items-center text-center"
             >
-              <div className="w-20 h-20 rounded-xl border border-border bg-background flex items-center justify-center overflow-hidden p-3 mb-4">
+              <div className="w-28 h-28 rounded-xl border border-border bg-background flex items-center justify-center overflow-hidden p-3 mb-4">
                 {p.logo_url
                   ? <img src={p.logo_url} alt={p.display_name} className="max-w-full max-h-full object-contain" />
-                  : <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                  : <Building2 className="h-10 w-10 text-muted-foreground/40" />
                 }
               </div>
               <h3 className="font-semibold text-sm leading-tight">{p.display_name}</h3>

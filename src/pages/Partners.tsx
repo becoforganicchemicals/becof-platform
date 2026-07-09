@@ -399,11 +399,11 @@ const Partners = () => {
                     )}
                   </div>
                   {/* logo */}
-                  <div className="px-5 -mt-8 mb-3">
-                    <div className="w-16 h-16 rounded-xl border-2 border-background shadow-md bg-background overflow-hidden flex items-center justify-center p-2">
+                  <div className="relative z-10 px-5 -mt-12 mb-3">
+                    <div className="w-24 h-24 rounded-xl border-2 border-background shadow-md bg-background overflow-hidden flex items-center justify-center p-2.5">
                       {p.logo_url
                         ? <img src={p.logo_url} alt={p.display_name} className="max-w-full max-h-full object-contain" />
-                        : <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                        : <Building2 className="h-10 w-10 text-muted-foreground/40" />
                       }
                     </div>
                   </div>
