@@ -525,10 +525,15 @@ const AdminLearn = () => {
                                 {/* SERP preview */}
                                 <div className="mb-6 p-4 border border-border rounded-lg bg-card">
                                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2 font-medium">SERP Preview</p>
-                                    <p className="text-blue-700 text-lg font-medium leading-tight hover:underline cursor-pointer">
+                                    <a
+                                        href={`https://www.becoforganicchemicals.com/learn/${form.slug || "article-slug"}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block text-blue-700 text-lg font-medium leading-tight hover:underline"
+                                    >
                                         {form.meta_title || form.title || "Article Title"}
-                                    </p>
-                                    <p className="text-green-700 text-xs mt-0.5">https://becoforganics.com/learn/{form.slug || "article-slug"}</p>
+                                    </a>
+                                    <p className="text-green-700 text-xs mt-0.5">https://www.becoforganicchemicals.com/learn/{form.slug || "article-slug"}</p>
                                     <p className="text-muted-foreground text-sm mt-1 line-clamp-2">
                                         {form.meta_description || form.excerpt || "No description set."}
                                     </p>
@@ -614,10 +619,15 @@ const AdminLearn = () => {
                                 {/* SERP live preview */}
                                 <div className="p-4 border border-border rounded-lg bg-card">
                                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 font-medium">Live SERP Preview</p>
-                                    <p className="text-blue-700 text-base font-medium hover:underline cursor-pointer">
+                                    <a
+                                        href={`https://www.becoforganicchemicals.com/learn/${form.slug || "article-slug"}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block text-blue-700 text-base font-medium hover:underline"
+                                    >
                                         {form.meta_title || form.title || "Article Title"}
-                                    </p>
-                                    <p className="text-green-700 text-xs mt-0.5">https://becoforganics.com/learn/{form.slug || "article-slug"}</p>
+                                    </a>
+                                    <p className="text-green-700 text-xs mt-0.5">https://www.becoforganicchemicals.com/learn/{form.slug || "article-slug"}</p>
                                     <p className="text-muted-foreground text-sm mt-1">
                                         {form.meta_description || form.excerpt || "No description set."}
                                     </p>
