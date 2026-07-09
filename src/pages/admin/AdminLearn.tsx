@@ -138,7 +138,7 @@ const AdminLearn = () => {
                 try {
                     const draft = JSON.parse(saved);
                     setForm({ ...draft });
-                    editor?.commands.setContent(draft.content || "");
+                    editor?.commands.setContent(draft.content || "", { emitUpdate: false });
                     setAutoSavedAt(new Date(draft.savedAt));
                     toast({ title: "Unsaved draft restored", description: "Your previous draft has been loaded." });
                 } catch { /* ignore */ }
@@ -197,22 +197,31 @@ const AdminLearn = () => {
         }
         const payload = { ...form, slug: form.slug || slugify(form.title) };
         if (editingArticle) {
-            await supabase.from("learn_articles").update(payload).eq("id", editingArticle.id);
+            const { error } = await supabase.from("learn_articles").update(payload).eq("id", editingArticle.id);
+            if (error) {
+                toast({ title: "Update failed", description: error.message, variant: "destructive" });
+                return;
+            }
             logAdminActivity({ action: "UPDATE", targetTable: "learn_articles", targetId: editingArticle.id, afterData: { title: form.title } });
             toast({ title: "Article updated ✓" });
         } else {
-            const { data } = await supabase.from("learn_articles").insert(payload).select("id").single();
+            const { data, error } = await supabase.from("learn_articles").insert(payload).select("id").single();
+            if (error) {
+                toast({ title: "Create failed", description: error.message, variant: "destructive" });
+                return;
+            }
             logAdminActivity({ action: "INSERT", targetTable: "learn_articles", targetId: data?.id || null, afterData: { title: form.title } });
             toast({ title: "Article created ✓" });
-            localStorage.removeItem(AUTOSAVE_KEY);
         }
+        if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null; }
+        localStorage.removeItem(AUTOSAVE_KEY);
         resetForm(); fetchData();
     };
 
     const resetForm = () => {
         setEditingArticle(null);
         setForm({ title: "", slug: "", excerpt: "", content: "", category_id: "", author: "", published: true, meta_title: "", meta_description: "" });
-        editor?.commands.setContent("");
+        editor?.commands.setContent("", { emitUpdate: false });
         setDialogOpen(false);
         setActiveTab("editor");
         setWordCount(0);
@@ -227,7 +236,7 @@ const AdminLearn = () => {
             author: article.author || "", published: article.published,
             meta_title: article.meta_title || "", meta_description: article.meta_description || "",
         });
-        editor?.commands.setContent(article.content);
+        editor?.commands.setContent(article.content, { emitUpdate: false });
         setWordCount(countWords(article.content));
         setDialogOpen(true);
     };
