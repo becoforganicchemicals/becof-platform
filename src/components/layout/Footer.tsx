@@ -8,7 +8,6 @@ import {
   FaEnvelope,
   FaPhoneAlt,
   FaFlask,
-  FaUniversity,
 } from "react-icons/fa";
 
 import logo from "@/assets/becof-logo.png";
@@ -23,21 +22,6 @@ const socialLinks = [
 
 const quickLinks = ["Products", "Learn", "Impact", "About", "Partners", "Careers", "Contact"];
 
-const locations = [
-  {
-    Icon: FaFlask,
-    title: "Production Facility",
-    place: "Ongata Rongai, Kajiado County",
-    note: "Waste sorting, biofertiliser & biopesticide manufacturing and storage",
-  },
-  {
-    Icon: FaUniversity,
-    title: "Research Partner",
-    place: "Technical University of Kenya",
-    note: "Microorganism culturing & harvesting for our biofertilisers & biopesticides",
-  },
-];
-
 const Footer = () => (
   <footer className="bg-primary text-primary-foreground relative overflow-hidden">
     {/* decorative accents, consistent with the rest of the site */}
@@ -47,7 +31,7 @@ const Footer = () => (
     <div className="container py-16 relative z-10">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-x-8 gap-y-12">
         {/* Company Info */}
-        <div className="lg:col-span-4">
+        <div className="lg:col-span-5">
           <div className="flex items-center gap-3 mb-4">
             <img src={logo} alt="Becof Organic Chemicals Logo" className="h-8 w-auto" />
             <span className="font-heading font-bold text-xl">
@@ -77,7 +61,7 @@ const Footer = () => (
         </div>
 
         {/* Quick Links */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <h4 className="font-heading font-semibold mb-4 text-primary-foreground/90">Quick Links</h4>
           <ul className="space-y-2.5 text-sm text-primary-foreground/70">
             {quickLinks.map((l) => (
@@ -93,27 +77,18 @@ const Footer = () => (
           </ul>
         </div>
 
-        {/* Our Locations */}
-        <div className="lg:col-span-3">
-          <h4 className="font-heading font-semibold mb-4 text-primary-foreground/90">Our Locations</h4>
-          <ul className="space-y-4 text-sm text-primary-foreground/70">
-            {locations.map(({ Icon, title, place, note }) => (
-              <li key={title} className="flex gap-3">
-                <Icon className="text-primary-foreground/60 mt-1 shrink-0" />
-                <div>
-                  <p className="font-medium text-primary-foreground/90">{title}</p>
-                  <p>{place}</p>
-                  <p className="text-primary-foreground/50 text-xs mt-0.5 leading-relaxed">{note}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
         {/* Contact */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-4">
           <h4 className="font-heading font-semibold mb-4 text-primary-foreground/90">Contact</h4>
           <ul className="space-y-3 text-sm text-primary-foreground/70">
+            <li className="flex gap-3">
+              <FaFlask className="text-primary-foreground/60 mt-1 shrink-0" />
+              <div>
+                <p className="font-medium text-primary-foreground/90">Production Facility</p>
+                <p>Ongata Rongai, Kajiado County</p>
+              </div>
+            </li>
+
             <li className="flex items-center gap-2">
               <FaEnvelope className="text-primary-foreground/60 shrink-0" />
               <a href="mailto:info@becoforganic.com" className="hover:text-primary-foreground transition-colors">
