@@ -115,8 +115,8 @@ serve(async (req) => {
             <h2 style="color:#166534;margin:0 0 8px;">Payment Confirmed ✓</h2>
             <p style="color:#475569;margin:0 0 20px;">Your M-Pesa payment has been received successfully.</p>
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:20px;">
-              <p style="margin:0;font-weight:600;color:#166534;">Receipt: ${receipt}</p>
-              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Amount Paid: KES ${Number(amount).toLocaleString()}</p>
+              ${receipt ? `<p style="margin:0;font-weight:600;color:#166534;">Receipt: ${receipt}</p>` : ""}
+              <p style="margin:${receipt ? "4px 0 0" : "0"};color:#475569;font-size:14px;">Amount Paid: KES ${Number(amount).toLocaleString()}</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Order #${orderRef}</p>
             </div>
             <p style="color:#475569;font-size:14px;">

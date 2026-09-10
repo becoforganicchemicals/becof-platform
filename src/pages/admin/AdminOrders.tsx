@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ShoppingCart, ClipboardList, Search, RefreshCw,
   ChevronDown, ChevronUp, Phone, MapPin, Mail,
-  Package, Eye,
+  Package, Eye, Smartphone,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -35,6 +35,7 @@ interface CustomOrder {
   deposit_amount?: number; deposit_paid: boolean;
   mpesa_receipt_number?: string; admin_notes?: string;
   notes?: string; created_at: string;
+  mpesa_checkout_request_id?: string | null; payment_status?: string | null;
 }
 
 const statusColor = (s: string) => {
@@ -124,6 +125,34 @@ const AdminOrders = () => {
       toast({ title: "Order updated & customer notified ✓" });
     },
     onError: () => toast({ title: "Update failed", variant: "destructive" }),
+  });
+
+  /* ─── Check M-Pesa status (STK Push Query) — for orders stuck at awaiting_pin
+         because mpesa-callback never arrived ─── */
+  const checkMpesaStatus = useMutation({
+    mutationFn: async ({ id, orderType }: { id: string; orderType: "standard" | "custom" }) => {
+      const { data, error } = await supabase.functions.invoke("mpesa-stk-query", {
+        body: { order_id: id, order_type: orderType },
+      });
+      if (error || !data?.success) throw new Error(data?.error || error?.message || "Status check failed");
+      return { ...data, orderType, id } as { resolved: boolean; paymentStatus: string; resultDesc?: string; orderType: "standard" | "custom"; id: string };
+    },
+    onSuccess: (data) => {
+      logAdminActivity({
+        action: "UPDATE", targetTable: data.orderType === "custom" ? "custom_orders" : "orders",
+        targetId: data.id, afterData: { payment_status: data.paymentStatus, via: "mpesa-stk-query" },
+      });
+      queryClient.invalidateQueries({ queryKey: data.orderType === "custom" ? ["admin-custom-orders"] : ["admin-orders"] });
+
+      if (!data.resolved) {
+        toast({ title: "Still processing", description: data.resultDesc || "Safaricom hasn't resolved this transaction yet — try again shortly." });
+      } else if (data.paymentStatus === "paid") {
+        toast({ title: "Payment confirmed ✓", description: "Customer has been notified." });
+      } else {
+        toast({ title: `Payment ${data.paymentStatus}`, description: data.resultDesc, variant: "destructive" });
+      }
+    },
+    onError: (e: Error) => toast({ title: "Status check failed", description: e.message, variant: "destructive" }),
   });
 
   /* ─── Search filters ─── */
@@ -370,6 +399,22 @@ const AdminOrders = () => {
                         </Select>
                         <span className="text-xs text-muted-foreground">Customer is emailed on every change.</span>
                       </div>
+
+                      {/* M-Pesa reconciliation — only relevant while a push is still pending */}
+                      {(order as any).payment_status === "awaiting_pin" && (order as any).mpesa_checkout_request_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          disabled={checkMpesaStatus.isPending}
+                          onClick={() => checkMpesaStatus.mutate({ id: order.id, orderType: "standard" })}
+                        >
+                          {checkMpesaStatus.isPending
+                            ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                            : <Smartphone className="h-3.5 w-3.5" />}
+                          Check M-Pesa Status
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -476,6 +521,20 @@ const AdminOrders = () => {
                       >
                         <Mail className="h-4 w-4" /> Email: Order Ready
                       </Button>
+                      {order.payment_status === "awaiting_pin" && order.mpesa_checkout_request_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5"
+                          disabled={checkMpesaStatus.isPending}
+                          onClick={() => checkMpesaStatus.mutate({ id: order.id, orderType: "custom" })}
+                        >
+                          {checkMpesaStatus.isPending
+                            ? <RefreshCw className="h-4 w-4 animate-spin" />
+                            : <Smartphone className="h-4 w-4" />}
+                          Check M-Pesa Status
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}

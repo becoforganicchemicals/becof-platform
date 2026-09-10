@@ -1,17 +1,18 @@
 // supabase/functions/mpesa-stk-push/index.ts
-// Mocked Daraja STK Push — swap MOCK_MODE = false and fill real credentials when ready
+// LIVE Daraja STK Push — production credentials, real money moves. Set MOCK_MODE = true
+// to fall back to the simulated flow (e.g. for local/demo use without real payments).
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const MOCK_MODE = true; // ← set false when you have real Daraja credentials
+const MOCK_MODE = false; // ← LIVE: real Daraja production API, real charges
 
-// ── Real Daraja credentials (fill these in Supabase Edge Function secrets) ──
+// ── Real Daraja credentials (set these in Supabase Edge Function secrets) ──
 // DARAJA_CONSUMER_KEY
 // DARAJA_CONSUMER_SECRET
-// DARAJA_SHORTCODE
-// DARAJA_PASSKEY
-// DARAJA_CALLBACK_URL  → https://<project>.supabase.co/functions/v1/mpesa-callback
+// DARAJA_SHORTCODE       → the real PayBill number
+// DARAJA_PASSKEY         → production Lipa Na Mpesa Online passkey
+// DARAJA_CALLBACK_URL    → https://<project>.supabase.co/functions/v1/mpesa-callback
 //   (the mpesa-callback function handles this and marks the order paid/failed — see its
 //   own file; it's deployed with verify_jwt = false in config.toml)
 
@@ -106,16 +107,23 @@ serve(async (req) => {
 
         // Get access token
         const tokenRes = await fetch(
-            "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+            "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
             { headers: { Authorization: `Basic ${btoa(`${consumerKey}:${consumerSecret}`)}` } }
         );
         const { access_token } = await tokenRes.json();
+
+        if (!access_token) {
+            return new Response(JSON.stringify({
+                success: false,
+                error: "Failed to authenticate with Daraja — check DARAJA_CONSUMER_KEY/DARAJA_CONSUMER_SECRET",
+            }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
 
         const timestamp = new Date().toISOString().replace(/[-:T.Z]/g, "").slice(0, 14);
         const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
         const stkRes = await fetch(
-            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+            "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
             {
                 method: "POST",
                 headers: { Authorization: `Bearer ${access_token}`, "Content-Type": "application/json" },
@@ -144,11 +152,19 @@ serve(async (req) => {
                 payment_status: "awaiting_pin",
                 phone_number: normalised,
             }).eq("id", order_id);
+
+            return new Response(JSON.stringify({
+                success: true,
+                CheckoutRequestID: stkData.CheckoutRequestID,
+                CustomerMessage: stkData.CustomerMessage,
+            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
-        return new Response(JSON.stringify(stkData), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        // Daraja rejected the request (bad shortcode/passkey, invalid phone, etc.)
+        return new Response(JSON.stringify({
+            success: false,
+            error: stkData.errorMessage || stkData.ResponseDescription || "STK push request failed",
+        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     } catch (err) {
         return new Response(JSON.stringify({ error: String(err) }), {
