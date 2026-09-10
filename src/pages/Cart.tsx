@@ -5,13 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import PendingOrderBanner from "@/components/PendingOrderBanner";
 
 const Cart = () => {
   const { user } = useAuth();
   const { items, loading, subtotal, updateQuantity, removeFromCart } = useCart();
 
   if (!user) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your cart</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
-  
+
   if (loading) return <Layout><div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
   if (items.length === 0) return (
@@ -20,6 +21,7 @@ const Cart = () => {
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
         <p className="text-muted-foreground mb-6">Browse our products and add items to get started.</p>
+        <div className="max-w-md mx-auto text-left"><PendingOrderBanner /></div>
         <Link to="/products"><Button>Browse Products</Button></Link>
       </div>
     </Layout>
@@ -30,6 +32,7 @@ const Cart = () => {
       <section className="py-10">
         <div className="container">
           <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
+          <PendingOrderBanner />
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-4">
               {items.map((item, i) => (

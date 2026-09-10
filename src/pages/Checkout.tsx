@@ -10,13 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Smartphone, Loader2, RefreshCw } from "lucide-react";
+import PendingOrderBanner from "@/components/PendingOrderBanner";
 
-type CheckoutStep = "details" | "mpesa" | "polling" | "success";
+type CheckoutStep = "loading" | "details" | "mpesa" | "polling" | "success";
 
 const Checkout = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
+  const resumeOrderId = (location.state as any)?.resumeOrderId as string | undefined;
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>((location.state as any)?.coupon || null);
@@ -24,14 +26,43 @@ const Checkout = () => {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const total = subtotal - discount;
 
-  const [step, setStep] = useState<CheckoutStep>("details");
+  const [step, setStep] = useState<CheckoutStep>(resumeOrderId ? "loading" : "details");
   const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "", notes: "" });
   const [mpesaPhone, setMpesaPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [orderRef, setOrderRef] = useState("");
   const [receipt, setReceipt] = useState("");
+  // Set only when resuming an existing order — its already-locked-in total
+  // (post-discount) overrides the live cart-derived `total` in the mpesa/polling steps.
+  const [resumedTotal, setResumedTotal] = useState<number | null>(null);
+  const displayTotal = resumedTotal ?? total;
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Resume an existing unpaid order — skip straight to the M-Pesa step, no
+  // re-entering shipping details or the coupon.
+  useEffect(() => {
+    if (!resumeOrderId || !user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id, total_amount, shipping_address, phone_number, payment_status")
+        .eq("id", resumeOrderId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error || !data || data.payment_status === "paid") {
+        setStep("details");
+        return;
+      }
+
+      setOrderId(data.id);
+      setOrderRef(data.id.slice(0, 8).toUpperCase());
+      setMpesaPhone(data.phone_number || (data.shipping_address as any)?.phone || "");
+      setResumedTotal(data.total_amount);
+      setStep("mpesa");
+    })();
+  }, [resumeOrderId, user]);
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -128,7 +159,7 @@ const Checkout = () => {
     setSubmitting(true);
 
     const { data, error } = await supabase.functions.invoke("mpesa-stk-push", {
-      body: { phone: mpesaPhone, amount: total, order_id: orderId, order_type: "standard" },
+      body: { phone: mpesaPhone, amount: displayTotal, order_id: orderId, order_type: "standard" },
     });
 
     if (error || !data?.success) {
@@ -190,6 +221,15 @@ const Checkout = () => {
     </Layout>
   );
 
+  /* ── LOADING (resuming an existing order) ── */
+  if (step === "loading") return (
+    <Layout>
+      <div className="container py-24 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    </Layout>
+  );
+
   if (items.length === 0 && step === "details") return (
     <Layout>
       <div className="container py-20 text-center">
@@ -231,7 +271,7 @@ const Checkout = () => {
           <h1 className="text-2xl font-bold mb-2">Enter Your PIN</h1>
           <p className="text-muted-foreground mb-6">
             An M-Pesa prompt has been sent to <span className="font-semibold text-foreground">{mpesaPhone}</span>.<br />
-            Please enter your PIN to complete payment of <span className="font-semibold text-primary">KES {total.toLocaleString()}</span>.
+            Please enter your PIN to complete payment of <span className="font-semibold text-primary">KES {displayTotal.toLocaleString()}</span>.
           </p>
 
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
@@ -264,9 +304,15 @@ const Checkout = () => {
   if (step === "mpesa") return (
     <Layout>
       <div className="container py-10 max-w-lg mx-auto">
-        <button onClick={() => setStep("details")} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
-          <ArrowLeft className="h-4 w-4" /> Back to details
-        </button>
+        {resumedTotal === null ? (
+          <button onClick={() => setStep("details")} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
+            <ArrowLeft className="h-4 w-4" /> Back to details
+          </button>
+        ) : (
+          <Link to="/cart" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
+            <ArrowLeft className="h-4 w-4" /> Back to Cart
+          </Link>
+        )}
 
         <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
@@ -283,9 +329,9 @@ const Checkout = () => {
           <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground text-sm">Amount to Pay</span>
-              <span className="text-2xl font-bold text-primary">KES {total.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-primary">KES {displayTotal.toLocaleString()}</span>
             </div>
-            {discount > 0 && (
+            {resumedTotal === null && discount > 0 && (
               <p className="text-xs text-primary mt-1">Includes discount of KES {discount.toLocaleString()}</p>
             )}
           </div>
@@ -336,6 +382,7 @@ const Checkout = () => {
             <ArrowLeft className="h-4 w-4" /> Back to Cart
           </Link>
           <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+          <PendingOrderBanner />
 
           <div className="grid md:grid-cols-5 gap-8">
             <form onSubmit={handleSubmitDetails} className="md:col-span-3 space-y-4">
