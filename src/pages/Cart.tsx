@@ -3,39 +3,12 @@ import Layout from "@/components/layout/Layout";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const Cart = () => {
   const { user } = useAuth();
   const { items, loading, subtotal, updateQuantity, removeFromCart } = useCart();
-  const [couponCode, setCouponCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
-
-  const applyCoupon = async () => {
-    if (!couponCode.trim()) return;
-    setApplyingCoupon(true);
-    const { data } = await supabase.from("coupons").select("*").eq("code", couponCode.trim().toUpperCase()).eq("is_active", true).maybeSingle();
-    if (!data) { toast.error("Invalid or expired coupon"); setApplyingCoupon(false); return; }
-    if (data.expires_at && new Date(data.expires_at) < new Date()) { toast.error("Coupon has expired"); setApplyingCoupon(false); return; }
-    if (data.max_uses && data.current_uses >= data.max_uses) { toast.error("Coupon usage limit reached"); setApplyingCoupon(false); return; }
-    if (data.min_order_amount && subtotal < Number(data.min_order_amount)) { toast.error(`Minimum order of KES ${Number(data.min_order_amount).toLocaleString()} required`); setApplyingCoupon(false); return; }
-
-    const disc = data.discount_type === "percentage" ? subtotal * Number(data.discount_value) / 100 : Number(data.discount_value);
-    setDiscount(Math.min(disc, subtotal));
-    setAppliedCoupon(data);
-    toast.success("Coupon applied!");
-    setApplyingCoupon(false);
-  };
-
-  const removeCoupon = () => { setDiscount(0); setAppliedCoupon(null); setCouponCode(""); };
-  const total = subtotal - discount;
 
   if (!user) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your cart</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
   
@@ -89,24 +62,11 @@ const Cart = () => {
               <h2 className="font-bold text-lg">Order Summary</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
-                {discount > 0 && <div className="flex justify-between text-secondary"><span>Discount ({appliedCoupon?.code})</span><span>-KES {discount.toLocaleString()}</span></div>}
-                <div className="border-t border-border pt-2 flex justify-between font-bold text-lg"><span>Total</span><span className="text-primary">KES {total.toLocaleString()}</span></div>
+                <div className="border-t border-border pt-2 flex justify-between font-bold text-lg"><span>Total</span><span className="text-primary">KES {subtotal.toLocaleString()}</span></div>
               </div>
-              
-              {/* Coupon */}
-              {!appliedCoupon ? (
-                <div className="flex gap-2">
-                  <Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="uppercase" />
-                  <Button variant="outline" onClick={applyCoupon} disabled={applyingCoupon}>Apply</Button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between bg-secondary/10 p-2 rounded-lg text-sm">
-                  <span className="font-medium text-secondary">{appliedCoupon.code} applied</span>
-                  <Button variant="ghost" size="sm" onClick={removeCoupon}>Remove</Button>
-                </div>
-              )}
+              <p className="text-xs text-muted-foreground">Have a coupon code? You can apply it on the checkout page.</p>
 
-              <Link to="/checkout" state={{ coupon: appliedCoupon, discount }}>
+              <Link to="/checkout">
                 <Button className="w-full gap-2" size="lg"><span>Checkout</span><ArrowRight className="h-4 w-4" /></Button>
               </Link>
             </div>

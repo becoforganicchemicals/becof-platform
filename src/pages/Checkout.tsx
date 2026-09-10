@@ -17,8 +17,11 @@ const Checkout = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
-  const coupon = (location.state as any)?.coupon;
-  const discount = (location.state as any)?.discount || 0;
+
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>((location.state as any)?.coupon || null);
+  const [discount, setDiscount] = useState((location.state as any)?.discount || 0);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const total = subtotal - discount;
 
   const [step, setStep] = useState<CheckoutStep>("details");
@@ -29,6 +32,24 @@ const Checkout = () => {
   const [orderRef, setOrderRef] = useState("");
   const [receipt, setReceipt] = useState("");
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setApplyingCoupon(true);
+    const { data } = await supabase.from("coupons").select("*").eq("code", couponCode.trim().toUpperCase()).eq("is_active", true).maybeSingle();
+    if (!data) { toast.error("Invalid or expired coupon"); setApplyingCoupon(false); return; }
+    if (data.expires_at && new Date(data.expires_at) < new Date()) { toast.error("Coupon has expired"); setApplyingCoupon(false); return; }
+    if (data.max_uses && data.current_uses >= data.max_uses) { toast.error("Coupon usage limit reached"); setApplyingCoupon(false); return; }
+    if (data.min_order_amount && subtotal < Number(data.min_order_amount)) { toast.error(`Minimum order of KES ${Number(data.min_order_amount).toLocaleString()} required`); setApplyingCoupon(false); return; }
+
+    const disc = data.discount_type === "percentage" ? subtotal * Number(data.discount_value) / 100 : Number(data.discount_value);
+    setDiscount(Math.min(disc, subtotal));
+    setAppliedCoupon(data);
+    toast.success("Coupon applied!");
+    setApplyingCoupon(false);
+  };
+
+  const removeCoupon = () => { setDiscount(0); setAppliedCoupon(null); setCouponCode(""); };
 
   // Clear polling interval on unmount to prevent memory leaks
   useEffect(() => {
@@ -60,7 +81,7 @@ const Checkout = () => {
       total_amount: total,
       shipping_address: shippingAddress,
       notes: form.notes || null,
-      coupon_id: coupon?.id || null,
+      coupon_id: appliedCoupon?.id || null,
       discount_amount: discount,
       payment_method: "mpesa",
       payment_status: "pending",
@@ -85,8 +106,8 @@ const Checkout = () => {
     await supabase.from("order_items").insert(orderItems);
 
     // Increment coupon usage
-    if (coupon) {
-      await supabase.from("coupons").update({ current_uses: coupon.current_uses + 1 }).eq("id", coupon.id);
+    if (appliedCoupon) {
+      await supabase.from("coupons").update({ current_uses: appliedCoupon.current_uses + 1 }).eq("id", appliedCoupon.id);
     }
 
     // Send order placed email
@@ -363,9 +384,23 @@ const Checkout = () => {
               </div>
               <div className="border-t border-border pt-2 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
-                {discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-KES {discount.toLocaleString()}</span></div>}
+                {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({appliedCoupon?.code})</span><span>-KES {discount.toLocaleString()}</span></div>}
                 <div className="flex justify-between font-bold text-lg pt-1"><span>Total</span><span className="text-primary">KES {total.toLocaleString()}</span></div>
               </div>
+
+              {/* Coupon */}
+              {!appliedCoupon ? (
+                <div className="flex gap-2">
+                  <Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="uppercase" />
+                  <Button type="button" variant="outline" onClick={applyCoupon} disabled={applyingCoupon}>Apply</Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-primary/10 p-2 rounded-lg text-sm">
+                  <span className="font-medium text-primary">{appliedCoupon.code} applied</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={removeCoupon}>Remove</Button>
+                </div>
+              )}
+
               <p className="text-xs text-muted-foreground pt-2">+ Delivery fee (confirmed by sales team)</p>
             </div>
           </div>

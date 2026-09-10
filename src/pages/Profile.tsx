@@ -148,6 +148,113 @@ const DepositPayment = ({ order, onPaid }: { order: any; onPaid: () => void }) =
   );
 };
 
+// ─── Standard order payment retry (M-Pesa) ────────────────────────────────────
+const RetryPayment = ({ order, onPaid }: { order: any; onPaid: () => void }) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState(order.phone_number || order.shipping_address?.phone || "");
+  const [status, setStatus] = useState<"idle" | "sending" | "polling" | "failed">("idle");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+  }, []);
+
+  const poll = () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    let attempts = 0;
+    const maxAttempts = 20; // ~60s
+
+    pollRef.current = setInterval(async () => {
+      attempts++;
+      const { data } = await supabase
+        .from("orders")
+        .select("payment_status, mpesa_receipt_number")
+        .eq("id", order.id)
+        .single();
+
+      if (data?.payment_status === "paid") {
+        clearInterval(pollRef.current!);
+        pollRef.current = null;
+        toast({ title: "Payment confirmed!", description: `Receipt: ${data.mpesa_receipt_number || "—"}` });
+        setOpen(false);
+        setStatus("idle");
+        onPaid();
+      } else if (data?.payment_status === "failed" || data?.payment_status === "cancelled") {
+        clearInterval(pollRef.current!);
+        pollRef.current = null;
+        setStatus("failed");
+      } else if (attempts >= maxAttempts) {
+        clearInterval(pollRef.current!);
+        pollRef.current = null;
+        toast({ title: "Payment timeout", description: "If you paid, this will update shortly." });
+        setStatus("idle");
+      }
+    }, 3000);
+  };
+
+  const sendRequest = async () => {
+    if (!phone) {
+      toast({ title: "Enter your M-Pesa phone number", variant: "destructive" });
+      return;
+    }
+    setStatus("sending");
+    const { data, error } = await supabase.functions.invoke("mpesa-stk-push", {
+      body: { phone, amount: order.total_amount, order_id: order.id, order_type: "standard" },
+    });
+
+    if (error || !data?.success) {
+      toast({ title: "Failed to send payment request", description: "Please try again.", variant: "destructive" });
+      setStatus("idle");
+      return;
+    }
+
+    toast({ title: "Check your phone", description: "Enter your M-Pesa PIN to complete payment." });
+    setStatus("polling");
+    poll();
+  };
+
+  const label = order.payment_status === "awaiting_pin" ? "Resend Payment Request"
+    : order.payment_status === "failed" || order.payment_status === "cancelled" ? "Retry Payment"
+    : "Pay via M-Pesa";
+
+  if (!open) {
+    return (
+      <Button size="sm" className="mt-2 gap-2" onClick={() => setOpen(true)}>
+        <Smartphone className="h-3.5 w-3.5" /> {label}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-lg space-y-2">
+      <Label htmlFor={`retry-phone-${order.id}`} className="text-xs">M-Pesa Phone Number</Label>
+      <Input
+        id={`retry-phone-${order.id}`}
+        value={phone}
+        onChange={e => setPhone(e.target.value)}
+        placeholder="07XX XXX XXX"
+        disabled={status === "polling" || status === "sending"}
+      />
+      <Button
+        size="sm"
+        className="w-full gap-2"
+        onClick={sendRequest}
+        disabled={status === "sending" || status === "polling"}
+      >
+        {status === "polling"
+          ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for PIN…</>
+          : status === "sending"
+          ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+          : "Send Payment Request"}
+      </Button>
+      {status === "failed" && (
+        <p className="text-xs text-destructive">Payment failed or was cancelled. Try again.</p>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Profile = () => {
   const { user, profile, role, loading, signOut } = useAuth();
@@ -389,7 +496,7 @@ const Profile = () => {
   ];
 
   // ── Order history queries ─────────────────────────────────────────────────
-  const { data: orders = [] } = useQuery({
+  const { data: orders = [], refetch: refetchOrders } = useQuery({
     queryKey: ["my-orders", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -621,6 +728,9 @@ const Profile = () => {
                                 </div>
                               )}
                             </div>
+                            {order.payment_status && order.payment_status !== "paid" && (
+                              <RetryPayment order={order} onPaid={() => refetchOrders()} />
+                            )}
                           </div>
                         ))}
                       </div>
