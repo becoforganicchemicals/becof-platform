@@ -296,7 +296,9 @@ export type Database = {
           mpesa_checkout_request_id: string | null
           mpesa_receipt_number: string | null
           notes: string | null
+          payment_status: string | null
           phone: string
+          phone_number: string | null
           product_id: string | null
           product_name: string
           quantity: number
@@ -319,7 +321,9 @@ export type Database = {
           mpesa_checkout_request_id?: string | null
           mpesa_receipt_number?: string | null
           notes?: string | null
+          payment_status?: string | null
           phone: string
+          phone_number?: string | null
           product_id?: string | null
           product_name: string
           quantity?: number
@@ -342,7 +346,9 @@ export type Database = {
           mpesa_checkout_request_id?: string | null
           mpesa_receipt_number?: string | null
           notes?: string | null
+          payment_status?: string | null
           phone?: string
+          phone_number?: string | null
           product_id?: string | null
           product_name?: string
           quantity?: number
