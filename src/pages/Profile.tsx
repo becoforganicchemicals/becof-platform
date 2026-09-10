@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, Camera, Lock, AlertTriangle, Loader2, Save,
   MapPin, Phone, Sprout, Truck, Building2, Package,
-  MessageSquare, ShoppingBag,
+  MessageSquare, ShoppingBag, Smartphone,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -44,6 +44,109 @@ const Field = ({
     {children}
   </div>
 );
+
+// ─── Custom order deposit payment (M-Pesa) ────────────────────────────────────
+const DepositPayment = ({ order, onPaid }: { order: any; onPaid: () => void }) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState(order.phone || "");
+  const [status, setStatus] = useState<"idle" | "sending" | "polling" | "failed">("idle");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+  }, []);
+
+  const poll = () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    let attempts = 0;
+    const maxAttempts = 20; // ~60s
+
+    pollRef.current = setInterval(async () => {
+      attempts++;
+      const { data } = await supabase
+        .from("custom_orders")
+        .select("deposit_paid, payment_status")
+        .eq("id", order.id)
+        .single();
+
+      if (data?.deposit_paid) {
+        clearInterval(pollRef.current!);
+        pollRef.current = null;
+        toast({ title: "Deposit paid!", description: "Your custom order is confirmed." });
+        setOpen(false);
+        setStatus("idle");
+        onPaid();
+      } else if (data?.payment_status === "failed" || data?.payment_status === "cancelled") {
+        clearInterval(pollRef.current!);
+        pollRef.current = null;
+        setStatus("failed");
+      } else if (attempts >= maxAttempts) {
+        clearInterval(pollRef.current!);
+        pollRef.current = null;
+        toast({ title: "Payment timeout", description: "If you paid, this will update shortly." });
+        setStatus("idle");
+      }
+    }, 3000);
+  };
+
+  const sendRequest = async () => {
+    if (!phone) {
+      toast({ title: "Enter your M-Pesa phone number", variant: "destructive" });
+      return;
+    }
+    setStatus("sending");
+    const { data, error } = await supabase.functions.invoke("mpesa-stk-push", {
+      body: { phone, amount: order.deposit_amount, order_id: order.id, order_type: "custom" },
+    });
+
+    if (error || !data?.success) {
+      toast({ title: "Failed to send payment request", description: "Please try again.", variant: "destructive" });
+      setStatus("idle");
+      return;
+    }
+
+    toast({ title: "Check your phone", description: "Enter your M-Pesa PIN to pay the deposit." });
+    setStatus("polling");
+    poll();
+  };
+
+  if (!open) {
+    return (
+      <Button size="sm" className="mt-2 gap-2" onClick={() => setOpen(true)}>
+        <Smartphone className="h-3.5 w-3.5" /> Pay Deposit via M-Pesa
+      </Button>
+    );
+  }
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-lg space-y-2">
+      <Label htmlFor={`deposit-phone-${order.id}`} className="text-xs">M-Pesa Phone Number</Label>
+      <Input
+        id={`deposit-phone-${order.id}`}
+        value={phone}
+        onChange={e => setPhone(e.target.value)}
+        placeholder="07XX XXX XXX"
+        disabled={status === "polling" || status === "sending"}
+      />
+      <Button
+        size="sm"
+        className="w-full gap-2"
+        onClick={sendRequest}
+        disabled={status === "sending" || status === "polling"}
+      >
+        {status === "polling"
+          ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Waiting for PIN…</>
+          : status === "sending"
+          ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…</>
+          : "Send Payment Request"}
+      </Button>
+      {status === "failed" && (
+        <p className="text-xs text-destructive">Payment failed or was cancelled. Try again.</p>
+      )}
+    </div>
+  );
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Profile = () => {
@@ -300,7 +403,7 @@ const Profile = () => {
     enabled: !!user,
   });
 
-  const { data: customOrders = [] } = useQuery({
+  const { data: customOrders = [], refetch: refetchCustomOrders } = useQuery({
     queryKey: ["my-custom-orders", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -551,6 +654,9 @@ const Profile = () => {
                               <p>Date: {new Date(order.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</p>
                               {order.deposit_amount && <p>Deposit: KES {order.deposit_amount?.toLocaleString()} {order.deposit_paid ? "✓ Paid" : "— Pending"}</p>}
                             </div>
+                            {order.deposit_amount && !order.deposit_paid && (
+                              <DepositPayment order={order} onPaid={() => refetchCustomOrders()} />
+                            )}
                           </div>
                         ))}
                       </div>

@@ -144,6 +144,14 @@ const Checkout = () => {
         setReceipt(data.mpesa_receipt_number || "");
         await clearCart();
         setStep("success");
+      } else if (data?.payment_status === "failed" || data?.payment_status === "cancelled") {
+        clearInterval(pollIntervalRef.current!);
+        pollIntervalRef.current = null;
+        toast.error(
+          data.payment_status === "cancelled"
+            ? "Payment cancelled. Tap resend to try again."
+            : "Payment failed. Tap resend to try again."
+        );
       } else if (attempts >= maxAttempts) {
         clearInterval(pollIntervalRef.current!);
         pollIntervalRef.current = null;

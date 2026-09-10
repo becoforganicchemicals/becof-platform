@@ -1,3 +1,9 @@
 project_id = "waqopmlryzsdvsevbcpo"
 
+# Safaricom's STK push result callback carries no Supabase auth header, so this
+# function must accept unauthenticated requests. mpesa-stk-push keeps the default
+# (JWT-verified) since the frontend calls it via supabase.functions.invoke while signed in.
+[functions.mpesa-callback]
+verify_jwt = false
+
 

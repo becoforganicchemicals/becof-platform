@@ -11,7 +11,9 @@ const MOCK_MODE = true; // ← set false when you have real Daraja credentials
 // DARAJA_CONSUMER_SECRET
 // DARAJA_SHORTCODE
 // DARAJA_PASSKEY
-// DARAJA_CALLBACK_URL  (e.g. https://<project>.supabase.co/functions/v1/mpesa-callback)
+// DARAJA_CALLBACK_URL  → https://<project>.supabase.co/functions/v1/mpesa-callback
+//   (the mpesa-callback function handles this and marks the order paid/failed — see its
+//   own file; it's deployed with verify_jwt = false in config.toml)
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -59,6 +61,7 @@ serve(async (req) => {
                     payment_status: "paid",
                     mpesa_receipt_number: mockReceipt,
                     status: order_type === "custom" ? "deposit_paid" : "confirmed",
+                    ...(order_type === "custom" ? { deposit_paid: true, deposit_receipt: mockReceipt } : {}),
                 }).eq("id", order_id);
 
                 // Log notification for admin
