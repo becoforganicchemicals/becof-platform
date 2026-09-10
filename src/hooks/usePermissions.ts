@@ -14,11 +14,10 @@ export interface UserPermission {
   user_id: string;
   permission_id: string;
   granted: boolean;
-  permission?: Permission;
 }
 
 export const usePermissions = () => {
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isAdmin } = useAuth();
 
   const { data: allPermissions = [] } = useQuery({
     queryKey: ["permissions"],
@@ -30,7 +29,7 @@ export const usePermissions = () => {
       if (error) throw error;
       return data as Permission[];
     },
-    enabled: !!user,
+    enabled: !!user && isAdmin,
   });
 
   const { data: userPermissions = [] } = useQuery({
@@ -43,7 +42,7 @@ export const usePermissions = () => {
       if (error) throw error;
       return data as UserPermission[];
     },
-    enabled: !!user,
+    enabled: !!user && isAdmin,
   });
 
   const hasPermission = (permissionName: string): boolean => {

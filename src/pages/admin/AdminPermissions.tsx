@@ -4,22 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  ShieldCheck, Ban, UserCheck, Loader2, Shield, Truck, Tractor, ChevronRight,
-} from "lucide-react";
+import { ShieldCheck, Loader2, Shield, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-
-const ROLE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  admin: { label: "Admin", icon: Shield, color: "text-purple-600 bg-purple-50 border-purple-200" },
-  distributor: { label: "Distributor", icon: Truck, color: "text-blue-600 bg-blue-50 border-blue-200" },
-  farmer: { label: "Farmer", icon: Tractor, color: "text-green-600 bg-green-50 border-green-200" },
-};
 
 const AdminPermissions = () => {
   const { toast } = useToast();
@@ -27,28 +15,27 @@ const AdminPermissions = () => {
   const queryClient = useQueryClient();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  // All users except the current super admin
-  const { data: users = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ["permission-users"],
+  // Only admin-role users (not super_admin, farmer, distributor)
+  const { data: admins = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ["permission-admins"],
     queryFn: async () => {
       const { data: roles, error: rolesErr } = await supabase
         .from("user_roles")
         .select("*")
-        .in("role", ["admin", "distributor", "farmer"]);   // expert removed
+        .eq("role", "admin");
       if (rolesErr) throw rolesErr;
 
-      const filtered = roles.filter(r => r.user_id !== currentUser?.id);
-      if (filtered.length === 0) return [];
+      if (roles.length === 0) return [];
 
       const { data: profiles, error: profErr } = await supabase
         .from("profiles")
         .select("*")
-        .in("user_id", filtered.map(r => r.user_id));
+        .in("user_id", roles.map((r) => r.user_id));
       if (profErr) throw profErr;
 
-      return filtered.map(r => ({
+      return roles.map((r) => ({
         ...r,
-        profile: profiles.find(p => p.user_id === r.user_id) ?? null,
+        profile: profiles.find((p) => p.user_id === r.user_id) ?? null,
       }));
     },
   });
@@ -81,9 +68,15 @@ const AdminPermissions = () => {
   });
 
   const togglePerm = useMutation({
-    mutationFn: async ({ permissionId, granted }: { permissionId: string; granted: boolean }) => {
+    mutationFn: async ({
+      permissionId,
+      granted,
+    }: {
+      permissionId: string;
+      granted: boolean;
+    }) => {
       if (!selectedUserId) return;
-      const existing = userPerms.find(up => up.permission_id === permissionId);
+      const existing = userPerms.find((up) => up.permission_id === permissionId);
       if (existing) {
         const { error } = await supabase
           .from("user_permissions")
@@ -104,123 +97,147 @@ const AdminPermissions = () => {
       queryClient.invalidateQueries({ queryKey: ["user-perms", selectedUserId] });
       toast({ title: "Permission updated" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: any) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const toggleSuspend = useMutation({
-    mutationFn: async ({ userId, suspend }: { userId: string; suspend: boolean }) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ status: suspend ? "suspended" : "active" })
-        .eq("user_id", userId);
-      if (error) throw error;
+  const grantAll = useMutation({
+    mutationFn: async () => {
+      if (!selectedUserId) return;
+      for (const perm of permissions) {
+        const existing = userPerms.find((up) => up.permission_id === perm.id);
+        if (existing) {
+          if (!existing.granted) {
+            await supabase
+              .from("user_permissions")
+              .update({ granted: true, granted_by: currentUser?.id })
+              .eq("id", existing.id);
+          }
+        } else {
+          await supabase.from("user_permissions").insert({
+            user_id: selectedUserId,
+            permission_id: perm.id,
+            granted: true,
+            granted_by: currentUser?.id,
+          });
+        }
+      }
     },
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["permission-users"] });
-      toast({ title: vars.suspend ? "User suspended" : "User reactivated" });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-perms", selectedUserId] });
+      toast({ title: "All permissions granted" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const selectedUser = users.find(u => u.user_id === selectedUserId);
+  const revokeAll = useMutation({
+    mutationFn: async () => {
+      if (!selectedUserId) return;
+      for (const up of userPerms) {
+        if (up.granted) {
+          await supabase
+            .from("user_permissions")
+            .update({ granted: false, granted_by: currentUser?.id })
+            .eq("id", up.id);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-perms", selectedUserId] });
+      toast({ title: "All permissions revoked" });
+    },
+  });
+
+  const selectedAdmin = admins.find((u) => u.user_id === selectedUserId);
   const isPermGranted = (permId: string) =>
-    userPerms.find(p => p.permission_id === permId)?.granted ?? false;
+    userPerms.find((p) => p.permission_id === permId)?.granted ?? false;
 
-  // Group permissions by category
-  const grouped = permissions.reduce<Record<string, typeof permissions>>((acc, p) => {
-    (acc[p.category] = acc[p.category] || []).push(p);
-    return acc;
-  }, {});
+  const grouped = permissions.reduce<Record<string, typeof permissions>>(
+    (acc, p) => {
+      (acc[p.category] = acc[p.category] || []).push(p);
+      return acc;
+    },
+    {}
+  );
 
-  const grantedCount = userPerms.filter(p => p.granted).length;
+  const grantedCount = userPerms.filter((p) => p.granted).length;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold flex items-center gap-2">
-        <ShieldCheck className="h-5 w-5" /> Permission Management
-      </h2>
+      <div>
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5" /> Admin Permission Management
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Control which admin modules each admin can access. Super admins always
+          have full access.
+        </p>
+      </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
-
-        {/* ── Left: User list ── */}
-        <div className="lg:col-span-2 space-y-3">
+        {/* Left: Admin list */}
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Select a User</CardTitle>
+              <CardTitle className="text-base">Admin Users</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loadingUsers ? (
                 <div className="flex items-center gap-2 text-muted-foreground p-4">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading…
                 </div>
-              ) : users.length === 0 ? (
-                <p className="text-muted-foreground text-sm p-4">No manageable users found.</p>
+              ) : admins.length === 0 ? (
+                <p className="text-muted-foreground text-sm p-4">
+                  No admin users found. Only users with the "Admin" role appear
+                  here.
+                </p>
               ) : (
                 <div className="divide-y divide-border">
-                  {users.map(u => {
-                    const cfg = ROLE_CONFIG[u.role] ?? ROLE_CONFIG.farmer;
-                    const Icon = cfg.icon;
-                    const suspended = u.profile?.status === "suspended";
+                  {admins.map((u) => {
                     const selected = selectedUserId === u.user_id;
-                    const initials = u.profile?.full_name
-                      ?.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "U";
+                    const initials =
+                      u.profile?.full_name
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase() || "A";
 
                     return (
                       <div
                         key={u.user_id}
                         onClick={() => setSelectedUserId(u.user_id)}
-                        className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${selected ? "bg-primary/8 border-l-2 border-primary" : "hover:bg-muted/50"
-                          }`}
+                        className={`flex items-center gap-3 p-3 cursor-pointer transition-colors ${
+                          selected
+                            ? "bg-primary/8 border-l-2 border-primary"
+                            : "hover:bg-muted/50"
+                        }`}
                       >
                         <Avatar className="h-9 w-9 shrink-0">
-                          <AvatarImage src={u.profile?.avatar_url || undefined} />
-                          <AvatarFallback className="text-xs bg-muted">{initials}</AvatarFallback>
+                          <AvatarImage
+                            src={u.profile?.avatar_url || undefined}
+                          />
+                          <AvatarFallback className="text-xs bg-muted">
+                            {initials}
+                          </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
                             {u.profile?.full_name || "Unknown"}
                           </p>
                           <div className="flex items-center gap-1 mt-0.5">
-                            <Icon className={`h-3 w-3 ${cfg.color.split(" ")[0]}`} />
-                            <span className="text-xs text-muted-foreground">{cfg.label}</span>
-                            {suspended && (
-                              <Badge variant="destructive" className="text-[10px] px-1 py-0 ml-1">
-                                Suspended
-                              </Badge>
-                            )}
+                            <Shield className="h-3 w-3 text-purple-600" />
+                            <span className="text-xs text-muted-foreground">
+                              Admin
+                            </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Suspend / Reactivate */}
-                          {suspended ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-primary"
-                              title="Reactivate"
-                              onClick={e => {
-                                e.stopPropagation();
-                                toggleSuspend.mutate({ userId: u.user_id, suspend: false });
-                              }}
-                            >
-                              <UserCheck className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                              title="Suspend"
-                              onClick={e => {
-                                e.stopPropagation();
-                                toggleSuspend.mutate({ userId: u.user_id, suspend: true });
-                              }}
-                            >
-                              <Ban className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <ChevronRight className={`h-4 w-4 transition-colors ${selected ? "text-primary" : "text-muted-foreground"}`} />
-                        </div>
+                        <ChevronRight
+                          className={`h-4 w-4 transition-colors ${
+                            selected
+                              ? "text-primary"
+                              : "text-muted-foreground"
+                          }`}
+                        />
                       </div>
                     );
                   })}
@@ -230,13 +247,15 @@ const AdminPermissions = () => {
           </Card>
         </div>
 
-        {/* ── Right: Permission toggles ── */}
+        {/* Right: Permission toggles */}
         <div className="lg:col-span-3">
           {!selectedUserId ? (
             <Card className="h-full flex items-center justify-center min-h-[300px]">
               <CardContent className="text-center text-muted-foreground">
                 <ShieldCheck className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Select a user on the left to manage their permissions.</p>
+                <p className="text-sm">
+                  Select an admin on the left to manage their module access.
+                </p>
               </CardContent>
             </Card>
           ) : (
@@ -246,31 +265,35 @@ const AdminPermissions = () => {
                   <CardTitle className="text-base flex items-center gap-2">
                     Permissions for{" "}
                     <span className="text-primary">
-                      {selectedUser?.profile?.full_name || "User"}
+                      {selectedAdmin?.profile?.full_name || "Admin"}
                     </span>
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    {selectedUser && (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${ROLE_CONFIG[selectedUser.role]?.color ?? ""
-                        }`}>
-                        {ROLE_CONFIG[selectedUser.role]?.label}
-                      </span>
-                    )}
                     <Badge variant="outline" className="text-xs">
                       {grantedCount} / {permissions.length} granted
                     </Badge>
+                    <button
+                      onClick={() => grantAll.mutate()}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Grant all
+                    </button>
+                    <span className="text-muted-foreground text-xs">|</span>
+                    <button
+                      onClick={() => revokeAll.mutate()}
+                      className="text-xs text-destructive hover:underline"
+                    >
+                      Revoke all
+                    </button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {loadingPerms ? (
                   <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Loading permissions…
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading
+                    permissions…
                   </div>
-                ) : permissions.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-8">
-                    No permissions defined yet.
-                  </p>
                 ) : (
                   <div className="space-y-6">
                     {Object.entries(grouped).map(([category, perms]) => (
@@ -281,20 +304,24 @@ const AdminPermissions = () => {
                           </h4>
                           <div className="flex-1 h-px bg-border" />
                           <span className="text-xs text-muted-foreground">
-                            {perms.filter(p => isPermGranted(p.id)).length}/{perms.length}
+                            {perms.filter((p) => isPermGranted(p.id)).length}/
+                            {perms.length}
                           </span>
                         </div>
                         <div className="space-y-2">
-                          {perms.map(perm => (
+                          {perms.map((perm) => (
                             <div
                               key={perm.id}
-                              className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${isPermGranted(perm.id)
+                              className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                                isPermGranted(perm.id)
                                   ? "bg-primary/5 border-primary/20"
                                   : "bg-card border-border"
-                                }`}
+                              }`}
                             >
                               <div className="flex-1 min-w-0 mr-4">
-                                <p className="text-sm font-medium">{perm.name}</p>
+                                <p className="text-sm font-medium">
+                                  {perm.name.replace(".", " → ").replace(/^\w/, (c: string) => c.toUpperCase())}
+                                </p>
                                 {perm.description && (
                                   <p className="text-xs text-muted-foreground mt-0.5">
                                     {perm.description}
@@ -303,8 +330,11 @@ const AdminPermissions = () => {
                               </div>
                               <Switch
                                 checked={isPermGranted(perm.id)}
-                                onCheckedChange={checked =>
-                                  togglePerm.mutate({ permissionId: perm.id, granted: checked })
+                                onCheckedChange={(checked) =>
+                                  togglePerm.mutate({
+                                    permissionId: perm.id,
+                                    granted: checked,
+                                  })
                                 }
                               />
                             </div>

@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Navigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,7 @@ import {
   Package, ShoppingCart, Users, Bell, Activity, BarChart3, LogOut,
   Shield, ShieldCheck, ArrowLeft, Ban, FolderTree, Briefcase, User,
   Camera, Lock, Save, Loader2, BookOpen, Award, Mail,
-  MessageSquare,
+  MessageSquare, ShieldAlert,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -35,11 +37,64 @@ import AdminImpact from "./AdminImpact";
 import AdminPartners from "./AdminPartners";
 import AdminInbox from "./AdminInbox";
 import AdminTestimonials from "./AdminTestimonials";
+import AdminWelcome from "@/components/admin/AdminWelcome";
 
+// Map sidebar items to permission names
+const NAV_PERMISSION_MAP: Record<string, string> = {
+  analytics: "analytics.manage",
+  categories: "categories.manage",
+  products: "products.manage",
+  orders: "orders.manage",
+  notifications: "notifications.manage",
+  careers: "careers.manage",
+  learn: "learn.manage",
+  impact: "impact.manage",
+  partners: "partners.manage",
+  inbox: "inbox.manage",
+  testimonials: "testimonials.manage",
+};
 
 const AdminDashboard = () => {
   const { user, isAdmin, isSuperAdmin, isSuspended, loading, signOut, role, profile } = useAuth();
+  const { hasPermission } = usePermissions();
+
+  // Build filtered nav once to determine if admin has any permissions
+  const allMainNav = useMemo(() => [
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "categories", label: "Categories", icon: FolderTree },
+    { id: "products", label: "Products", icon: Package },
+    { id: "orders", label: "Orders", icon: ShoppingCart },
+    { id: "notifications", label: "Alerts", icon: Bell },
+    { id: "careers", label: "Careers", icon: Briefcase },
+    { id: "learn", label: "Learn", icon: BookOpen },
+    { id: "impact", label: "Impact", icon: Award },
+    { id: "partners", label: "Partners", icon: Users },
+    { id: "inbox", label: "Inbox", icon: Mail },
+    { id: "testimonials", label: "Testimonials", icon: MessageSquare },
+  ], []);
+
+  const mainNav = useMemo(() => allMainNav.filter((item) => {
+    const permName = NAV_PERMISSION_MAP[item.id];
+    return permName ? hasPermission(permName) : true;
+  }), [allMainNav, hasPermission]);
+
+  const hasAnyPermission = isSuperAdmin || mainNav.length > 0;
   const [activeTab, setActiveTab] = useState("analytics");
+
+  // Unread notification count for badge
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["admin-unread-notifications"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("admin_notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user && isAdmin,
+    refetchInterval: 30000,
+  });
 
   if (loading) {
     return (
@@ -66,19 +121,7 @@ const AdminDashboard = () => {
     );
   }
 
-  const mainNav = [
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "categories", label: "Categories", icon: FolderTree },
-    { id: "products", label: "Products", icon: Package },
-    { id: "orders", label: "Orders", icon: ShoppingCart },
-    { id: "notifications", label: "Alerts", icon: Bell },
-    { id: "careers", label: "Careers", icon: Briefcase },
-    { id: "learn", label: "Learn", icon: BookOpen },
-    { id: "impact", label: "Impact", icon: Award },
-    { id: "partners", label: "Partners", icon: Users },
-    { id: "inbox", label: "Inbox", icon: Mail },
-    { id: "testimonials", label: "Testimonials", icon: MessageSquare },
-  ];
+  // mainNav and allMainNav are now computed above via useMemo
 
   const superAdminNav = [
     { id: "permissions", label: "Permissions", icon: ShieldCheck },
@@ -86,7 +129,37 @@ const AdminDashboard = () => {
     { id: "logs", label: "Audit Logs", icon: Activity },
   ];
 
+  // Show "Request More Access" for non-super admins who have some permissions
+  const showRequestMore = !isSuperAdmin && hasAnyPermission;
+
+  const canAccessTab = (tabId: string): boolean => {
+    const permName = NAV_PERMISSION_MAP[tabId];
+    if (!permName) return true; // profile, super admin tabs
+    return hasPermission(permName);
+  };
+
   const renderContent = () => {
+    // Welcome page for admins with no permissions, or explicit request tab
+    if (!hasAnyPermission && activeTab !== "profile") {
+      return <AdminWelcome mode="welcome" />;
+    }
+    if (activeTab === "request-access") {
+      return <AdminWelcome mode="request-more" />;
+    }
+
+    // Check permission for the active tab
+    if (!canAccessTab(activeTab) && activeTab !== "profile") {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <ShieldAlert className="h-12 w-12 text-muted-foreground/40 mb-4" />
+          <h3 className="text-lg font-semibold">Access Denied</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            You don't have permission to access this module. Contact the Super Admin to request access.
+          </p>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case "analytics": return <AdminAnalytics />;
       case "categories": return <AdminCategories />;
@@ -148,7 +221,7 @@ const AdminDashboard = () => {
 
             <Separator className="my-3" />
 
-            {/* Main Navigation */}
+            {/* Main Navigation — filtered by permissions */}
             <SidebarGroup>
               <SidebarGroupLabel>Management</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -160,13 +233,37 @@ const AdminDashboard = () => {
                         className={activeTab === item.id ? "bg-primary/10 text-primary font-medium" : ""}
                       >
                         <item.icon className="h-4 w-4 mr-2 shrink-0" />
-                        <span>{item.label}</span>
+                        <span className="flex-1">{item.label}</span>
+                        {item.id === "notifications" && unreadCount > 0 && (
+                          <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-semibold">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {/* Request More Access — for admins with some permissions */}
+            {showRequestMore && (
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => setActiveTab("request-access")}
+                        className={activeTab === "request-access" ? "bg-primary/10 text-primary font-medium" : ""}
+                      >
+                        <ShieldAlert className="h-4 w-4 mr-2 shrink-0" />
+                        <span>Request More Access</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
             {/* Super Admin Navigation */}
             {isSuperAdmin && (
@@ -215,7 +312,11 @@ const AdminDashboard = () => {
           <header className="sticky top-0 z-40 bg-card border-b border-border px-4 py-3 flex items-center gap-3">
             <SidebarTrigger />
             <h2 className="font-semibold capitalize">
-              {activeTab === "profile" ? "My Profile" : activeTab.replace(/_/g, " ")}
+              {(!hasAnyPermission && activeTab !== "profile") || activeTab === "request-access"
+                ? "Request Access"
+                : activeTab === "profile"
+                  ? "My Profile"
+                  : activeTab.replace(/_/g, " ")}
             </h2>
           </header>
           <main className="flex-1 p-6 overflow-auto">

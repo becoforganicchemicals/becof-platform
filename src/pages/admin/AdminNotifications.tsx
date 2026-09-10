@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Bell, Check, CheckCheck, Package, ShoppingCart,
   AlertTriangle, Trash2, RefreshCw, Filter, Circle,
-  BellOff, Info, Star, Users, Mail,
+  BellOff, Info, Star, Users, Mail, Shield, Loader2, X,
 } from "lucide-react";
 
 /* ─── type config ─── */
@@ -24,6 +25,8 @@ const TYPE_CONFIG: Record<string, {
   order_updated: { icon: Info, color: "text-muted-foreground", bg: "bg-muted/50", label: "Order Update" },
   new_application: { icon: Users, color: "text-teal-600", bg: "bg-teal-50", label: "Application" },
   new_message: { icon: Mail, color: "text-indigo-600", bg: "bg-indigo-50", label: "Message" },
+  access_request: { icon: Shield, color: "text-purple-600", bg: "bg-purple-50", label: "Access Request" },
+  access_denied: { icon: X, color: "text-red-600", bg: "bg-red-50", label: "Access Denied" },
 };
 
 const DEFAULT_CONFIG = { icon: Bell, color: "text-muted-foreground", bg: "bg-muted/50", label: "Alert" };
@@ -47,9 +50,12 @@ const formatTime = (iso: string) => {
 /* ══════════════════════════════════════════════════════════════════ */
 const AdminNotifications = () => {
   const { toast } = useToast();
+  const { isSuperAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterTab>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [denyingId, setDenyingId] = useState<string | null>(null);
 
   /* ─── Query ─── */
   const { data: notifications = [], isLoading, refetch } = useQuery({
@@ -112,6 +118,94 @@ const AdminNotifications = () => {
       toast({ title: "Notifications deleted" });
     },
   });
+
+  /* ─── Deny access request ─── */
+  const handleDeny = async (notification: typeof notifications[0]) => {
+    const meta = notification.metadata as any;
+    const requesterId = meta?.requester_id;
+    const requesterEmail = meta?.requester_email || "An admin";
+
+    setDenyingId(notification.id);
+    try {
+      // Mark notification as read
+      await supabase.from("admin_notifications").update({ is_read: true }).eq("id", notification.id);
+
+      // Send a notification back to the requester (visible in order_notifications or admin_notifications)
+      if (requesterId) {
+        await supabase.from("admin_notifications").insert({
+          type: "access_denied",
+          title: "Access Request Denied",
+          message: `Your access request has been reviewed and denied. Please contact the Super Admin for more information.`,
+          metadata: { target_user_id: requesterId },
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-unread-notifications"] });
+      toast({ title: "Request denied", description: `${requesterEmail}'s request was denied.` });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+    setDenyingId(null);
+  };
+
+
+  /* ─── Approve access request ─── */
+  const handleApprove = async (notification: typeof notifications[0]) => {
+    const meta = notification.metadata as any;
+    const requesterId = meta?.requester_id;
+    const modules = meta?.requested_modules as string[];
+    if (!requesterId || !modules?.length) return;
+
+    setApprovingId(notification.id);
+    try {
+      // Fetch all permissions to map names → ids
+      const { data: allPerms } = await supabase.from("permissions").select("id, name");
+      if (!allPerms) throw new Error("Failed to load permissions");
+
+      const permMap = new Map(allPerms.map(p => [p.name, p.id]));
+
+      // Upsert granted permissions for the requester
+      const rows = modules
+        .filter(name => permMap.has(name))
+        .map(name => ({
+          user_id: requesterId,
+          permission_id: permMap.get(name)!,
+          granted: true,
+        }));
+
+      if (rows.length === 0) throw new Error("No valid permissions found");
+
+      for (const row of rows) {
+        // Check if permission already exists
+        const { data: existing } = await supabase
+          .from("user_permissions")
+          .select("id")
+          .eq("user_id", row.user_id)
+          .eq("permission_id", row.permission_id)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("user_permissions")
+            .update({ granted: true })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("user_permissions").insert(row);
+        }
+      }
+
+      // Mark notification as read
+      await supabase.from("admin_notifications").update({ is_read: true }).eq("id", notification.id);
+
+      queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-unread-notifications"] });
+      toast({ title: "Access granted ✓", description: `${rows.length} module(s) approved.` });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+    setApprovingId(null);
+  };
 
   /* ─── Computed ─── */
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -332,6 +426,39 @@ const AdminNotifications = () => {
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
                 <p className="text-xs text-muted-foreground/40 mt-1.5">{formatTime(n.created_at)}</p>
               </div>
+
+              {/* approve button for access requests */}
+              {n.type === "access_request" && isSuperAdmin && !n.is_read && (
+                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                  <Button
+                    size="sm"
+                    onClick={() => handleApprove(n)}
+                    disabled={approvingId === n.id || denyingId === n.id}
+                    className="gap-1.5 text-xs"
+                  >
+                    {approvingId === n.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Check className="h-3.5 w-3.5" />
+                    )}
+                    Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeny(n)}
+                    disabled={approvingId === n.id || denyingId === n.id}
+                    className="gap-1.5 text-xs border-red-200 text-red-600 hover:bg-red-50"
+                  >
+                    {denyingId === n.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <X className="h-3.5 w-3.5" />
+                    )}
+                    Deny
+                  </Button>
+                </div>
+              )}
 
               {/* mark read button */}
               {!n.is_read && (
