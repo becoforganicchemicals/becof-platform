@@ -108,7 +108,7 @@ const FeaturedProducts = () => {
                   className="group bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col"
                 >
                   <Link to={`/products/${p.slug}`}>
-                    <div className="relative h-48 bg-gradient-to-br from-primary/8 to-secondary/8 overflow-hidden flex items-center justify-center">
+                    <div className="relative aspect-[2/3] bg-gradient-to-br from-primary/8 to-secondary/8 overflow-hidden flex items-center justify-center">
                       {coverImage ? (
                         <img
                           src={coverImage}

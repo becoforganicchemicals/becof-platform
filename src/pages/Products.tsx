@@ -224,7 +224,7 @@ const Products = () => {
                 return (
                   <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                     className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all group">
-                    <Link to={`/products/${p.slug}`} className="block h-44 bg-muted relative overflow-hidden">
+                    <Link to={`/products/${p.slug}`} className="block aspect-[2/3] bg-muted relative overflow-hidden">
                       <img src={p.images?.[0] || "/placeholder.svg"} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       {!inStock && (
                         <span className="absolute top-3 right-3 px-2 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-full">Out of Stock</span>

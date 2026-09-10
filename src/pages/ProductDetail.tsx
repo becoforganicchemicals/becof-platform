@@ -124,7 +124,7 @@ const ProductDetail = () => {
           <div className="grid lg:grid-cols-2 gap-10">
             {/* Images */}
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <div className="aspect-square rounded-xl overflow-hidden bg-muted mb-3">
+              <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3">
                 <img src={images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
               </div>
               {images.length > 1 && (

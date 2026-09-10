@@ -52,7 +52,7 @@ const Wishlist = () => {
               {items.map((item, i) => (
                 <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all">
-                  <Link to={`/products/${item.product.slug}`} className="block h-44 bg-muted">
+                  <Link to={`/products/${item.product.slug}`} className="block aspect-[2/3] bg-muted">
                     <img src={item.product.images?.[0] || "/placeholder.svg"} alt={item.product.name} className="w-full h-full object-cover" />
                   </Link>
                   <div className="p-4">
