@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 import CookieConsentBanner from "@/components/CookieConsentBanner";
 import AnalyticsPageViewTracker from "@/components/AnalyticsPageViewTracker";
+import ScrollToTop from "@/components/ScrollToTop";
 import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
@@ -90,6 +91,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <AnalyticsPageViewTracker />
             <CookieConsentBanner />
             <Routes>
