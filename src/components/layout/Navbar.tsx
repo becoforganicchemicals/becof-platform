@@ -153,8 +153,9 @@ const Navbar = () => {
                         {roleConfig.portalLabel}
                       </Link>
                     </DropdownMenuItem>
-                    {/* Show profile link for farmers/distributors */}
-                    {(role === "farmer" || role === "distributor") && (
+                    {/* Everyone has a customer profile (orders, rewards, referrals) —
+                        farmer's portal link above already points at it, so skip only that one */}
+                    {role !== "farmer" && (
                       <DropdownMenuItem asChild>
                         <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                           <User className="h-4 w-4" />
@@ -242,6 +243,14 @@ const Navbar = () => {
                     <Button variant="outline" className="w-full gap-2">
                       <roleConfig.icon className="h-4 w-4" />
                       {roleConfig.portalLabel}
+                    </Button>
+                  </Link>
+                )}
+                {role !== "farmer" && (
+                  <Link to="/profile" className="flex-1" onClick={() => setOpen(false)}>
+                    <Button variant="outline" className="w-full gap-2">
+                      <User className="h-4 w-4" />
+                      My Profile
                     </Button>
                   </Link>
                 )}
