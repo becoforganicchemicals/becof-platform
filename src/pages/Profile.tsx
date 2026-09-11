@@ -511,8 +511,8 @@ const Profile = () => {
     return (
       <Layout>
         <section className="py-16 min-h-[80vh] flex items-center">
-          <div className="container max-w-md">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="container">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto">
               <Card>
                 <CardHeader>
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -633,7 +633,7 @@ const Profile = () => {
   return (
     <Layout>
       <section className="py-12 bg-muted/30 min-h-screen">
-        <div className="container max-w-3xl space-y-8">
+        <div className="container space-y-8">
 
           {/* ── Header card ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

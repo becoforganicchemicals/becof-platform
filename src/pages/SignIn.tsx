@@ -154,11 +154,11 @@ const SignIn = () => {
     return (
       <Layout>
         <section className="py-16 min-h-[80vh] flex items-center">
-          <div className="container max-w-md">
+          <div className="container">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-card border border-border rounded-2xl p-10 shadow-lg text-center"
+              className="bg-card border border-border rounded-2xl p-10 shadow-lg text-center max-w-md mx-auto"
             >
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-5">
                 <CheckCircle2 className="h-8 w-8 text-primary" />
@@ -186,12 +186,12 @@ const SignIn = () => {
   return (
     <Layout>
       <section className="py-16 min-h-[80vh] flex items-center">
-        <div className="container max-w-md">
+        <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden"
+            className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden max-w-md mx-auto"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-primary to-secondary px-8 py-7 text-primary-foreground">

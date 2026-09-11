@@ -281,7 +281,8 @@ const LearnDetail = () => {
     if (loading) {
         return (
             <Layout>
-                <div className="container py-16 max-w-3xl mx-auto space-y-6 animate-pulse">
+                <div className="container py-16">
+                  <div className="max-w-3xl mx-auto space-y-6 animate-pulse">
                     <div className="h-4 bg-muted rounded w-1/3" />
                     <div className="h-8 bg-muted rounded w-3/4" />
                     <div className="h-4 bg-muted rounded w-1/2" />
@@ -290,6 +291,7 @@ const LearnDetail = () => {
                             <div key={i} className={`h-4 bg-muted rounded ${i % 3 === 2 ? "w-3/4" : "w-full"}`} />
                         ))}
                     </div>
+                  </div>
                 </div>
             </Layout>
         );
@@ -345,8 +347,8 @@ const LearnDetail = () => {
 
             {/* Article hero */}
             <section className="bg-gradient-to-br from-primary/5 to-primary/10 border-b border-primary/10 py-12">
-                <div className="container max-w-3xl">
-                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+                <div className="container">
+                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto">
                         {category && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full border border-primary/20 mb-4">
                                 <CatIcon className="h-3.5 w-3.5" />
@@ -389,11 +391,12 @@ const LearnDetail = () => {
 
             {/* Article body */}
             <section className="py-12">
-                <div className="container max-w-3xl">
+                <div className="container">
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
+                        className="max-w-3xl mx-auto"
                     >
                         <div
                             className="
@@ -431,7 +434,8 @@ const LearnDetail = () => {
             {/* Related articles */}
             {related.length > 0 && (
                 <section className="py-12 bg-muted/30 border-t border-border">
-                    <div className="container max-w-3xl">
+                    <div className="container">
+                      <div className="max-w-3xl mx-auto">
                         <h2 className="text-xl font-bold mb-6">More from {category?.name || "this category"}</h2>
                         <div className="grid sm:grid-cols-2 gap-4">
                             {related.map((r) => (
@@ -457,6 +461,7 @@ const LearnDetail = () => {
                                 </motion.article>
                             ))}
                         </div>
+                      </div>
                     </div>
                 </section>
             )}

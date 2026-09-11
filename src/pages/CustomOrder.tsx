@@ -78,7 +78,7 @@ const CustomOrder = () => {
 
     if (!user) return (
         <Layout>
-            <div className="container py-20 text-center max-w-md mx-auto">
+            <div className="container py-20 text-center">
                 <PackageSearch className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold mb-2">Sign in to place an order</h1>
                 <p className="text-muted-foreground mb-6">You need an account to submit a custom order request.</p>
@@ -89,8 +89,8 @@ const CustomOrder = () => {
 
     if (submitted) return (
         <Layout>
-            <div className="container py-20 max-w-lg mx-auto text-center">
-                <div className="bg-card rounded-2xl border border-border p-10 shadow-sm">
+            <div className="container py-20 text-center">
+                <div className="bg-card rounded-2xl border border-border p-10 shadow-sm max-w-lg mx-auto">
                     <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
                     <h1 className="text-2xl font-bold text-foreground mb-2">Order Request Submitted!</h1>
                     <p className="text-muted-foreground mb-1">Reference #{orderId}</p>
@@ -115,7 +115,8 @@ const CustomOrder = () => {
                 url="https://www.becoforganicchemicals.com/custom-order"
             />
             <section className="py-10">
-                <div className="container max-w-2xl">
+                <div className="container">
+                  <div className="max-w-2xl mx-auto">
                     <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
                         <ArrowLeft className="h-4 w-4" /> Back
                     </button>
@@ -227,6 +228,7 @@ const CustomOrder = () => {
                             }
                         </Button>
                     </form>
+                  </div>
                 </div>
             </section>
         </Layout>

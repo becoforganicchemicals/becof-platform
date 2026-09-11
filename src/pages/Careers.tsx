@@ -80,7 +80,7 @@ const Careers = () => {
         url="https://www.becoforganicchemicals.com/careers"
       />
       <section className="py-16">
-        <div className="container max-w-7xl">
+        <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4">Join Our Team</h1>
             <p className="text-lg text-muted-foreground max-w-7xl mx-auto">
@@ -90,7 +90,7 @@ const Careers = () => {
 
           {/* Why Join Becof */}
           <section className="py-20 bg-muted/30">
-            <div className="container max-w-7xl">
+            <div className="container">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Join Becof?</h2>
                 <p className="text-muted-foreground max-w-7xl mx-auto">
@@ -137,7 +137,7 @@ const Careers = () => {
 
           {/* Career Growth & Development */}
           <section className="py-24">
-            <div className="container max-w-7xl">
+            <div className="container">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
                   Career Growth & Development
@@ -171,7 +171,7 @@ const Careers = () => {
 
           {/* What We Value */}
           <section className="py-20 bg-muted/30">
-            <div className="container max-w-7xl">
+            <div className="container">
               <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
                   What We Value
@@ -211,7 +211,7 @@ const Careers = () => {
 
           {/* Life at Becof */}
           <section className="py-24">
-            <div className="container max-w-7xl text-center">
+            <div className="container text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
                 Life at Becof
               </h2>
@@ -224,7 +224,7 @@ const Careers = () => {
 
           {/* Final CTA */}
           <section className="py-16 bg-primary text-primary-foreground text-center">
-            <div className="container max-w-7xl">
+            <div className="container">
               <h2 className="text-3xl font-bold mb-4">
                 Ready to Shape the Future?
               </h2>

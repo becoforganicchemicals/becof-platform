@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
+import AnalyticsPageViewTracker from "@/components/AnalyticsPageViewTracker";
 import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
@@ -27,6 +30,10 @@ import LearnDetail from "./pages/LearnDetail";
 import CustomOrder from "./pages/CustomOrder";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import DistributorDashboard from "./pages/DistributorDashboard";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import CookiePolicy from "./pages/legal/CookiePolicy";
+import AccessibilityStatement from "./pages/legal/AccessibilityStatement";
 
 const queryClient = new QueryClient();
 
@@ -79,9 +86,12 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <CartProvider>
+          <CookieConsentProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <AnalyticsPageViewTracker />
+            <CookieConsentBanner />
             <Routes>
 
               {/* ── Fully public ─────────────────────────────────────── */}
@@ -96,6 +106,10 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/application-status" element={<ApplicationStatus />} />
+              <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+              <Route path="/legal/terms" element={<TermsOfService />} />
+              <Route path="/legal/cookies" element={<CookiePolicy />} />
+              <Route path="/legal/accessibility" element={<AccessibilityStatement />} />
 
               {/* Sign-in: kick already-logged-in users to their portal */}
               <Route path="/signin"
@@ -130,6 +144,7 @@ const App = () => (
 
             </Routes>
           </BrowserRouter>
+          </CookieConsentProvider>
         </CartProvider>
       </AuthProvider>
     </TooltipProvider>

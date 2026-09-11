@@ -266,8 +266,8 @@ const Checkout = () => {
   /* ── SUCCESS ── */
   if (step === "success") return (
     <Layout>
-      <div className="container py-20 max-w-lg mx-auto text-center">
-        <div className="bg-card rounded-2xl border border-border p-10 shadow-sm">
+      <div className="container py-20 text-center">
+        <div className="bg-card rounded-2xl border border-border p-10 shadow-sm max-w-lg mx-auto">
           <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
           <h1 className="text-3xl font-bold mb-2">Payment Confirmed!</h1>
           <p className="text-muted-foreground mb-1">Order #{orderRef}</p>
@@ -287,8 +287,8 @@ const Checkout = () => {
   /* ── POLLING ── */
   if (step === "polling") return (
     <Layout>
-      <div className="container py-20 max-w-lg mx-auto text-center">
-        <div className="bg-card rounded-2xl border border-border p-10 shadow-sm">
+      <div className="container py-20 text-center">
+        <div className="bg-card rounded-2xl border border-border p-10 shadow-sm max-w-lg mx-auto">
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Smartphone className="h-8 w-8 text-primary" />
           </div>
@@ -327,7 +327,8 @@ const Checkout = () => {
   /* ── MPESA STEP ── */
   if (step === "mpesa") return (
     <Layout>
-      <div className="container py-10 max-w-lg mx-auto">
+      <div className="container py-10">
+       <div className="max-w-lg mx-auto">
         {resumedTotal === null ? (
           <button onClick={() => setStep("details")} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
             <ArrowLeft className="h-4 w-4" /> Back to details
@@ -393,6 +394,7 @@ const Checkout = () => {
             <p>4. You'll receive a confirmation SMS from M-Pesa</p>
           </div>
         </div>
+       </div>
       </div>
     </Layout>
   );
@@ -401,7 +403,7 @@ const Checkout = () => {
   return (
     <Layout>
       <section className="py-10">
-        <div className="container max-w-4xl">
+        <div className="container">
           <Link to="/cart" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
             <ArrowLeft className="h-4 w-4" /> Back to Cart
           </Link>

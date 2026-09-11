@@ -201,8 +201,8 @@ const Partners = () => {
 
       {/* ── Application Form ── */}
       <section className="py-16 bg-background">
-        <div className="container max-w-3xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+        <div className="container">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold text-foreground mb-2">Distributor Application</h2>
               <p className="text-muted-foreground">Fill in the form below. Applications are reviewed within 5–10 business days.</p>

@@ -75,8 +75,8 @@ const ApplicationStatus = () => {
       />
 
       <section className="py-16 min-h-[70vh]">
-        <div className="container max-w-lg">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="container">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold mb-2">Application Status</h1>
               <p className="text-muted-foreground">
