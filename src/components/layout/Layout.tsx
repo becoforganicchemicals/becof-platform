@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import WhatsAppFloatButton from "@/components/WhatsAppFloatButton";
 
 const REFERRAL_KEY = "becof-referral-code";
 
@@ -23,6 +24,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
       <Navbar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <WhatsAppFloatButton />
     </div>
   );
 };

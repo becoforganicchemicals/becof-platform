@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, ShoppingCart, Heart, Minus, Plus, Leaf, ArrowLeft, FileText, Zap, ClipboardList, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -101,6 +102,10 @@ const ProductDetail = () => {
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const inStock = product.stock_quantity > 0;
+
+  const whatsappMessage = inStock
+    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nQuantity: ${quantity}\nEstimated total: KES ${(product.price * quantity).toLocaleString()}\n\nProduct link: ${window.location.href}\n\nCould you help me place this order?`
+    : `Hi Becof Organic Chemicals! I'm interested in *${product.name}*, currently shown as out of stock on your website.\n\nProduct link: ${window.location.href}\n\nCould you let me know when it'll be back, or help me arrange a custom order?`;
 
   return (
     <Layout>
@@ -225,6 +230,8 @@ const ProductDetail = () => {
                     <ClipboardList className="h-4 w-4" /> Make an Order
                   </Button>
                 )}
+
+                <WhatsAppOrderButton message={whatsappMessage} label="Order via WhatsApp" />
               </div>
 
               {product.safety_sheet_url && (

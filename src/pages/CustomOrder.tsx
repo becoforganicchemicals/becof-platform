@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, ClipboardList, Loader2, PackageSearch } from "lucide-react";
 import SEO from "@/components/SEO";
+import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 
 const CustomOrder = () => {
     const { user } = useAuth();
@@ -39,6 +40,21 @@ const CustomOrder = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
+
+    // Prefilled with whatever the visitor has already typed, so switching to
+    // WhatsApp partway through the form doesn't mean starting over.
+    const whatsappMessage = [
+        "Hi Becof Organic Chemicals! I'd like to place a custom/bulk order:",
+        "",
+        `Product: ${form.product_name || "(please advise)"}`,
+        `Quantity: ${form.quantity} ${form.unit}`,
+        (form.delivery_address || form.city)
+            ? `Delivery to: ${[form.delivery_address, form.city].filter(Boolean).join(", ")}`
+            : null,
+        form.notes ? `Notes: ${form.notes}` : null,
+        "",
+        "Could you assist me with this order?",
+    ].filter(Boolean).join("\n");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -227,6 +243,12 @@ const CustomOrder = () => {
                                 : <><ClipboardList className="h-4 w-4" /> Submit Custom Order</>
                             }
                         </Button>
+
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span className="flex-1 h-px bg-border" /> or <span className="flex-1 h-px bg-border" />
+                        </div>
+
+                        <WhatsAppOrderButton message={whatsappMessage} label="Order via WhatsApp Instead" className="h-12 text-base" />
                     </form>
                   </div>
                 </div>
