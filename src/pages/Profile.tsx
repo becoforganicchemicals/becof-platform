@@ -638,18 +638,17 @@ const Profile = () => {
           {/* ── Header card ── */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="overflow-hidden">
-              <div className="h-24 bg-gradient-to-r from-primary/80 to-secondary/80" />
-              <CardContent className="pt-0 pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20 border-4 border-background shadow-md">
+              <div className="bg-primary px-6 py-6 sm:px-8 sm:py-8">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="relative shrink-0">
+                    <Avatar className="h-20 w-20 border-4 border-primary-foreground/20 shadow-md">
                       <AvatarImage src={avatarSrc} />
-                      <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">
+                      <AvatarFallback className="text-2xl bg-primary-foreground/10 text-primary-foreground font-bold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <label className="absolute bottom-0 right-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow">
-                      <Camera className="h-3 w-3 text-white" />
+                    <label className="absolute bottom-0 right-0 w-6 h-6 bg-primary-foreground rounded-full flex items-center justify-center cursor-pointer shadow">
+                      <Camera className="h-3 w-3 text-primary" />
                       <input
                         type="file"
                         accept="image/*"
@@ -658,34 +657,34 @@ const Profile = () => {
                       />
                     </label>
                   </div>
-                  <div className="flex-1 pb-1">
-                    <h1 className="text-xl font-bold leading-tight">
+                  <div className="flex-1">
+                    <h1 className="text-xl font-bold leading-tight text-primary-foreground">
                       {form.full_name || "Your Name"}
                     </h1>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <p className="text-sm text-primary-foreground/80">{user.email}</p>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${meta.color}`}>
                         <RoleIcon className="h-3 w-3" />{meta.label}
                       </span>
                       {form.phone && (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 text-xs text-primary-foreground/80">
                           <Phone className="h-3 w-3" />{form.phone}
                         </span>
                       )}
                       {role === "farmer" && form.farm_location && (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 text-xs text-primary-foreground/80">
                           <MapPin className="h-3 w-3" />{form.farm_location}
                         </span>
                       )}
                       {role === "distributor" && form.business_location && (
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 text-xs text-primary-foreground/80">
                           <Building2 className="h-3 w-3" />{form.business_location}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </motion.div>
 
