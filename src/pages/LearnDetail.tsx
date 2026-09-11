@@ -131,7 +131,7 @@ const SharePanel = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 8 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 top-11 z-50 w-68 bg-card border border-border rounded-2xl shadow-2xl p-5 min-w-[260px]"
+                        className="absolute right-0 top-11 z-50 w-[260px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl p-5"
                     >
                         <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-4">
                             Share this article
@@ -417,7 +417,7 @@ const LearnDetail = () => {
                     </motion.div>
 
                     {/* Footer row */}
-                    <div className="flex items-center justify-between mt-12 pt-8 border-t border-border">
+                    <div className="flex flex-wrap items-center justify-between gap-4 mt-12 pt-8 border-t border-border">
                         <Button
                             variant="outline"
                             onClick={() => navigate("/learn")}

@@ -95,7 +95,7 @@ const HeroSection = () => {
             >
               <Link
                 to={`/products/${product.slug}`}
-                className="group block w-full max-w-xs sm:max-w-sm bg-card/95 backdrop-blur rounded-3xl border border-white/20 shadow-2xl overflow-hidden hover:-translate-y-1 transition-transform duration-300"
+                className="group block w-full max-w-[220px] sm:max-w-[260px] bg-card/95 backdrop-blur rounded-3xl border border-white/20 shadow-2xl overflow-hidden hover:-translate-y-1 transition-transform duration-300"
               >
                 <div className="flex items-center gap-1.5 px-4 pt-4">
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">
@@ -103,7 +103,7 @@ const HeroSection = () => {
                   </span>
                 </div>
 
-                <div className="relative aspect-[4/3] mx-4 mt-3 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                <div className="relative aspect-[2/3] mx-4 mt-3 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
                   {coverImage ? (
                     <img
                       src={coverImage}
