@@ -6,8 +6,9 @@ import { buildWhatsAppLink } from "@/lib/whatsapp";
 const TEASER_SEEN_KEY = "becof-whatsapp-teaser-seen";
 
 // Show the friendly teaser bubble once per browser session, a couple of
-// seconds after landing, then auto-hide it — same one-shot pattern as a
-// typical live-chat widget rather than nagging on every page.
+// seconds after landing, and leave it up until the visitor dismisses it
+// or clicks through — same one-shot pattern as a typical live-chat widget
+// rather than nagging on every page.
 const WhatsAppFloatButton = () => {
   const [showTeaser, setShowTeaser] = useState(false);
 
@@ -27,12 +28,6 @@ const WhatsAppFloatButton = () => {
       sessionStorage.setItem(TEASER_SEEN_KEY, "1");
     } catch { /* ignore */ }
   };
-
-  useEffect(() => {
-    if (!showTeaser) return;
-    const hideTimer = setTimeout(dismissTeaser, 9000);
-    return () => clearTimeout(hideTimer);
-  }, [showTeaser]);
 
   return (
     <div className="fixed bottom-24 left-4 sm:bottom-6 sm:left-6 z-40 flex flex-col items-start gap-3">
