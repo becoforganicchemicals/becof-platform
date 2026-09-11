@@ -664,6 +664,60 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          order_id: string | null
+          points: number
+          referred_user_id: string | null
+          review_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          points: number
+          referred_user_id?: string | null
+          review_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          points?: number
+          referred_user_id?: string | null
+          review_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_points_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_points_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -757,6 +811,8 @@ export type Database = {
           payment_reference: string | null
           payment_status: string | null
           phone_number: string | null
+          points_discount: number | null
+          points_redeemed: number | null
           shipping_address: Json | null
           status: Database["public"]["Enums"]["order_status"]
           total_amount: number
@@ -778,6 +834,8 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: string | null
           phone_number?: string | null
+          points_discount?: number | null
+          points_redeemed?: number | null
           shipping_address?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number
@@ -799,6 +857,8 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: string | null
           phone_number?: string | null
+          points_discount?: number | null
+          points_redeemed?: number | null
           shipping_address?: Json | null
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number
@@ -928,7 +988,9 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
+          image_url: string | null
           is_verified_purchase: boolean | null
+          order_item_id: string | null
           product_id: string
           rating: number
           user_id: string
@@ -937,7 +999,9 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           is_verified_purchase?: boolean | null
+          order_item_id?: string | null
           product_id: string
           rating: number
           user_id: string
@@ -946,12 +1010,21 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           is_verified_purchase?: boolean | null
+          order_item_id?: string | null
           product_id?: string
           rating?: number
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: true
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_reviews_product_id_fkey"
             columns: ["product_id"]
@@ -1059,6 +1132,7 @@ export type Database = {
           id: string
           must_change_password: boolean
           phone: string | null
+          referred_by_user_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1078,6 +1152,7 @@ export type Database = {
           id?: string
           must_change_password?: boolean
           phone?: string | null
+          referred_by_user_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1097,6 +1172,7 @@ export type Database = {
           id?: string
           must_change_password?: boolean
           phone?: string | null
+          referred_by_user_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -1283,6 +1359,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      resolve_referral_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "farmer" | "distributor"
