@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import WhatsAppFloatButton from "@/components/WhatsAppFloatButton";
+import { captureAffiliateCode } from "@/lib/affiliate";
 
 const REFERRAL_KEY = "becof-referral-code";
 
@@ -17,6 +18,11 @@ const Layout = ({ children }: { children: ReactNode }) => {
         localStorage.setItem(REFERRAL_KEY, ref.toUpperCase());
       }
     } catch { /* ignore */ }
+
+    // Capture ?aff=CODE from an affiliate's shared link — see
+    // src/lib/affiliate.ts for the attribution-window logic.
+    const aff = new URLSearchParams(window.location.search).get("aff");
+    if (aff) captureAffiliateCode(aff);
   }, []);
 
   return (

@@ -21,6 +21,7 @@ import Learn from "./pages/Learn";
 import Impact from "./pages/Impact";
 import About from "./pages/About";
 import Partners from "./pages/Partners";
+import Affiliate from "./pages/Affiliate";
 import Contact from "./pages/Contact";
 import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
@@ -105,6 +106,7 @@ const App = () => (
               <Route path="/impact" element={<Impact />} />
               <Route path="/about" element={<About />} />
               <Route path="/partners" element={<Partners />} />
+              <Route path="/affiliates" element={<Affiliate />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/careers" element={<Careers />} />
               <Route path="/application-status" element={<ApplicationStatus />} />

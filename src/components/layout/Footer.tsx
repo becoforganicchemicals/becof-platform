@@ -31,6 +31,7 @@ const shopLinks = [
 const companyLinks = [
   { label: "About Us", to: "/about" },
   { label: "Become a Distributor", to: "/partners" },
+  { label: "Become an Affiliate", to: "/affiliates" },
   { label: "Careers", to: "/careers" },
   { label: "Contact Us", to: "/contact" },
 ];

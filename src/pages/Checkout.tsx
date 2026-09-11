@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Smartphone, Loader2, RefreshCw, Gift } from "lucide-react";
 import PendingOrderBanner from "@/components/PendingOrderBanner";
 import { useLoyaltyPoints, KES_PER_POINT_REDEEMED, MAX_REDEMPTION_FRACTION } from "@/hooks/useLoyaltyPoints";
+import { getStoredAffiliate } from "@/lib/affiliate";
 
 type CheckoutStep = "loading" | "details" | "mpesa" | "polling" | "success";
 
@@ -114,6 +115,16 @@ const Checkout = () => {
       address: form.address, city: form.city,
     };
 
+    // Resolve any active affiliate attribution (?aff=CODE, captured client-side
+    // with a 30-day window) to its affiliate id — never trust the raw code
+    // as a foreign key, resolve_affiliate_code only returns APPROVED affiliates.
+    let affiliateId: string | null = null;
+    const storedAffiliate = getStoredAffiliate();
+    if (storedAffiliate) {
+      const { data: resolvedId } = await supabase.rpc("resolve_affiliate_code", { _code: storedAffiliate.code });
+      affiliateId = resolvedId || null;
+    }
+
     const { data: order, error } = await supabase.from("orders").insert({
       user_id: user.id,
       total_amount: total,
@@ -127,6 +138,7 @@ const Checkout = () => {
       payment_status: "pending",
       status: "received",
       order_type: "standard",
+      affiliate_id: affiliateId,
     }).select("id").single();
 
     if (error || !order) {

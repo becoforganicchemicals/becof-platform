@@ -14,6 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          admin_note: string | null
+          applied_at: string
+          application_note: string | null
+          business_name: string | null
+          code: string | null
+          commission_rate: number
+          created_at: string
+          id: string
+          mpesa_phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          applied_at?: string
+          application_note?: string | null
+          business_name?: string | null
+          code?: string | null
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          mpesa_phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          applied_at?: string
+          application_note?: string | null
+          business_name?: string | null
+          code?: string | null
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          mpesa_phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      affiliate_commissions: {
+        Row: {
+          affiliate_id: string
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          id: string
+          order_id: string
+          order_total: number
+          payout_id: string | null
+          status: string
+        }
+        Insert: {
+          affiliate_id: string
+          commission_amount: number
+          commission_rate: number
+          created_at?: string
+          id?: string
+          order_id: string
+          order_total: number
+          payout_id?: string | null
+          status?: string
+        }
+        Update: {
+          affiliate_id?: string
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          order_total?: number
+          payout_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commissions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commissions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_payouts: {
+        Row: {
+          admin_note: string | null
+          affiliate_id: string
+          amount: number
+          id: string
+          mpesa_phone: string
+          mpesa_receipt: string | null
+          processed_at: string | null
+          processed_by: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          admin_note?: string | null
+          affiliate_id: string
+          amount: number
+          id?: string
+          mpesa_phone: string
+          mpesa_receipt?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          admin_note?: string | null
+          affiliate_id?: string
+          amount?: number
+          id?: string
+          mpesa_phone?: string
+          mpesa_receipt?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_activity_logs: {
         Row: {
           action: string
@@ -798,6 +954,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          affiliate_id: string | null
           coupon_id: string | null
           created_at: string
           delivery_partner: string | null
@@ -821,6 +978,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          affiliate_id?: string | null
           coupon_id?: string | null
           created_at?: string
           delivery_partner?: string | null
@@ -844,6 +1002,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          affiliate_id?: string | null
           coupon_id?: string | null
           created_at?: string
           delivery_partner?: string | null
@@ -867,6 +1026,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_coupon_id_fkey"
             columns: ["coupon_id"]
@@ -1359,6 +1525,7 @@ export type Database = {
           updated_at: string
         }[]
       }
+      resolve_affiliate_code: { Args: { _code: string }; Returns: string }
       resolve_referral_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {

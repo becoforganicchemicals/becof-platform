@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, Camera, Lock, AlertTriangle, Loader2, Save,
   MapPin, Phone, Sprout, Truck, Building2, Package,
-  MessageSquare, ShoppingBag, Smartphone, Gift, Star, Copy, Users,
+  MessageSquare, ShoppingBag, Smartphone, Gift, Star, Copy, Users, Megaphone,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -26,6 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import TestimonialForm from "@/components/TestimonialForm";
+import AffiliateTab from "@/components/profile/AffiliateTab";
 import { useLoyaltyPoints, KES_PER_POINT_REDEEMED } from "@/hooks/useLoyaltyPoints";
 
 // ─── Role badge config ────────────────────────────────────────────────────────
@@ -578,6 +579,7 @@ const Profile = () => {
     { value: "profile", label: "Profile", icon: User },
     { value: "orders", label: "My Orders", icon: ShoppingBag },
     { value: "rewards", label: "Rewards", icon: Gift },
+    { value: "affiliate", label: "Affiliate", icon: Megaphone },
     { value: "security", label: "Security", icon: Lock },
     ...(isFarmerOrDistributor
       ? [{ value: "testimonial", label: "My Testimonial", icon: MessageSquare }]
@@ -943,6 +945,11 @@ const Profile = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* ── Affiliate Tab ── */}
+              <TabsContent value="affiliate" className="mt-6">
+                <AffiliateTab />
               </TabsContent>
 
               {/* ── Security Tab ── */}
