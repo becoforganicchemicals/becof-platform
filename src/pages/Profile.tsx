@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User, Camera, Lock, AlertTriangle, Loader2, Save,
   MapPin, Phone, Sprout, Truck, Building2, Package,
-  MessageSquare, ShoppingBag, Smartphone,
+  MessageSquare, ShoppingBag, Smartphone, Gift, Star, Copy, Users,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -26,6 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import TestimonialForm from "@/components/TestimonialForm";
+import { useLoyaltyPoints, KES_PER_POINT_REDEEMED } from "@/hooks/useLoyaltyPoints";
 
 // ─── Role badge config ────────────────────────────────────────────────────────
 const roleMeta: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -251,6 +252,92 @@ const RetryPayment = ({ order, onPaid }: { order: any; onPaid: () => void }) => 
       {status === "failed" && (
         <p className="text-xs text-destructive">Payment failed or was cancelled. Try again.</p>
       )}
+    </div>
+  );
+};
+
+// ─── Review a purchased, delivered order item (earns loyalty points) ─────────
+const ReviewItem = ({ item, userId }: { item: any; userId: string }) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  // undefined = still checking, null = no review yet, object = already reviewed
+  const [existing, setExisting] = useState<any>(undefined);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("product_reviews").select("id").eq("order_item_id", item.id).maybeSingle();
+      setExisting(data);
+    })();
+  }, [item.id]);
+
+  const submit = async () => {
+    setSubmitting(true);
+    try {
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop();
+        const path = `${userId}/${item.id}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("review-images").upload(path, imageFile, { upsert: true });
+        if (uploadErr) throw uploadErr;
+        imageUrl = supabase.storage.from("review-images").getPublicUrl(path).data.publicUrl;
+      }
+      const { data, error } = await supabase.from("product_reviews").insert({
+        product_id: item.product_id,
+        user_id: userId,
+        order_item_id: item.id,
+        rating,
+        comment: comment || null,
+        image_url: imageUrl,
+      }).select("id").single();
+      if (error) throw error;
+      toast({ title: "Review submitted!", description: "You've earned loyalty points for this review." });
+      setExisting(data);
+      setOpen(false);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    }
+    setSubmitting(false);
+  };
+
+  if (existing === undefined) return null;
+  if (existing) return <p className="text-xs text-primary mt-1">✓ Reviewed — thanks for the feedback!</p>;
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="outline" className="mt-1 h-7 gap-1 text-xs" onClick={() => setOpen(true)}>
+        <Star className="h-3 w-3" /> Leave a Review
+      </Button>
+    );
+  }
+
+  return (
+    <div className="mt-2 p-3 bg-muted/50 rounded-lg space-y-2">
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map(n => (
+          <button key={n} type="button" onClick={() => setRating(n)}>
+            <Star className={`h-4 w-4 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+          </button>
+        ))}
+      </div>
+      <Textarea
+        rows={2} placeholder="How was this product?" value={comment}
+        onChange={e => setComment(e.target.value)} className="text-xs resize-none"
+      />
+      <Input
+        type="file" accept="image/*" className="text-xs"
+        onChange={e => setImageFile(e.target.files?.[0] || null)}
+      />
+      <p className="text-xs text-muted-foreground">A photo earns extra points.</p>
+      <div className="flex gap-2">
+        <Button size="sm" className="flex-1" onClick={submit} disabled={submitting}>
+          {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Submit Review"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+      </div>
     </div>
   );
 };
@@ -488,12 +575,29 @@ const Profile = () => {
   const tabs = [
     { value: "profile", label: "Profile", icon: User },
     { value: "orders", label: "My Orders", icon: ShoppingBag },
+    { value: "rewards", label: "Rewards", icon: Gift },
     { value: "security", label: "Security", icon: Lock },
     ...(isFarmerOrDistributor
       ? [{ value: "testimonial", label: "My Testimonial", icon: MessageSquare }]
       : []),
     { value: "danger", label: "Danger Zone", icon: AlertTriangle },
   ];
+
+  // ── Loyalty points & referrals ────────────────────────────────────────────
+  const { ledger: pointsLedger, balance: pointsBalance, balanceKes: pointsBalanceKes } = useLoyaltyPoints();
+  const referralCode = user.id.slice(0, 8).toUpperCase();
+  const referralLink = `${window.location.origin}/signin?ref=${referralCode}`;
+  const referralPointsEarned = pointsLedger.filter(r => r.type === "referral").reduce((s, r) => s + r.points, 0);
+  const referralCount = pointsLedger.filter(r => r.type === "referral").length;
+
+  const copyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      toast({ title: "Referral link copied!" });
+    } catch {
+      toast({ title: "Couldn't copy — copy it manually", variant: "destructive" });
+    }
+  };
 
   // ── Order history queries ─────────────────────────────────────────────────
   const { data: orders = [], refetch: refetchOrders } = useQuery({
@@ -721,9 +825,12 @@ const Profile = () => {
                               <p>Date: {new Date(order.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</p>
                               {order.mpesa_receipt_number && <p className="text-primary">M-Pesa: {order.mpesa_receipt_number}</p>}
                               {order.order_items?.length > 0 && (
-                                <div className="pt-2 border-t border-border mt-2">
+                                <div className="pt-2 border-t border-border mt-2 space-y-2">
                                   {order.order_items.map((item: any) => (
-                                    <p key={item.id} className="text-xs">{item.product_name} × {item.quantity} — KES {item.total_price?.toLocaleString()}</p>
+                                    <div key={item.id}>
+                                      <p className="text-xs">{item.product_name} × {item.quantity} — KES {item.total_price?.toLocaleString()}</p>
+                                      {order.status === "delivered" && <ReviewItem item={item} userId={user!.id} />}
+                                    </div>
                                   ))}
                                 </div>
                               )}
@@ -771,6 +878,68 @@ const Profile = () => {
                         ))}
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* ── Rewards Tab ── */}
+              <TabsContent value="rewards" className="mt-6 space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Gift className="h-5 w-5" /> Loyalty Points
+                    </CardTitle>
+                    <CardDescription>Earn 1 point per KES 100 spent — credited once your order is delivered. 1 point = KES {KES_PER_POINT_REDEEMED} off a future order (up to 10% of that order). Points expire 1 year after they're earned.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex items-center justify-between flex-wrap gap-3">
+                      <div>
+                        <p className="text-3xl font-bold text-primary">{pointsBalance.toLocaleString()} pts</p>
+                        <p className="text-sm text-muted-foreground">≈ KES {pointsBalanceKes.toLocaleString()} in discounts</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground max-w-xs">
+                        Leave a review on a delivered product for +200 points, or +400 with a photo.
+                      </p>
+                    </div>
+
+                    {pointsLedger.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Recent Activity</p>
+                        <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                          {pointsLedger.slice(0, 20).map(row => (
+                            <div key={row.id} className="flex items-center justify-between text-sm border-b border-border last:border-0 py-1.5">
+                              <div>
+                                <p className="text-foreground">{row.description || row.type}</p>
+                                <p className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}</p>
+                              </div>
+                              <span className={`font-semibold ${row.points > 0 ? "text-primary" : "text-muted-foreground"}`}>
+                                {row.points > 0 ? "+" : ""}{row.points}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" /> Refer a Friend
+                    </CardTitle>
+                    <CardDescription>
+                      Share your link — when a friend you refer signs up and their first order is delivered, you get 500 points.
+                      {referralCount > 0 && ` You've earned ${referralPointsEarned} points from ${referralCount} referral${referralCount === 1 ? "" : "s"} so far.`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2">
+                      <Input readOnly value={referralLink} className="font-mono text-xs" />
+                      <Button type="button" variant="outline" className="gap-1.5 shrink-0" onClick={copyReferralLink}>
+                        <Copy className="h-3.5 w-3.5" /> Copy
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

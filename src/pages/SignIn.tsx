@@ -75,9 +75,23 @@ const SignIn = () => {
             .maybeSingle();
 
           if (!existingProfile) {
+            // Resolve a stored referral code (captured on landing from a shared
+            // link) to the referrer's user_id. Invalid/missing code just means
+            // no referrer — never blocks signup.
+            let referredByUserId: string | null = null;
+            try {
+              const refCode = localStorage.getItem("becof-referral-code");
+              if (refCode) {
+                const { data: referrerId } = await supabase.rpc("resolve_referral_code", { _code: refCode });
+                if (referrerId && referrerId !== data.user.id) referredByUserId = referrerId;
+                localStorage.removeItem("becof-referral-code");
+              }
+            } catch { /* ignore */ }
+
             await supabase.from("profiles").insert({
               user_id: data.user.id,
               full_name: fullName,
+              referred_by_user_id: referredByUserId,
             });
           }
         }

@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [wishlisted, setWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -33,9 +34,21 @@ const ProductDetail = () => {
         const { data: w } = await supabase.from("wishlists").select("id").eq("user_id", user.id).eq("product_id", data.id).maybeSingle();
         setWishlisted(!!w);
       }
+      if (data) {
+        const { data: r } = await supabase
+          .from("product_reviews")
+          .select("id, rating, comment, image_url, is_verified_purchase, created_at")
+          .eq("product_id", data.id)
+          .order("created_at", { ascending: false });
+        setReviews(r || []);
+      }
     };
     if (slug) fetchProduct();
   }, [slug, user]);
+
+  const avgRating = reviews.length
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : product?.average_rating || 0;
 
   const toggleWishlist = async () => {
     if (!user) { toast.error("Please sign in"); return; }
@@ -147,8 +160,8 @@ const ProductDetail = () => {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-earth text-earth" />
-                  <span className="font-medium">{product.average_rating || 0}</span>
-                  <span className="text-sm text-muted-foreground">({product.review_count || 0} reviews)</span>
+                  <span className="font-medium">{avgRating.toFixed(1)}</span>
+                  <span className="text-sm text-muted-foreground">({reviews.length} review{reviews.length === 1 ? "" : "s"})</span>
                 </div>
                 {product.environmental_rating && (
                   <div className="flex items-center gap-1 text-sm text-secondary">
@@ -228,6 +241,36 @@ const ProductDetail = () => {
               )}
             </motion.div>
           </div>
+
+          {/* Reviews */}
+          {reviews.length > 0 && (
+            <div className="mt-12 pt-8 border-t border-border max-w-3xl">
+              <h2 className="font-semibold text-lg mb-4">Customer Reviews ({reviews.length})</h2>
+              <div className="space-y-4">
+                {reviews.map(r => (
+                  <div key={r.id} className="border border-border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <Star key={n} className={`h-3.5 w-3.5 ${n <= r.rating ? "fill-earth text-earth" : "text-muted-foreground"}`} />
+                        ))}
+                      </div>
+                      {r.is_verified_purchase && (
+                        <Badge variant="secondary" className="text-[10px]">Verified Purchase</Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        {new Date(r.created_at).toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
+                    </div>
+                    {r.comment && <p className="text-sm text-muted-foreground">{r.comment}</p>}
+                    {r.image_url && (
+                      <img src={r.image_url} alt="Review" className="mt-2 h-24 w-24 object-cover rounded-lg border border-border" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </Layout>

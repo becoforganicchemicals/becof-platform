@@ -16,7 +16,7 @@ import {
   Package, ShoppingCart, Users, Bell, Activity, BarChart3, LogOut,
   Shield, ShieldCheck, ArrowLeft, Ban, FolderTree, Briefcase, User,
   Camera, Lock, Save, Loader2, BookOpen, Award, Mail,
-  MessageSquare, ShieldAlert, Tag,
+  MessageSquare, ShieldAlert, Tag, Gift,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -38,6 +38,7 @@ import AdminPartners from "./AdminPartners";
 import AdminInbox from "./AdminInbox";
 import AdminTestimonials from "./AdminTestimonials";
 import AdminCoupons from "./AdminCoupons";
+import AdminLoyalty from "./AdminLoyalty";
 import AdminWelcome from "@/components/admin/AdminWelcome";
 
 // Map sidebar items to permission names
@@ -47,6 +48,7 @@ const NAV_PERMISSION_MAP: Record<string, string> = {
   products: "products.manage",
   orders: "orders.manage",
   coupons: "coupons.manage",
+  loyalty: "loyalty.manage",
   notifications: "notifications.manage",
   careers: "careers.manage",
   learn: "learn.manage",
@@ -67,6 +69,7 @@ const AdminDashboard = () => {
     { id: "products", label: "Products", icon: Package },
     { id: "orders", label: "Orders", icon: ShoppingCart },
     { id: "coupons", label: "Coupons", icon: Tag },
+    { id: "loyalty", label: "Loyalty", icon: Gift },
     { id: "notifications", label: "Alerts", icon: Bell },
     { id: "careers", label: "Careers", icon: Briefcase },
     { id: "learn", label: "Learn", icon: BookOpen },
@@ -169,6 +172,7 @@ const AdminDashboard = () => {
       case "products": return <AdminProducts />;
       case "orders": return <AdminOrders />;
       case "coupons": return <AdminCoupons />;
+      case "loyalty": return <AdminLoyalty />;
       case "notifications": return <AdminNotifications />;
       case "careers": return <AdminCareers />;
       case "permissions": return isSuperAdmin ? <AdminPermissions /> : null;

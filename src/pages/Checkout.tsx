@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle, Smartphone, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle, Smartphone, Loader2, RefreshCw, Gift } from "lucide-react";
 import PendingOrderBanner from "@/components/PendingOrderBanner";
+import { useLoyaltyPoints, KES_PER_POINT_REDEEMED, MAX_REDEMPTION_FRACTION } from "@/hooks/useLoyaltyPoints";
 
 type CheckoutStep = "loading" | "details" | "mpesa" | "polling" | "success";
 
@@ -19,12 +20,18 @@ const Checkout = () => {
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
   const resumeOrderId = (location.state as any)?.resumeOrderId as string | undefined;
+  const { balance: pointsBalance } = useLoyaltyPoints();
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>((location.state as any)?.coupon || null);
   const [discount, setDiscount] = useState((location.state as any)?.discount || 0);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
-  const total = subtotal - discount;
+  const [usePoints, setUsePoints] = useState(false);
+
+  const maxPointsByCap = Math.floor(((subtotal - discount) * MAX_REDEMPTION_FRACTION) / KES_PER_POINT_REDEEMED);
+  const pointsToRedeem = usePoints ? Math.min(pointsBalance, maxPointsByCap) : 0;
+  const pointsDiscount = pointsToRedeem * KES_PER_POINT_REDEEMED;
+  const total = subtotal - discount - pointsDiscount;
 
   const [step, setStep] = useState<CheckoutStep>(resumeOrderId ? "loading" : "details");
   const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "", notes: "" });
@@ -114,6 +121,8 @@ const Checkout = () => {
       notes: form.notes || null,
       coupon_id: appliedCoupon?.id || null,
       discount_amount: discount,
+      points_redeemed: pointsToRedeem,
+      points_discount: pointsDiscount,
       payment_method: "mpesa",
       payment_status: "pending",
       status: "received",
@@ -139,6 +148,21 @@ const Checkout = () => {
     // Increment coupon usage
     if (appliedCoupon) {
       await supabase.from("coupons").update({ current_uses: appliedCoupon.current_uses + 1 }).eq("id", appliedCoupon.id);
+    }
+
+    // Deduct redeemed points — the balance is re-verified server-side, since
+    // the loyalty_points table can't be written to directly by a client.
+    if (pointsToRedeem > 0) {
+      const { data: redeemData, error: redeemError } = await supabase.functions.invoke("redeem-points", {
+        body: { order_id: order.id, points: pointsToRedeem },
+      });
+      if (redeemError || !redeemData?.success) {
+        toast.error("Couldn't apply your points discount — order placed without it.");
+        await supabase.from("orders").update({
+          points_redeemed: 0, points_discount: 0, total_amount: subtotal - discount,
+        }).eq("id", order.id);
+        setUsePoints(false);
+      }
     }
 
     // Send order placed email
@@ -432,6 +456,7 @@ const Checkout = () => {
               <div className="border-t border-border pt-2 space-y-1 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
                 {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({appliedCoupon?.code})</span><span>-KES {discount.toLocaleString()}</span></div>}
+                {pointsDiscount > 0 && <div className="flex justify-between text-primary"><span>Points redeemed ({pointsToRedeem} pts)</span><span>-KES {pointsDiscount.toLocaleString()}</span></div>}
                 <div className="flex justify-between font-bold text-lg pt-1"><span>Total</span><span className="text-primary">KES {total.toLocaleString()}</span></div>
               </div>
 
@@ -446,6 +471,17 @@ const Checkout = () => {
                   <span className="font-medium text-primary">{appliedCoupon.code} applied</span>
                   <Button type="button" variant="ghost" size="sm" onClick={removeCoupon}>Remove</Button>
                 </div>
+              )}
+
+              {/* Loyalty points */}
+              {pointsBalance > 0 && (
+                <label className="flex items-center justify-between gap-2 bg-muted/50 p-3 rounded-lg text-sm cursor-pointer">
+                  <span className="flex items-center gap-2">
+                    <Gift className="h-4 w-4 text-primary shrink-0" />
+                    Use points ({pointsBalance} available, up to {maxPointsByCap} on this order)
+                  </span>
+                  <input type="checkbox" checked={usePoints} onChange={e => setUsePoints(e.target.checked)} className="accent-primary h-4 w-4 shrink-0" />
+                </label>
               )}
 
               <p className="text-xs text-muted-foreground pt-2">+ Delivery fee (confirmed by sales team)</p>
