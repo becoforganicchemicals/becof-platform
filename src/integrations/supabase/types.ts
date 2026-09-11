@@ -1019,17 +1019,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "product_reviews_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "product_reviews_order_item_id_fkey"
             columns: ["order_item_id"]
             isOneToOne: true
             referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -1359,10 +1359,7 @@ export type Database = {
           updated_at: string
         }[]
       }
-      resolve_referral_code: {
-        Args: { _code: string }
-        Returns: string
-      }
+      resolve_referral_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "farmer" | "distributor"

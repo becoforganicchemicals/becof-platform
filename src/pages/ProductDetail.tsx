@@ -40,7 +40,19 @@ const ProductDetail = () => {
           .select("id, rating, comment, image_url, is_verified_purchase, created_at")
           .eq("product_id", data.id)
           .order("created_at", { ascending: false });
-        setReviews(r || []);
+        // review-images is a private bucket: image_url holds the object path,
+        // so signed-in visitors get a short-lived signed link for each photo.
+        const rows = r || [];
+        const withPhotos = await Promise.all(
+          rows.map(async (row: any) => {
+            if (!row.image_url || row.image_url.startsWith("http")) return row;
+            const { data: signed } = await supabase.storage
+              .from("review-images")
+              .createSignedUrl(row.image_url, 3600);
+            return { ...row, image_url: signed?.signedUrl || null };
+          })
+        );
+        setReviews(withPhotos);
       }
     };
     if (slug) fetchProduct();

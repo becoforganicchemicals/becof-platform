@@ -283,7 +283,9 @@ const ReviewItem = ({ item, userId }: { item: any; userId: string }) => {
         const path = `${userId}/${item.id}.${ext}`;
         const { error: uploadErr } = await supabase.storage.from("review-images").upload(path, imageFile, { upsert: true });
         if (uploadErr) throw uploadErr;
-        imageUrl = supabase.storage.from("review-images").getPublicUrl(path).data.publicUrl;
+        // review-images is a private bucket, so we store the object path and
+        // sign it at render time rather than a (non-working) public URL.
+        imageUrl = path;
       }
       const { data, error } = await supabase.from("product_reviews").insert({
         product_id: item.product_id,
