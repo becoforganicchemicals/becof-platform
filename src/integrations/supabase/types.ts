@@ -14,54 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      affiliates: {
+      admin_activity_logs: {
         Row: {
-          admin_note: string | null
-          applied_at: string
-          application_note: string | null
-          business_name: string | null
-          code: string | null
-          commission_rate: number
+          action: string
+          admin_email: string
+          admin_user_id: string
+          after_data: Json | null
+          before_data: Json | null
           created_at: string
           id: string
-          mpesa_phone: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          status: string
-          updated_at: string
-          user_id: string
+          ip_address: unknown
+          target_id: string | null
+          target_table: string | null
         }
         Insert: {
-          admin_note?: string | null
-          applied_at?: string
-          application_note?: string | null
-          business_name?: string | null
-          code?: string | null
-          commission_rate?: number
+          action: string
+          admin_email: string
+          admin_user_id: string
+          after_data?: Json | null
+          before_data?: Json | null
           created_at?: string
           id?: string
-          mpesa_phone?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
+          ip_address?: unknown
+          target_id?: string | null
+          target_table?: string | null
         }
         Update: {
-          admin_note?: string | null
-          applied_at?: string
-          application_note?: string | null
-          business_name?: string | null
-          code?: string | null
-          commission_rate?: number
+          action?: string
+          admin_email?: string
+          admin_user_id?: string
+          after_data?: Json | null
+          before_data?: Json | null
           created_at?: string
           id?: string
-          mpesa_phone?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
+          ip_address?: unknown
+          target_id?: string | null
+          target_table?: string | null
+        }
+        Relationships: []
+      }
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          metadata: Json | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          metadata?: Json | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          metadata?: Json | null
+          title?: string
+          type?: string
         }
         Relationships: []
       }
@@ -170,72 +188,54 @@ export type Database = {
           },
         ]
       }
-      admin_activity_logs: {
+      affiliates: {
         Row: {
-          action: string
-          admin_email: string
-          admin_user_id: string
-          after_data: Json | null
-          before_data: Json | null
+          admin_note: string | null
+          application_note: string | null
+          applied_at: string
+          business_name: string | null
+          code: string | null
+          commission_rate: number
           created_at: string
           id: string
-          ip_address: unknown
-          target_id: string | null
-          target_table: string | null
+          mpesa_phone: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          action: string
-          admin_email: string
-          admin_user_id: string
-          after_data?: Json | null
-          before_data?: Json | null
+          admin_note?: string | null
+          application_note?: string | null
+          applied_at?: string
+          business_name?: string | null
+          code?: string | null
+          commission_rate?: number
           created_at?: string
           id?: string
-          ip_address?: unknown
-          target_id?: string | null
-          target_table?: string | null
+          mpesa_phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          action?: string
-          admin_email?: string
-          admin_user_id?: string
-          after_data?: Json | null
-          before_data?: Json | null
+          admin_note?: string | null
+          application_note?: string | null
+          applied_at?: string
+          business_name?: string | null
+          code?: string | null
+          commission_rate?: number
           created_at?: string
           id?: string
-          ip_address?: unknown
-          target_id?: string | null
-          target_table?: string | null
-        }
-        Relationships: []
-      }
-      admin_notifications: {
-        Row: {
-          created_at: string
-          id: string
-          is_read: boolean
-          message: string | null
-          metadata: Json | null
-          title: string
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message?: string | null
-          metadata?: Json | null
-          title: string
-          type: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          message?: string | null
-          metadata?: Json | null
-          title?: string
-          type?: string
+          mpesa_phone?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
