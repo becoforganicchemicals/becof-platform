@@ -347,7 +347,7 @@ const ReviewItem = ({ item, userId }: { item: any; userId: string }) => {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const Profile = () => {
-  const { user, profile, role, loading, signOut } = useAuth();
+  const { user, profile, role, loading, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const forcePassword = searchParams.get("force_password") === "true";
@@ -448,6 +448,7 @@ const Profile = () => {
     onSuccess: () => {
       toast({ title: "Profile updated successfully" });
       setAvatarFile(null);
+      refreshProfile();
     },
     onError: (e: any) =>
       toast({ title: "Error", description: e.message, variant: "destructive" }),

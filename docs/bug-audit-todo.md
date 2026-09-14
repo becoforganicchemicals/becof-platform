@@ -73,23 +73,36 @@ and shipped.
 
 ## Medium
 
-- [ ] 9. `Partners.tsx` — "Kisumu" listed twice in the `COUNTIES` array
-      (confirmed live via a React duplicate-key console warning).
-- [ ] 10. Profile edits (name/avatar) don't propagate to `AuthContext` — navbar
-       shows stale name/photo until a hard refresh.
-- [ ] 11. `AdminAnalytics.tsx` "Total Revenue" KPI sums all orders including
+- [x] 9. `Partners.tsx` — "Kisumu" listed twice in the `COUNTIES` array
+      (confirmed live via a React duplicate-key console warning). **Fixed**:
+      removed the duplicate entry.
+- [x] 10. Profile edits (name/avatar) don't propagate to `AuthContext` — navbar
+       shows stale name/photo until a hard refresh. **Fixed**: added
+       `refreshProfile()` to `AuthContext`, called from both Profile.tsx's and
+       DistributorDashboard.tsx's update-profile mutation on success.
+- [x] 11. `AdminAnalytics.tsx` "Total Revenue" KPI sums all orders including
        cancelled/refunded ones; only the sub-label is correctly filtered.
-- [ ] 12. `Cart.tsx`, `Checkout.tsx`, `Wishlist.tsx`, `CustomOrder.tsx` flash a
+       **Fixed**: excludes cancelled/refunded from the headline figure
+       (still includes pending/in-progress orders, distinct from the
+       strictly-paid sub-label).
+- [x] 12. `Cart.tsx`, `Checkout.tsx`, `Wishlist.tsx`, `CustomOrder.tsx` flash a
        "please sign in" wall on hard refresh for already-logged-in users —
        they check `user` but not `AuthContext`'s `loading` flag first.
-- [ ] 13. `ProductDetail.tsx` doesn't reset `selectedImage`/`quantity` when
-       navigating between two different products.
-- [ ] 14. Order status changes to `cancelled`/`refunded` in `AdminOrders.tsx`
+       **Fixed**: all four now show a spinner while `AuthContext` is still
+       resolving, before falling through to the sign-in wall.
+- [x] 13. `ProductDetail.tsx` doesn't reset `selectedImage`/`quantity` when
+       navigating between two different products. **Fixed**: both (plus
+       `wishlisted`/`reviews`) reset at the top of the product-fetch effect.
+- [x] 14. Order status changes to `cancelled`/`refunded` in `AdminOrders.tsx`
        fire immediately on dropdown selection with no confirmation, despite
-       triggering a customer email.
-- [ ] 15. `AuthContext.tsx` role/profile fetches aren't cancelled on rapid
+       triggering a customer email. **Fixed**: a `confirm()` now gates
+       specifically those two transitions.
+- [x] 15. `AuthContext.tsx` role/profile fetches aren't cancelled on rapid
        sign-out/sign-in — a slow in-flight fetch can overwrite the new
-       session's state with the previous user's data.
+       session's state with the previous user's data. **Fixed**: a ref
+       tracks the latest-known user id synchronously; a fetch whose target
+       user id no longer matches it when the response lands is discarded
+       instead of applied.
 
 ## Lower priority / polish
 

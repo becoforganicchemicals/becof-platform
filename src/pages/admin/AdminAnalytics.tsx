@@ -126,7 +126,13 @@ const AdminAnalytics = () => {
   });
 
   /* ─── computed metrics ─── */
-  const totalRevenue = orders.reduce((s, o) => s + Number(o.total_amount), 0);
+  // Excludes cancelled/refunded orders — those will never actually be paid,
+  // so counting them at face value overstated the headline number. Pending/
+  // in-progress orders are still included here (distinct from paidRevenue
+  // below) since they represent real, still-expected revenue.
+  const totalRevenue = orders
+    .filter(o => o.status !== "cancelled" && o.status !== "refunded")
+    .reduce((s, o) => s + Number(o.total_amount), 0);
   const paidRevenue = orders.filter(o => (o as any).payment_status === "paid").reduce((s, o) => s + Number(o.total_amount), 0);
   const totalOrders = orders.length;
   const deliveredOrders = orders.filter(o => o.status === "delivered").length;

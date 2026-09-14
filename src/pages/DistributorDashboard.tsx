@@ -37,7 +37,7 @@ const Field = ({ label, id, children }: { label: string; id?: string; children: 
 );
 
 const DistributorDashboard = () => {
-  const { user, profile, role, loading, signOut } = useAuth();
+  const { user, profile, role, loading, signOut, refreshProfile } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const forcePassword = searchParams.get("force_password") === "true";
@@ -149,7 +149,7 @@ const DistributorDashboard = () => {
       }).eq("user_id", user.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast({ title: "Profile updated successfully" }); setAvatarFile(null); },
+    onSuccess: () => { toast({ title: "Profile updated successfully" }); setAvatarFile(null); refreshProfile(); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 

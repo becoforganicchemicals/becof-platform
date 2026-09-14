@@ -42,7 +42,7 @@ const PRODUCT_OPTIONS = [
 const COUNTIES = [
   "Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika", "Machakos", "Meru", "Nyeri", "Kisii",
   "Kakamega", "Kericho", "Embu", "Muranga", "Kiambu", "Nyandarua", "Laikipia", "Samburu", "Trans Nzoia",
-  "Uasin Gishu", "Elgeyo Marakwet", "Nandi", "Baringo", "Turkana", "West Pokot", "Siaya", "Kisumu",
+  "Uasin Gishu", "Elgeyo Marakwet", "Nandi", "Baringo", "Turkana", "West Pokot", "Siaya",
   "Homa Bay", "Migori", "Nyamira", "Bungoma", "Busia", "Vihiga", "Tana River", "Lamu", "Taita Taveta",
   "Kilifi", "Kwale", "Garissa", "Wajir", "Mandera", "Isiolo", "Marsabit", "Tharaka Nithi", "Kirinyaga",
   "Kajiado", "Makueni", "Kitui", "Narok", "Bomet",

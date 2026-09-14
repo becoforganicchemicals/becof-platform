@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 const Wishlist = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { addToCart } = useCart();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +36,11 @@ const Wishlist = () => {
     toast.success("Removed from wishlist");
     fetch();
   };
+
+  // AuthContext resolves asynchronously — check its own loading state first,
+  // so an already-logged-in visitor doesn't briefly see a "sign in" wall on
+  // every hard refresh before the session actually resolves.
+  if (authLoading) return <Layout><div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
   if (!user) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your wishlist</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
 

@@ -384,7 +384,14 @@ const AdminOrders = () => {
                         <label className="text-xs font-medium text-muted-foreground">Update Status:</label>
                         <Select
                           value={order.status}
-                          onValueChange={v => updateOrderStatus.mutate({ id: order.id, status: v as OrderStatus })}
+                          onValueChange={v => {
+                            const status = v as OrderStatus;
+                            if (
+                              (status === "cancelled" || status === "refunded") &&
+                              !confirm(`Mark order #${orderRef(order.id)} as "${status}"? The customer will be emailed, and this can't be undone from here.`)
+                            ) return;
+                            updateOrderStatus.mutate({ id: order.id, status });
+                          }}
                         >
                           <SelectTrigger className="w-[180px] h-8">
                             <SelectValue />

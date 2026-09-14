@@ -8,8 +8,14 @@ import { motion } from "framer-motion";
 import PendingOrderBanner from "@/components/PendingOrderBanner";
 
 const Cart = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, loading, subtotal, updateQuantity, removeFromCart } = useCart();
+
+  // AuthContext resolves asynchronously (starts as user: null, loading: true)
+  // — checking `!user` alone would flash the "sign in" wall at every hard
+  // refresh for an already-logged-in visitor, for the brief moment before
+  // the session actually resolves.
+  if (authLoading) return <Layout><div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
   if (!user) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your cart</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
 

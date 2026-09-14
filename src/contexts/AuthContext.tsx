@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -23,6 +23,7 @@ interface AuthContextType {
   role: AppRole | null;
   profile: Database["public"]["Tables"]["profiles"]["Row"] | null;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isSuspended: boolean;
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   profile: null,
   signOut: async () => { },
+  refreshProfile: async () => { },
   isAdmin: false,
   isSuperAdmin: false,
   isSuspended: false,
@@ -49,6 +51,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<AppRole | null>(null);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
 
+  // Tracks whichever user id is "current" as of the most recent auth event,
+  // set synchronously (not via state, which only lands after a render) so an
+  // in-flight fetchUserData call from a since-superseded session can tell
+  // it's stale and bail instead of overwriting the new session's role/profile
+  // — matters if a user signs out and a different user signs in again
+  // quickly enough that the two fetches overlap.
+  const latestUserIdRef = useRef<string | null>(null);
+
   const fetchUserData = async (userId: string) => {
     console.debug("[Auth] fetchUserData started for user:", userId);
 
@@ -57,6 +67,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
+
+    if (latestUserIdRef.current !== userId) {
+      console.debug("[Auth] fetchUserData: stale (role), ignoring for", userId);
+      return;
+    }
 
     if (roleRes.error) {
       console.error("[Auth] Role fetch error:", roleRes.error.message);
@@ -76,6 +91,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .maybeSingle()
       .then(({ data, error }) => {
+        if (latestUserIdRef.current !== userId) {
+          console.debug("[Auth] fetchUserData: stale (profile), ignoring for", userId);
+          return;
+        }
         if (error) {
           console.error("[Auth] Profile fetch error:", error.message);
         } else if (data) {
@@ -89,14 +108,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        const uid = session?.user?.id ?? null;
+        latestUserIdRef.current = uid;
+
         setSession(session);
         setUser(session?.user ?? null);
 
-        if (session?.user) {
+        if (uid) {
           // Defer DB queries via setTimeout so Supabase has time to set auth
           // headers before the query runs. Without this, INITIAL_SESSION fires
           // before headers are ready, RLS blocks the query, and role stays null.
-          const uid = session.user.id;
           setTimeout(() => fetchUserData(uid), 0);
         } else {
           setRole(null);
@@ -117,10 +138,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!initialised) {
         initialised = true;
+        const uid = session?.user?.id ?? null;
+        latestUserIdRef.current = uid;
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchUserData(session.user.id);
+        if (uid) {
+          fetchUserData(uid);
         }
         setLoading(false);
       }
@@ -129,6 +152,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Lets a page that just wrote to `profiles` (name/avatar edit, etc.) pull
+  // the fresh row back into this shared context, so anything reading
+  // `profile` from here — the navbar, most visibly — doesn't keep showing
+  // stale data until an unrelated auth event happens to refire.
+  const refreshProfile = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!error && data) setProfile(data);
+  };
+
   const signOut = async () => {
     console.debug("[Auth] signOut initiated");
     try {
@@ -136,6 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) console.error("[Auth] signOut error:", error.message);
     } finally {
       // Always clear local state — even if the Supabase call fails
+      latestUserIdRef.current = null;
       setUser(null);
       setSession(null);
       setRole(null);
@@ -149,7 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isSuspended = profile?.status === "suspended";
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, profile, signOut, isAdmin, isSuperAdmin, isSuspended }}>
+    <AuthContext.Provider value={{ user, session, loading, role, profile, signOut, refreshProfile, isAdmin, isSuperAdmin, isSuspended }}>
       {children}
     </AuthContext.Provider>
   );

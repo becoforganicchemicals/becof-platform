@@ -18,7 +18,7 @@ type CheckoutStep = "loading" | "details" | "mpesa" | "polling" | "success";
 
 const Checkout = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, subtotal, clearCart } = useCart();
   const resumeOrderId = (location.state as any)?.resumeOrderId as string | undefined;
   const { balance: pointsBalance } = useLoyaltyPoints();
@@ -233,6 +233,17 @@ const Checkout = () => {
       }
     }, 3000);
   };
+
+  // AuthContext resolves asynchronously — check its own loading state first,
+  // so an already-logged-in visitor doesn't briefly see a "sign in" wall on
+  // every hard refresh before the session actually resolves.
+  if (authLoading) return (
+    <Layout>
+      <div className="container py-24 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    </Layout>
+  );
 
   if (!user) return (
     <Layout>

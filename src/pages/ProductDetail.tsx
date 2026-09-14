@@ -28,6 +28,15 @@ const ProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
+      // Reset per-product UI state up front — otherwise navigating from one
+      // product to another (same route, so this component instance persists)
+      // can leave a stale selectedImage index pointing past the new
+      // product's image count (broken image), or a quantity left over from
+      // the previous product that hasn't been clamped to its stock yet.
+      setQuantity(1);
+      setSelectedImage(0);
+      setWishlisted(false);
+      setReviews([]);
       const { data } = await supabase.from("products").select("*, categories(name)").eq("slug", slug!).maybeSingle();
       setProduct(data);
       setLoading(false);
