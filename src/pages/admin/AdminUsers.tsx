@@ -263,7 +263,14 @@ const AdminUsers = () => {
                       <Select
                         value={u.role}
                         disabled={isSelf}
-                        onValueChange={v => updateRole.mutate({ id: u.id, role: v as AppRole })}
+                        onValueChange={v => {
+                          const role = v as AppRole;
+                          if (
+                            role === "super_admin" &&
+                            !confirm(`Grant "${u.profile?.full_name || "this user"}" Super Admin access? This bypasses every permission check in the admin dashboard.`)
+                          ) return;
+                          updateRole.mutate({ id: u.id, role });
+                        }}
                       >
                         <SelectTrigger className="w-[140px] h-8">
                           <SelectValue />

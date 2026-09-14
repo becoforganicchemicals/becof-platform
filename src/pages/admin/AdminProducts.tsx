@@ -200,6 +200,7 @@ const AdminProducts = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({ title: is_featured ? "⭐ Product featured on homepage" : "Product removed from featured" });
     },
+    onError: (e: any) => toast({ title: "Couldn't update product", description: e.message, variant: "destructive" }),
   });
 
   /* ─── Toggle published inline ─── */
@@ -212,6 +213,7 @@ const AdminProducts = () => {
       logAdminActivity({ action: "UPDATE", targetTable: "products", targetId: id, afterData: { is_published } });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
+    onError: (e: any) => toast({ title: "Couldn't update product", description: e.message, variant: "destructive" }),
   });
 
   /* ─── Delete ─── */
@@ -225,6 +227,7 @@ const AdminProducts = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       toast({ title: "Product deleted" });
     },
+    onError: (e: any) => toast({ title: "Couldn't delete product", description: e.message, variant: "destructive" }),
   });
 
   const resetForm = () => {

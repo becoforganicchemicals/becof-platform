@@ -66,11 +66,13 @@ const AdminImpact = () => {
             toast({ title: "Label and value are required", variant: "destructive" }); return;
         }
         if (editingMetric) {
-            await supabase.from("impact_metrics").update(metricForm).eq("id", editingMetric.id);
+            const { error } = await supabase.from("impact_metrics").update(metricForm).eq("id", editingMetric.id);
+            if (error) { toast({ title: "Couldn't update metric", description: error.message, variant: "destructive" }); return; }
             logAdminActivity({ action: "UPDATE", targetTable: "impact_metrics", targetId: editingMetric.id, afterData: metricForm });
             toast({ title: "Metric updated" });
         } else {
-            const { data } = await supabase.from("impact_metrics").insert(metricForm).select("id").single();
+            const { data, error } = await supabase.from("impact_metrics").insert(metricForm).select("id").single();
+            if (error) { toast({ title: "Couldn't create metric", description: error.message, variant: "destructive" }); return; }
             logAdminActivity({ action: "INSERT", targetTable: "impact_metrics", targetId: data?.id || null, afterData: metricForm });
             toast({ title: "Metric created" });
         }
@@ -82,7 +84,8 @@ const AdminImpact = () => {
 
     const deleteMetric = async (id: string) => {
         if (!confirm("Delete this metric?")) return;
-        await supabase.from("impact_metrics").delete().eq("id", id);
+        const { error } = await supabase.from("impact_metrics").delete().eq("id", id);
+        if (error) { toast({ title: "Couldn't delete metric", description: error.message, variant: "destructive" }); return; }
         logAdminActivity({ action: "DELETE", targetTable: "impact_metrics", targetId: id });
         fetchAll();
     };
@@ -121,11 +124,13 @@ const AdminImpact = () => {
 
         const payload = { ...reportForm, file_url };
         if (editingReport) {
-            await supabase.from("esg_reports").update(payload).eq("id", editingReport.id);
+            const { error } = await supabase.from("esg_reports").update(payload).eq("id", editingReport.id);
+            if (error) { toast({ title: "Couldn't update report", description: error.message, variant: "destructive" }); setUploading(false); return; }
             logAdminActivity({ action: "UPDATE", targetTable: "esg_reports", targetId: editingReport.id, afterData: { title: reportForm.title } });
             toast({ title: "Report updated" });
         } else {
-            const { data } = await supabase.from("esg_reports").insert(payload).select("id").single();
+            const { data, error } = await supabase.from("esg_reports").insert(payload).select("id").single();
+            if (error) { toast({ title: "Couldn't publish report", description: error.message, variant: "destructive" }); setUploading(false); return; }
             logAdminActivity({ action: "INSERT", targetTable: "esg_reports", targetId: data?.id || null, afterData: { title: reportForm.title } });
             toast({ title: "Report published" });
         }
@@ -139,13 +144,15 @@ const AdminImpact = () => {
 
     const deleteReport = async (id: string) => {
         if (!confirm("Delete this ESG report?")) return;
-        await supabase.from("esg_reports").delete().eq("id", id);
+        const { error } = await supabase.from("esg_reports").delete().eq("id", id);
+        if (error) { toast({ title: "Couldn't delete report", description: error.message, variant: "destructive" }); return; }
         logAdminActivity({ action: "DELETE", targetTable: "esg_reports", targetId: id });
         fetchAll();
     };
 
     const toggleReport = async (r: Report) => {
-        await supabase.from("esg_reports").update({ published: !r.published }).eq("id", r.id);
+        const { error } = await supabase.from("esg_reports").update({ published: !r.published }).eq("id", r.id);
+        if (error) { toast({ title: "Couldn't update report", description: error.message, variant: "destructive" }); return; }
         logAdminActivity({ action: "UPDATE", targetTable: "esg_reports", targetId: r.id, afterData: { published: !r.published } });
         fetchAll();
     };
@@ -169,11 +176,13 @@ const AdminImpact = () => {
         }
         const payload = { ...awardForm, image_url };
         if (editingAward) {
-            await supabase.from("impact_awards").update(payload).eq("id", editingAward.id);
+            const { error } = await supabase.from("impact_awards").update(payload).eq("id", editingAward.id);
+            if (error) { toast({ title: "Couldn't update award", description: error.message, variant: "destructive" }); return; }
             logAdminActivity({ action: "UPDATE", targetTable: "impact_awards", targetId: editingAward.id, afterData: { name: awardForm.name } });
             toast({ title: "Award updated" });
         } else {
-            const { data } = await supabase.from("impact_awards").insert(payload).select("id").single();
+            const { data, error } = await supabase.from("impact_awards").insert(payload).select("id").single();
+            if (error) { toast({ title: "Couldn't create award", description: error.message, variant: "destructive" }); return; }
             logAdminActivity({ action: "INSERT", targetTable: "impact_awards", targetId: data?.id || null, afterData: { name: awardForm.name } });
             toast({ title: "Award created" });
         }
@@ -186,7 +195,8 @@ const AdminImpact = () => {
 
     const deleteAward = async (id: string) => {
         if (!confirm("Delete this award?")) return;
-        await supabase.from("impact_awards").delete().eq("id", id);
+        const { error } = await supabase.from("impact_awards").delete().eq("id", id);
+        if (error) { toast({ title: "Couldn't delete award", description: error.message, variant: "destructive" }); return; }
         logAdminActivity({ action: "DELETE", targetTable: "impact_awards", targetId: id });
         fetchAll();
     };

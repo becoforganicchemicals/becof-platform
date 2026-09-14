@@ -128,16 +128,18 @@ const AdminNotifications = () => {
     setDenyingId(notification.id);
     try {
       // Mark notification as read
-      await supabase.from("admin_notifications").update({ is_read: true }).eq("id", notification.id);
+      const { error: readError } = await supabase.from("admin_notifications").update({ is_read: true }).eq("id", notification.id);
+      if (readError) throw readError;
 
       // Send a notification back to the requester (visible in order_notifications or admin_notifications)
       if (requesterId) {
-        await supabase.from("admin_notifications").insert({
+        const { error: insertError } = await supabase.from("admin_notifications").insert({
           type: "access_denied",
           title: "Access Request Denied",
           message: `Your access request has been reviewed and denied. Please contact the Super Admin for more information.`,
           metadata: { target_user_id: requesterId },
         });
+        if (insertError) throw insertError;
       }
 
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
@@ -178,25 +180,29 @@ const AdminNotifications = () => {
 
       for (const row of rows) {
         // Check if permission already exists
-        const { data: existing } = await supabase
+        const { data: existing, error: lookupError } = await supabase
           .from("user_permissions")
           .select("id")
           .eq("user_id", row.user_id)
           .eq("permission_id", row.permission_id)
           .maybeSingle();
+        if (lookupError) throw lookupError;
 
         if (existing) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("user_permissions")
             .update({ granted: true })
             .eq("id", existing.id);
+          if (updateError) throw updateError;
         } else {
-          await supabase.from("user_permissions").insert(row);
+          const { error: insertError } = await supabase.from("user_permissions").insert(row);
+          if (insertError) throw insertError;
         }
       }
 
       // Mark notification as read
-      await supabase.from("admin_notifications").update({ is_read: true }).eq("id", notification.id);
+      const { error: readError } = await supabase.from("admin_notifications").update({ is_read: true }).eq("id", notification.id);
+      if (readError) throw readError;
 
       queryClient.invalidateQueries({ queryKey: ["admin-notifications"] });
       queryClient.invalidateQueries({ queryKey: ["admin-unread-notifications"] });

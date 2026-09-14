@@ -52,29 +52,34 @@ const AdminInbox = () => {
     /* ─── Mark as read ─── */
     const markRead = useMutation({
         mutationFn: async (id: string) => {
-            await supabase.from("contact_messages").update({ read: true }).eq("id", id);
+            const { error } = await supabase.from("contact_messages").update({ read: true }).eq("id", id);
+            if (error) throw error;
         },
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-inbox"] }),
+        onError: (e: any) => toast({ title: "Couldn't mark as read", description: e.message, variant: "destructive" }),
     });
 
     /* ─── Mark as replied ─── */
     const markReplied = useMutation({
         mutationFn: async (id: string) => {
-            await supabase.from("contact_messages")
+            const { error } = await supabase.from("contact_messages")
                 .update({ read: true, replied: true })
                 .eq("id", id);
+            if (error) throw error;
         },
         onSuccess: (_, id) => {
             logAdminActivity({ action: "UPDATE", targetTable: "contact_messages", targetId: id, afterData: { read: true, replied: true } });
             queryClient.invalidateQueries({ queryKey: ["admin-inbox"] });
             toast({ title: "Marked as replied ✓" });
         },
+        onError: (e: any) => toast({ title: "Couldn't mark as replied", description: e.message, variant: "destructive" }),
     });
 
     /* ─── Delete ─── */
     const deleteMessage = useMutation({
         mutationFn: async (id: string) => {
-            await supabase.from("contact_messages").delete().eq("id", id);
+            const { error } = await supabase.from("contact_messages").delete().eq("id", id);
+            if (error) throw error;
         },
         onSuccess: (_, id) => {
             logAdminActivity({ action: "DELETE", targetTable: "contact_messages", targetId: id });
@@ -82,6 +87,7 @@ const AdminInbox = () => {
             if (selectedId === selectedMessage?.id) setSelectedId(null);
             toast({ title: "Message deleted" });
         },
+        onError: (e: any) => toast({ title: "Couldn't delete message", description: e.message, variant: "destructive" }),
     });
 
     /* ─── Select message (auto mark read) ─── */

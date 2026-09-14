@@ -241,11 +241,19 @@ const AdminPartners = () => {
         const payload = { ...profileForm, logo_url, products: selectedProducts, display_name: profileForm.display_name! };
 
         if (editingProfile) {
-            await supabase.from("partner_profiles").update(payload).eq("id", editingProfile.id);
+            const { error } = await supabase.from("partner_profiles").update(payload).eq("id", editingProfile.id);
+            if (error) {
+                toast({ title: "Couldn't update partner profile", description: error.message, variant: "destructive" });
+                setSavingProfile(false); return;
+            }
             logAdminActivity({ action: "UPDATE", targetTable: "partner_profiles", targetId: editingProfile.id, afterData: { display_name: profileForm.display_name } });
             toast({ title: "Partner profile updated ✓" });
         } else {
-            const { data } = await supabase.from("partner_profiles").insert([payload as any]).select("id").single();
+            const { data, error } = await supabase.from("partner_profiles").insert([payload as any]).select("id").single();
+            if (error) {
+                toast({ title: "Couldn't create partner profile", description: error.message, variant: "destructive" });
+                setSavingProfile(false); return;
+            }
             logAdminActivity({ action: "INSERT", targetTable: "partner_profiles", targetId: data?.id || null, afterData: { display_name: profileForm.display_name } });
             toast({ title: "Partner profile created ✓" });
         }
@@ -258,7 +266,11 @@ const AdminPartners = () => {
     /* ─── Delete profile ─── */
     const deleteProfile = async (id: string) => {
         if (!confirm("Delete this partner profile? This cannot be undone.")) return;
-        await supabase.from("partner_profiles").delete().eq("id", id);
+        const { error } = await supabase.from("partner_profiles").delete().eq("id", id);
+        if (error) {
+            toast({ title: "Couldn't delete profile", description: error.message, variant: "destructive" });
+            return;
+        }
         logAdminActivity({ action: "DELETE", targetTable: "partner_profiles", targetId: id });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
         toast({ title: "Profile deleted" });
@@ -266,7 +278,11 @@ const AdminPartners = () => {
 
     /* ─── Toggle published/featured ─── */
     const toggleField = async (id: string, field: "published" | "featured", current: boolean) => {
-        await supabase.from("partner_profiles").update({ [field]: !current }).eq("id", id);
+        const { error } = await supabase.from("partner_profiles").update({ [field]: !current }).eq("id", id);
+        if (error) {
+            toast({ title: "Couldn't update profile", description: error.message, variant: "destructive" });
+            return;
+        }
         logAdminActivity({ action: "UPDATE", targetTable: "partner_profiles", targetId: id, afterData: { [field]: !current } });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };

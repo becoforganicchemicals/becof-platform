@@ -43,12 +43,18 @@ and shipped.
       calls it) — left deployed rather than removed, since deleting it isn't
       necessary to fix the bug and touching deployment state is out of scope
       here.
-- [ ] 5. No confirmation before promoting a user to `super_admin` —
+- [x] 5. No confirmation before promoting a user to `super_admin` —
       `AdminUsers.tsx` role dropdown fires the mutation on first click.
-- [ ] 6. Multiple admin pages don't check `.error` after Supabase calls, so a
+      **Fixed**: a native `confirm()` (matching the codebase's existing
+      delete-confirmation convention) now gates specifically the transition
+      to `super_admin` — other role changes are unaffected.
+- [x] 6. Multiple admin pages don't check `.error` after Supabase calls, so a
       failed mutation still shows a success toast — `AdminInbox.tsx`,
       `AdminPartners.tsx`, `AdminImpact.tsx`, `AdminNotifications.tsx`,
-      `AdminProducts.tsx` (delete/toggle).
+      `AdminProducts.tsx` (delete/toggle). **Fixed**: every write now checks
+      `error`, throws (React Query mutations) or early-returns with a
+      destructive-variant toast (plain async handlers), instead of silently
+      proceeding to a false "success" state.
 - [ ] 7. Homepage "Add to Cart" widgets skip the stock check `/products`
       enforces — `HeroSection.tsx`, `FeaturedProducts.tsx` don't fetch
       `stock_quantity`, so Add is always clickable even when out of stock.
