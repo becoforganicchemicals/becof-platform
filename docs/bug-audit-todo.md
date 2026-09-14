@@ -8,18 +8,22 @@ and shipped.
 
 ## Critical — silently defeats a whole feature, or can crash a page
 
-- [ ] 1. Referral program never actually attributes signups — `SignIn.tsx` only
+- [x] 1. Referral program never actually attributes signups — `SignIn.tsx` only
       resolves the referral code inside `if (!existingProfile)`, but the DB's
       auto-create-profile trigger already runs during `signUp()`, so that
-      branch essentially never executes.
-- [ ] 2. Wishlist can crash — `Wishlist.tsx` doesn't null-check the joined
+      branch essentially never executes. **Fixed**: referral resolution now
+      runs unconditionally and UPDATEs the trigger-created profile row
+      instead of being bundled into an INSERT that rarely ran.
+- [x] 2. Wishlist can crash — `Wishlist.tsx` doesn't null-check the joined
       `product`. Products auto-unpublish at 0 stock, which makes the embedded
       product come back `null` under RLS for a regular user, and the page
-      throws on `item.product.slug`.
-- [ ] 3. Admin: duplicate React Query cache key — `AdminCareers.tsx` and
+      throws on `item.product.slug`. **Fixed**: rows with a null product are
+      filtered out after fetch, same convention as `CartContext`.
+- [x] 3. Admin: duplicate React Query cache key — `AdminCareers.tsx` and
       `AdminPartners.tsx` both use `queryKey: ["admin-applications"]` for two
       different tables; switching tabs can render one page with the other's
-      cached, wrong-shaped data.
+      cached, wrong-shaped data. **Fixed**: renamed to
+      `admin-career-applications` / `admin-partner-applications`.
 
 ## High — real money/data risk, not crash-level
 

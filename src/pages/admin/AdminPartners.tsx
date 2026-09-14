@@ -92,7 +92,7 @@ const AdminPartners = () => {
 
     /* ─── Queries ─── */
     const { data: applications = [], isLoading: appsLoading, refetch: refetchApps } = useQuery({
-        queryKey: ["admin-applications"],
+        queryKey: ["admin-partner-applications"],
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("distributor_applications")
@@ -185,7 +185,7 @@ const AdminPartners = () => {
         toast({ title: `Application ${newStatus} — customer notified ✓` });
         setReviewing(false);
         setReviewDialog(false);
-        queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-partner-applications"] });
         queryClient.invalidateQueries({ queryKey: ["admin-partner-profiles"] });
     };
 

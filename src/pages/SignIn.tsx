@@ -68,6 +68,32 @@ const SignIn = () => {
             }]);
           }
 
+          // The handle_new_user() DB trigger creates the profile row
+          // synchronously as part of signUp() above, so by the time we get
+          // here it already exists — attaching the referral has to be an
+          // UPDATE onto that row, not something bundled into an INSERT that
+          // (almost) never actually runs. Resolve a stored referral code
+          // (captured on landing from a shared link) to the referrer's
+          // user_id; invalid/missing code just means no referrer — never
+          // blocks signup. The `.is("referred_by_user_id", null)` filter
+          // keeps this a no-op if a referrer somehow got set already.
+          const refCode = localStorage.getItem("becof-referral-code");
+          if (refCode) {
+            try {
+              const { data: referrerId } = await supabase.rpc("resolve_referral_code", { _code: refCode });
+              if (referrerId && referrerId !== data.user.id) {
+                await supabase
+                  .from("profiles")
+                  .update({ referred_by_user_id: referrerId })
+                  .eq("user_id", data.user.id)
+                  .is("referred_by_user_id", null);
+              }
+            } catch { /* ignore */ }
+            localStorage.removeItem("becof-referral-code");
+          }
+
+          // Fallback in case the trigger didn't run (disabled/removed) — make
+          // sure the profile (and full_name) exists regardless.
           const { data: existingProfile } = await supabase
             .from("profiles")
             .select("id")
@@ -75,23 +101,9 @@ const SignIn = () => {
             .maybeSingle();
 
           if (!existingProfile) {
-            // Resolve a stored referral code (captured on landing from a shared
-            // link) to the referrer's user_id. Invalid/missing code just means
-            // no referrer — never blocks signup.
-            let referredByUserId: string | null = null;
-            try {
-              const refCode = localStorage.getItem("becof-referral-code");
-              if (refCode) {
-                const { data: referrerId } = await supabase.rpc("resolve_referral_code", { _code: refCode });
-                if (referrerId && referrerId !== data.user.id) referredByUserId = referrerId;
-                localStorage.removeItem("becof-referral-code");
-              }
-            } catch { /* ignore */ }
-
             await supabase.from("profiles").insert({
               user_id: data.user.id,
               full_name: fullName,
-              referred_by_user_id: referredByUserId,
             });
           }
         }

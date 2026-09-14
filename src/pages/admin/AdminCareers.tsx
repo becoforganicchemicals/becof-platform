@@ -91,7 +91,7 @@ const AdminCareers = () => {
   });
 
   const { data: applications = [], isLoading: loadingApps } = useQuery({
-    queryKey: ["admin-applications"],
+    queryKey: ["admin-career-applications"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("career_applications")
@@ -159,7 +159,7 @@ const AdminCareers = () => {
     },
     onSuccess: (_, { id, status }) => {
       logAdminActivity({ action: "UPDATE", targetTable: "career_applications", targetId: id, afterData: { status } });
-      queryClient.invalidateQueries({ queryKey: ["admin-applications"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-career-applications"] });
       toast({ title: "Status updated" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),

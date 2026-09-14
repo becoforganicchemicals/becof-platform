@@ -19,7 +19,12 @@ const Wishlist = () => {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase.from("wishlists").select("id, product_id, products(id, name, slug, price, images, stock_quantity, average_rating, short_description)").eq("user_id", user.id);
-    setItems(data?.map((d: any) => ({ ...d, product: d.products })) || []);
+    // A wishlisted product that's since gone out of stock is auto-unpublished
+    // (see the check_low_stock trigger), which makes the embedded product
+    // come back null under RLS for a non-admin viewer — drop those rows
+    // rather than rendering a card with no product data. Same convention as
+    // CartContext filtering out deleted products.
+    setItems((data || []).map((d: any) => ({ ...d, product: d.products })).filter((d: any) => d.product));
     setLoading(false);
   };
 
