@@ -56,6 +56,15 @@ const PendingOrderBanner = () => {
     });
   };
 
+  // "Start New Order" must actually cancel the abandoned order server-side —
+  // not just hide the banner locally — otherwise it sits pending forever and
+  // a late M-Pesa confirmation on it (after the customer's already paid for a
+  // second, fresh checkout) means paying for a duplicate with no warning.
+  const startNewOrder = async () => {
+    await supabase.from("orders").update({ status: "cancelled" }).eq("id", pendingOrder.id);
+    dismiss();
+  };
+
   return (
     <div className="flex items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex-wrap">
       <div className="flex items-center gap-3">
@@ -68,7 +77,7 @@ const PendingOrderBanner = () => {
         </div>
       </div>
       <div className="flex gap-2 shrink-0">
-        <Button size="sm" variant="outline" onClick={dismiss}>Start New Order</Button>
+        <Button size="sm" variant="outline" onClick={startNewOrder}>Start New Order</Button>
         <Button size="sm" onClick={() => navigate("/checkout", { state: { resumeOrderId: pendingOrder.id } })}>
           Resume Payment
         </Button>

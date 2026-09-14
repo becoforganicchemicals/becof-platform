@@ -15,6 +15,7 @@ interface SpotlightProduct {
   short_description: string | null;
   images: string[] | null;
   slug: string;
+  stock_quantity: number;
 }
 
 const HeroSection = () => {
@@ -26,7 +27,7 @@ const HeroSection = () => {
     const fetchLatest = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, compare_at_price, short_description, images, slug")
+        .select("id, name, price, compare_at_price, short_description, images, slug, stock_quantity")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -44,6 +45,7 @@ const HeroSection = () => {
   };
 
   const coverImage = product?.images?.[0] ?? null;
+  const inStock = (product?.stock_quantity ?? 0) > 0;
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
@@ -136,15 +138,19 @@ const HeroSection = () => {
                         </span>
                       )}
                     </div>
-                    <Button
-                      size="sm"
-                      className="gap-1.5 text-xs shrink-0"
-                      disabled={adding}
-                      onClick={(e) => { e.preventDefault(); handleAddToCart(); }}
-                    >
-                      <ShoppingCart className="h-3.5 w-3.5" />
-                      {adding ? "Adding…" : "Add"}
-                    </Button>
+                    {inStock ? (
+                      <Button
+                        size="sm"
+                        className="gap-1.5 text-xs shrink-0"
+                        disabled={adding}
+                        onClick={(e) => { e.preventDefault(); handleAddToCart(); }}
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                        {adding ? "Adding…" : "Add"}
+                      </Button>
+                    ) : (
+                      <span className="text-xs font-medium text-destructive shrink-0">Out of Stock</span>
+                    )}
                   </div>
                 </div>
               </Link>

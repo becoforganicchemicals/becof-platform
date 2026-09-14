@@ -14,6 +14,7 @@ interface Product {
   short_description: string | null;
   images: string[] | null;
   slug: string;
+  stock_quantity: number;
   categories: { name: string } | null;
 }
 
@@ -27,7 +28,7 @@ const FeaturedProducts = () => {
     const fetchFeatured = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, average_rating, short_description, images, slug, categories(name)")
+        .select("id, name, price, average_rating, short_description, images, slug, stock_quantity, categories(name)")
         .eq("is_featured", true)
         .eq("is_published", true)
         .order("average_rating", { ascending: false, nullsFirst: false })
@@ -98,6 +99,7 @@ const FeaturedProducts = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((p, i) => {
               const coverImage = p.images?.[0] ?? null;
+              const inStock = p.stock_quantity > 0;
               return (
                 <motion.div
                   key={p.id}
@@ -125,6 +127,9 @@ const FeaturedProducts = () => {
                           Top Rated
                         </span>
                       )}
+                      {!inStock && (
+                        <span className="absolute top-3 right-3 px-2 py-1 text-[10px] font-medium bg-destructive text-destructive-foreground rounded-full">Out of Stock</span>
+                      )}
                     </div>
                   </Link>
 
@@ -149,15 +154,21 @@ const FeaturedProducts = () => {
 
                     <div className="flex items-center justify-between pt-2 border-t border-border mt-auto">
                       <span className="font-bold text-primary">{formatPrice(p.price)}</span>
-                      <Button
-                        size="sm"
-                        className="gap-1.5 text-xs"
-                        disabled={addingId === p.id}
-                        onClick={() => handleAddToCart(p.id)}
-                      >
-                        <ShoppingCart className="h-3.5 w-3.5" />
-                        {addingId === p.id ? "Adding…" : "Add"}
-                      </Button>
+                      {inStock ? (
+                        <Button
+                          size="sm"
+                          className="gap-1.5 text-xs"
+                          disabled={addingId === p.id}
+                          onClick={() => handleAddToCart(p.id)}
+                        >
+                          <ShoppingCart className="h-3.5 w-3.5" />
+                          {addingId === p.id ? "Adding…" : "Add"}
+                        </Button>
+                      ) : (
+                        <Link to={`/products/${p.slug}`}>
+                          <Button size="sm" variant="outline" className="gap-1.5 text-xs">View</Button>
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </motion.div>

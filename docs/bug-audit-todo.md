@@ -55,12 +55,21 @@ and shipped.
       `error`, throws (React Query mutations) or early-returns with a
       destructive-variant toast (plain async handlers), instead of silently
       proceeding to a false "success" state.
-- [ ] 7. Homepage "Add to Cart" widgets skip the stock check `/products`
+- [x] 7. Homepage "Add to Cart" widgets skip the stock check `/products`
       enforces — `HeroSection.tsx`, `FeaturedProducts.tsx` don't fetch
       `stock_quantity`, so Add is always clickable even when out of stock.
-- [ ] 8. "Start New Order" on the pending-order banner doesn't cancel the
+      **Fixed**: both now fetch `stock_quantity` and show an "Out of Stock"
+      badge/label with the Add button hidden, matching `Products.tsx`'s
+      existing convention. (In practice this mainly protects a brand-new
+      product created with 0 stock from the start — the existing
+      auto-unpublish trigger already excludes anything that goes out of stock
+      later, since these queries filter `is_published = true`.)
+- [x] 8. "Start New Order" on the pending-order banner doesn't cancel the
       original order — `PendingOrderBanner.tsx` only hides it locally; a late
       M-Pesa confirmation on the original can mean paying for two orders.
+      **Fixed**: now actually sets the abandoned order's `status` to
+      `cancelled` server-side before dismissing, so it's genuinely cancelled
+      rather than silently orphaned.
 
 ## Medium
 
