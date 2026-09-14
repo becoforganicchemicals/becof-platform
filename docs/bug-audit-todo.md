@@ -1,10 +1,19 @@
 # Bug & UX Audit — Fix TODO
 
+**Status: all 20 items fixed and shipped.**
+
 Generated from a full-app audit (3 parallel code-review passes + a live crawl of
 every public page at desktop/mobile). Highest-severity items were independently
-re-verified against the actual code before landing here. Fixing top-down,
-critical first, one at a time — each item gets checked off as it's completed
-and shipped.
+re-verified against the actual code before landing here. Fixed top-down,
+critical first, one item (or tightly-related group) per commit, each verified
+with `tsc --noEmit` + a production build at minimum, and browser-verified live
+for anything UI-visible or touching shared/foundational code (AuthContext,
+the M-Pesa payment webhooks).
+
+One item (#4, points/coupons applied at payment time instead of order
+creation) changed two Supabase Edge Functions (`mpesa-callback`,
+`mpesa-stk-query`) — those need Lovable to redeploy them before the fix is
+live, same as any other edge function change.
 
 ## Critical — silently defeats a whole feature, or can crash a page
 
@@ -106,19 +115,36 @@ and shipped.
 
 ## Lower priority / polish
 
-- [ ] 16. `AdminAffiliates.tsx` approve-flow skips the 0–50% commission-rate
+- [x] 16. `AdminAffiliates.tsx` approve-flow skips the 0–50% commission-rate
        validation `updateRateMutation` has (DB `CHECK` constraint prevents
        actual corruption, but produces a raw Postgres error instead of a
-       clean message).
-- [ ] 17. `TestimonialForm.tsx` only checks the single most-recent submission,
+       clean message). **Fixed**: same validation added to the approve flow.
+- [x] 17. `TestimonialForm.tsx` only checks the single most-recent submission,
        which can block leaving a testimonial for a second product.
-- [ ] 18. `LearnDetail.tsx` renders article HTML via `dangerouslySetInnerHTML`
+       **Investigated**: this widget is a single "My Testimonial" slot
+       (embedded once in Profile/DistributorDashboard, with withdraw /
+       submit-new-after-rejection flows) — one testimonial per user is the
+       actual design intent, not one per product; the product dropdown is
+       just optional tagging. The real issue was the error copy implying a
+       different product would let a second submission through, which the UI
+       never actually allows — **fixed** by correcting the message instead of
+       building out multi-submission support that wasn't the original intent.
+- [x] 18. `LearnDetail.tsx` renders article HTML via `dangerouslySetInnerHTML`
        with no sanitization — fine while only admins author content, a real
-       risk if that ever changes.
-- [ ] 19. Permission grants/revokes in `AdminPermissions.tsx` aren't
-       audit-logged, unlike every other admin mutation.
-- [ ] 20. M-Pesa phone number at checkout has no format validation before the
+       risk if that ever changes. **Fixed**: added `dompurify`, wired through
+       a shared `sanitizeHtml()` helper in both LearnDetail.tsx (the public
+       page) and AdminLearn.tsx's own live preview (defense in depth).
+- [x] 19. Permission grants/revokes in `AdminPermissions.tsx` aren't
+       audit-logged, unlike every other admin mutation. **Fixed**: all three
+       mutations (single toggle, grant-all, revoke-all) now call
+       `logAdminActivity`; also added the same missing `.error` checks the
+       other admin-mutation fixes (#6) already covered elsewhere, which this
+       file had too.
+- [x] 20. M-Pesa phone number at checkout has no format validation before the
        STK push call — bad input just produces a generic failure toast.
+       **Fixed**: validates against the same normalisation the edge function
+       already applies server-side, with a specific error message instead of
+       letting a malformed number reach Daraja first.
 
 ---
 

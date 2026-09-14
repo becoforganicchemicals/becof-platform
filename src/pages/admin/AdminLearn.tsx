@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logAdminActivity } from "@/lib/audit-logger";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -545,7 +546,7 @@ const AdminLearn = () => {
                                     {form.excerpt && <p className="text-muted-foreground text-lg mb-6 border-l-4 border-emerald-400 pl-4">{form.excerpt}</p>}
                                     <div
                                         className="prose prose-slate max-w-none prose-headings:font-bold prose-a:text-primary prose-img:rounded-lg"
-                                        dangerouslySetInnerHTML={{ __html: form.content || "<p class='text-muted-foreground/40 italic'>Nothing written yet…</p>" }}
+                                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.content || "<p class='text-muted-foreground/40 italic'>Nothing written yet…</p>") }}
                                     />
                                 </div>
                             </div>

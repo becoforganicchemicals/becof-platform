@@ -112,6 +112,10 @@ const AdminAffiliates = () => {
   // ── Mutations ──
   const reviewMutation = useMutation({
     mutationFn: async (decision: "approved" | "rejected") => {
+      if (decision === "approved") {
+        const rate = Number(reviewRate);
+        if (!rate || rate <= 0 || rate > 50) throw new Error("Enter a commission rate between 0 and 50%");
+      }
       const { error } = await supabase.from("affiliates").update({
         status: decision,
         commission_rate: decision === "approved" ? Number(reviewRate) / 100 : reviewTarget.commission_rate,

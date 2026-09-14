@@ -4,6 +4,7 @@ import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import {
     ArrowLeft, Calendar, User, Clock,
@@ -412,7 +413,7 @@ const LearnDetail = () => {
                                 prose-ul:text-foreground prose-ol:text-foreground
                                 prose-strong:text-foreground
                             "
-                            dangerouslySetInnerHTML={{ __html: article.content }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
                         />
                     </motion.div>
 

@@ -97,7 +97,11 @@ const TestimonialForm = () => {
 
         if (error) {
             if (error.code === "23505") {
-                toast.error("You have already submitted a testimonial for this product");
+                // This widget only ever shows one testimonial slot per user
+                // (see the `existing` gate below) — the message shouldn't
+                // imply picking a different product would let a second
+                // submission through, since the UI never offers that.
+                toast.error("You've already submitted a testimonial.");
             } else {
                 toast.error("Failed to submit testimonial. Please try again.");
             }

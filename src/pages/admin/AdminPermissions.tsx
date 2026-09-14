@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logAdminActivity } from "@/lib/audit-logger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +94,12 @@ const AdminPermissions = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, { permissionId, granted }) => {
+      const permName = permissions.find((p) => p.id === permissionId)?.name ?? permissionId;
+      logAdminActivity({
+        action: "UPDATE", targetTable: "user_permissions", targetId: selectedUserId,
+        afterData: { permission: permName, granted },
+      });
       queryClient.invalidateQueries({ queryKey: ["user-perms", selectedUserId] });
       toast({ title: "Permission updated" });
     },
@@ -108,25 +114,33 @@ const AdminPermissions = () => {
         const existing = userPerms.find((up) => up.permission_id === perm.id);
         if (existing) {
           if (!existing.granted) {
-            await supabase
+            const { error } = await supabase
               .from("user_permissions")
               .update({ granted: true, granted_by: currentUser?.id })
               .eq("id", existing.id);
+            if (error) throw error;
           }
         } else {
-          await supabase.from("user_permissions").insert({
+          const { error } = await supabase.from("user_permissions").insert({
             user_id: selectedUserId,
             permission_id: perm.id,
             granted: true,
             granted_by: currentUser?.id,
           });
+          if (error) throw error;
         }
       }
     },
     onSuccess: () => {
+      logAdminActivity({
+        action: "UPDATE", targetTable: "user_permissions", targetId: selectedUserId,
+        afterData: { granted: "all", permissions: permissions.map((p) => p.name) },
+      });
       queryClient.invalidateQueries({ queryKey: ["user-perms", selectedUserId] });
       toast({ title: "All permissions granted" });
     },
+    onError: (e: any) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const revokeAll = useMutation({
@@ -134,17 +148,24 @@ const AdminPermissions = () => {
       if (!selectedUserId) return;
       for (const up of userPerms) {
         if (up.granted) {
-          await supabase
+          const { error } = await supabase
             .from("user_permissions")
             .update({ granted: false, granted_by: currentUser?.id })
             .eq("id", up.id);
+          if (error) throw error;
         }
       }
     },
     onSuccess: () => {
+      logAdminActivity({
+        action: "UPDATE", targetTable: "user_permissions", targetId: selectedUserId,
+        afterData: { granted: "none" },
+      });
       queryClient.invalidateQueries({ queryKey: ["user-perms", selectedUserId] });
       toast({ title: "All permissions revoked" });
     },
+    onError: (e: any) =>
+      toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const selectedAdmin = admins.find((u) => u.user_id === selectedUserId);

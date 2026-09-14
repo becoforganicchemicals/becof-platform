@@ -178,6 +178,14 @@ const Checkout = () => {
   /* ── Step 2: Trigger STK Push ── */
   const handleStkPush = async () => {
     if (!mpesaPhone) { toast.error("Enter your M-Pesa phone number"); return; }
+    // Same normalisation mpesa-stk-push applies server-side — catch an
+    // obviously malformed number here with a specific message, instead of
+    // letting it reach Daraja and come back as a generic "request failed".
+    const normalised = mpesaPhone.replace(/^(\+?254|0)/, "254").replace(/\s/g, "");
+    if (!/^254\d{9}$/.test(normalised)) {
+      toast.error("Enter a valid Kenyan phone number, e.g. 0712 345 678");
+      return;
+    }
     setSubmitting(true);
 
     const { data, error } = await supabase.functions.invoke("mpesa-stk-push", {
