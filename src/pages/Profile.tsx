@@ -27,6 +27,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import TestimonialForm from "@/components/TestimonialForm";
 import AffiliateTab from "@/components/profile/AffiliateTab";
+import SEO from "@/components/SEO";
+
+// A signed-in user's own account page — never worth indexing.
+const ProfileSEO = () => (
+  <SEO title="My Account" description="Manage your Becof Organic Chemicals account." url="https://www.becoforganicchemicals.com/profile" noindex />
+);
 import { useLoyaltyPoints, KES_PER_POINT_REDEEMED } from "@/hooks/useLoyaltyPoints";
 
 // ─── Role badge config ────────────────────────────────────────────────────────
@@ -512,6 +518,7 @@ const Profile = () => {
   if (forcePassword || mustChangePassword) {
     return (
       <Layout>
+        <ProfileSEO />
         <section className="py-16 min-h-[80vh] flex items-center">
           <div className="container">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto">
@@ -635,6 +642,7 @@ const Profile = () => {
 
   return (
     <Layout>
+      <ProfileSEO />
       <section className="py-12 bg-muted/30 min-h-screen">
         <div className="container space-y-8">
 

@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import SEO from "@/components/SEO";
+
+// A signed-in shopper's own wishlist — never worth indexing.
+const WishlistSEO = () => (
+  <SEO title="Wishlist" description="Your saved Becof Organic Chemicals products." url="https://www.becoforganicchemicals.com/wishlist" noindex />
+);
 
 const Wishlist = () => {
   const { user, loading: authLoading } = useAuth();
@@ -42,10 +48,11 @@ const Wishlist = () => {
   // every hard refresh before the session actually resolves.
   if (authLoading) return <Layout><div className="flex justify-center py-20"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
-  if (!user) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your wishlist</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
+  if (!user) return <Layout><WishlistSEO /><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your wishlist</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
 
   return (
     <Layout>
+      <WishlistSEO />
       <section className="py-10">
         <div className="container">
           <h1 className="text-3xl font-bold mb-8 flex items-center gap-2"><Heart className="h-7 w-7 text-destructive" /> My Wishlist</h1>

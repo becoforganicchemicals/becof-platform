@@ -5,11 +5,12 @@ interface SEOProps {
     description: string;
     url: string;
     image?: string;
+    noindex?: boolean;
 }
 
 const brand = "Becof Organic Chemicals";
 
-const SEO = ({ title, description, url, image }: SEOProps) => {
+const SEO = ({ title, description, url, image, noindex }: SEOProps) => {
     const fullTitle = `${title} | ${brand}`;
     const baseUrl = "https://www.becoforganicchemicals.com";
 
@@ -24,7 +25,7 @@ const SEO = ({ title, description, url, image }: SEOProps) => {
             <title>{fullTitle}</title>
             <meta name="description" content={description} />
             <link rel="canonical" href={url} />
-            <meta name="robots" content="index, follow" />
+            <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow"} />
 
             {/* Open Graph */}
             <meta property="og:title" content={fullTitle} />

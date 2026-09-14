@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleRedirect } from "@/App";
+import SEO from "@/components/SEO";
 
 const SignIn = () => {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -197,6 +198,13 @@ const SignIn = () => {
   // ── Main form ─────────────────────────────────────────────────────────────
   return (
     <Layout>
+      {/* Worth indexing (unlike Cart/Checkout/Profile) — a returning
+          customer searching "becof sign in" should be able to find it. */}
+      <SEO
+        title="Sign In"
+        description="Sign in or create an account with Becof Organic Chemicals to shop, track orders, and manage your loyalty rewards."
+        url="https://www.becoforganicchemicals.com/signin"
+      />
       <section className="py-16 min-h-[80vh] flex items-center">
         <div className="container">
           <motion.div

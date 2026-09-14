@@ -6,6 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import PendingOrderBanner from "@/components/PendingOrderBanner";
+import SEO from "@/components/SEO";
+
+// A signed-in shopper's own cart contents — never worth indexing.
+const CartSEO = () => (
+  <SEO title="Cart" description="Your Becof Organic Chemicals shopping cart." url="https://www.becoforganicchemicals.com/cart" noindex />
+);
 
 const Cart = () => {
   const { user, loading: authLoading } = useAuth();
@@ -17,12 +23,13 @@ const Cart = () => {
   // the session actually resolves.
   if (authLoading) return <Layout><div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
-  if (!user) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your cart</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
+  if (!user) return <Layout><CartSEO /><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your cart</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
 
   if (loading) return <Layout><div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
   if (items.length === 0) return (
     <Layout>
+      <CartSEO />
       <div className="container py-20 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
@@ -35,6 +42,7 @@ const Cart = () => {
 
   return (
     <Layout>
+      <CartSEO />
       <section className="py-10">
         <div className="container">
           <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>

@@ -13,6 +13,12 @@ import { ArrowLeft, CheckCircle, Smartphone, Loader2, RefreshCw, Gift } from "lu
 import PendingOrderBanner from "@/components/PendingOrderBanner";
 import { useLoyaltyPoints, KES_PER_POINT_REDEEMED, MAX_REDEMPTION_FRACTION } from "@/hooks/useLoyaltyPoints";
 import { getStoredAffiliate } from "@/lib/affiliate";
+import SEO from "@/components/SEO";
+
+// A signed-in shopper's own checkout flow — never worth indexing.
+const CheckoutSEO = () => (
+  <SEO title="Checkout" description="Complete your Becof Organic Chemicals order." url="https://www.becoforganicchemicals.com/checkout" noindex />
+);
 
 type CheckoutStep = "loading" | "details" | "mpesa" | "polling" | "success";
 
@@ -255,6 +261,7 @@ const Checkout = () => {
 
   if (!user) return (
     <Layout>
+      <CheckoutSEO />
       <div className="container py-20 text-center">
         <h1 className="text-2xl font-bold mb-4">Sign in to checkout</h1>
         <Link to="/signin"><Button>Sign In</Button></Link>
@@ -419,6 +426,7 @@ const Checkout = () => {
   /* ── DETAILS STEP ── */
   return (
     <Layout>
+      <CheckoutSEO />
       <section className="py-10">
         <div className="container">
           <Link to="/cart" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">

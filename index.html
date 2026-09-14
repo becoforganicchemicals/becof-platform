@@ -5,30 +5,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Fallback only — every route renders its own <SEO> component (react-helmet-async),
+       which sets title/description/robots/canonical/Open Graph/Twitter tags dynamically
+       per page. Helmet appends rather than replacing static tags already in this file, so
+       duplicating any of those here would produce two conflicting tags (this is exactly
+       what happened with a static "index, follow" robots tag silently duplicating a page's
+       "noindex, nofollow" one). This title only shows before the JS bundle loads. -->
   <title>Becof Organic Chemicals | Sustainable Agricultural Solutions</title>
-
-  <meta name="description"
-    content="Becof Organic Chemicals is a sustainable manufacturer and supplier of innovative organic chemical solutions for agriculture." />
   <meta name="author" content="Becof Organic Chemicals Limited" />
-  <meta name="robots" content="index, follow" />
 
-  <link rel="canonical" href="https://www.becoforganicchemicals.com/" />
-
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.becoforganicchemicals.com/" />
-  <meta property="og:title" content="Becof Organic Chemicals | Sustainable Agricultural Solutions" />
-  <meta property="og:description"
-    content="Innovative organic chemical manufacturing focused on sustainability, agriculture, and environmental responsibility." />
-  <meta property="og:image" content="https://www.becoforganicchemicals.com/images/becof-logo.png" />
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Becof Organic Chemicals" />
-  <meta name="twitter:description" content="Sustainable organic chemical manufacturing and agricultural innovation." />
-  <meta name="twitter:image" content="https://www.becoforganicchemicals.com/images/becof-logo.png" />
-
-  <!-- Structured Data -->
+  <!-- Structured Data (site-wide identity — not page-specific, safe to be global) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",

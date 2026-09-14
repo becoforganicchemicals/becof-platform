@@ -151,6 +151,15 @@ const ProductDetail = () => {
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
           },
+          // Google requires this to reflect genuine reviews — omit entirely
+          // rather than show a 0.0/0-reviews rating for an unreviewed product.
+          ...(reviews.length > 0 && {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: avgRating.toFixed(1),
+              reviewCount: reviews.length,
+            },
+          }),
         })}
       </script>
 
