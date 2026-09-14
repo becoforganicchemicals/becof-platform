@@ -122,11 +122,57 @@ serve(async (req) => {
             // Paid. Query responses don't carry a receipt number (only the callback's
             // CallbackMetadata does) — if the callback shows up later its own update is
             // idempotent and will fill mpesa_receipt_number in.
-            await supabase.from(table).update({
+            // The `.neq("payment_status", "paid")` makes this an atomic
+            // "claim" — it only actually updates (and returns) a row if this
+            // call is the one transitioning it into paid. That return value,
+            // not a separate before/after SELECT (which would have a race
+            // window of its own), is what gates the side effects below.
+            const { data: claimedRows } = await supabase.from(table).update({
                 payment_status: "paid",
                 status: isCustom ? "deposit_paid" : "confirmed",
                 ...(isCustom ? { deposit_paid: true } : {}),
-            }).eq("id", order_id);
+            }).eq("id", order_id).neq("payment_status", "paid").select("id");
+            const wonTheRace = (claimedRows?.length ?? 0) > 0;
+
+            // Same coupon/points side effects as mpesa-callback, applied here
+            // too since this manual-reconciliation path can also be the one
+            // that first marks an order paid (e.g. admin clicks "Check M-Pesa
+            // Status" right as the real callback also lands).
+            if (!isCustom && wonTheRace) {
+                if (order.coupon_id) {
+                    const { data: coupon } = await supabase.from("coupons").select("current_uses").eq("id", order.coupon_id).maybeSingle();
+                    if (coupon) {
+                        await supabase.from("coupons").update({ current_uses: coupon.current_uses + 1 }).eq("id", order.coupon_id);
+                    }
+                }
+                if (order.points_redeemed && order.points_redeemed > 0) {
+                    const { data: existingRedemption } = await supabase
+                        .from("loyalty_points")
+                        .select("id")
+                        .eq("order_id", order_id)
+                        .eq("type", "redemption")
+                        .maybeSingle();
+                    if (!existingRedemption && order.user_id) {
+                        const { data: ledger } = await supabase.from("loyalty_points").select("points, expires_at").eq("user_id", order.user_id);
+                        const now = new Date();
+                        const balance = (ledger || []).reduce((sum, row) => {
+                            const valid = !row.expires_at || new Date(row.expires_at) > now;
+                            return valid ? sum + row.points : sum;
+                        }, 0);
+                        if (balance >= order.points_redeemed) {
+                            await supabase.from("loyalty_points").insert({
+                                user_id: order.user_id,
+                                points: -order.points_redeemed,
+                                type: "redemption",
+                                order_id,
+                                description: `Redeemed on order #${String(order_id).slice(0, 8).toUpperCase()}`,
+                            });
+                        } else {
+                            console.error(`mpesa-stk-query: insufficient points balance to redeem on order ${order_id} (have ${balance}, need ${order.points_redeemed}) — skipping redemption`);
+                        }
+                    }
+                }
+            }
 
             const amount = isCustom ? order.deposit_amount : order.total_amount;
 

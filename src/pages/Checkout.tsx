@@ -157,25 +157,11 @@ const Checkout = () => {
     }));
     await supabase.from("order_items").insert(orderItems);
 
-    // Increment coupon usage
-    if (appliedCoupon) {
-      await supabase.from("coupons").update({ current_uses: appliedCoupon.current_uses + 1 }).eq("id", appliedCoupon.id);
-    }
-
-    // Deduct redeemed points — the balance is re-verified server-side, since
-    // the loyalty_points table can't be written to directly by a client.
-    if (pointsToRedeem > 0) {
-      const { data: redeemData, error: redeemError } = await supabase.functions.invoke("redeem-points", {
-        body: { order_id: order.id, points: pointsToRedeem },
-      });
-      if (redeemError || !redeemData?.success) {
-        toast.error("Couldn't apply your points discount — order placed without it.");
-        await supabase.from("orders").update({
-          points_redeemed: 0, points_discount: 0, total_amount: subtotal - discount,
-        }).eq("id", order.id);
-        setUsePoints(false);
-      }
-    }
+    // Coupon usage and points redemption are intentionally NOT applied here.
+    // This order is still payment_status: "pending" — if the customer
+    // abandons the M-Pesa step or the payment fails, nothing should be
+    // spent. Both are applied server-side (mpesa-callback / mpesa-stk-query)
+    // at the exact moment payment_status actually transitions to "paid".
 
     // Send order placed email
     await supabase.functions.invoke("send-order-email", {

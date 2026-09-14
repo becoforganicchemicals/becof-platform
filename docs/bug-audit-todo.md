@@ -27,10 +27,22 @@ and shipped.
 
 ## High — real money/data risk, not crash-level
 
-- [ ] 4. Loyalty points + coupon usage are consumed at order *creation*, not
+- [x] 4. Loyalty points + coupon usage are consumed at order *creation*, not
       order *payment* — `Checkout.tsx` burns both before the M-Pesa prompt
       even fires. Abandoned/failed payments still cost the customer points and
-      burn the coupon slot. Also has a TOCTOU race on `max_uses`.
+      burn the coupon slot. Also has a TOCTOU race on `max_uses`. **Fixed**:
+      moved both side effects out of Checkout.tsx entirely, into
+      `mpesa-callback` and `mpesa-stk-query` — applied exactly once, at the
+      moment `payment_status` actually transitions to `paid`, via an atomic
+      conditional update (`.neq("payment_status","paid")`) so a Safaricom
+      callback retry or a race between the webhook and the manual admin
+      reconciliation path can't double-apply either one. Points redemption
+      re-validates the balance at that point and skips (logs, doesn't block
+      the payment) if it's no longer sufficient. The pre-existing
+      `redeem-points` edge function is now unused (Checkout.tsx no longer
+      calls it) — left deployed rather than removed, since deleting it isn't
+      necessary to fix the bug and touching deployment state is out of scope
+      here.
 - [ ] 5. No confirmation before promoting a user to `super_admin` —
       `AdminUsers.tsx` role dropdown fires the mutation on first click.
 - [ ] 6. Multiple admin pages don't check `.error` after Supabase calls, so a
