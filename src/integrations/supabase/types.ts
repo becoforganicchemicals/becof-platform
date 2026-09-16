@@ -959,6 +959,7 @@ export type Database = {
           created_at: string
           delivery_partner: string | null
           discount_amount: number | null
+          email: string | null
           id: string
           mpesa_checkout_request_id: string | null
           mpesa_receipt_number: string | null
@@ -983,6 +984,7 @@ export type Database = {
           created_at?: string
           delivery_partner?: string | null
           discount_amount?: number | null
+          email?: string | null
           id?: string
           mpesa_checkout_request_id?: string | null
           mpesa_receipt_number?: string | null
@@ -1007,6 +1009,7 @@ export type Database = {
           created_at?: string
           delivery_partner?: string | null
           discount_amount?: number | null
+          email?: string | null
           id?: string
           mpesa_checkout_request_id?: string | null
           mpesa_receipt_number?: string | null
@@ -1501,6 +1504,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_guest_order_status: {
+        Args: { _order_id: string }
+        Returns: {
+          payment_status: string
+          mpesa_receipt_number: string
+          status: string
+          total_amount: number
+        }[]
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean

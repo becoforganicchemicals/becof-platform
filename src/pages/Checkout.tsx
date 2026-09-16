@@ -41,7 +41,7 @@ const Checkout = () => {
   const total = subtotal - discount - pointsDiscount;
 
   const [step, setStep] = useState<CheckoutStep>(resumeOrderId ? "loading" : "details");
-  const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "", notes: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "", address: "", city: "", notes: "" });
   const [mpesaPhone, setMpesaPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState("");
@@ -110,9 +110,12 @@ const Checkout = () => {
   /* ── Step 1: Create order, move to M-Pesa step ── */
   const handleSubmitDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || items.length === 0) return;
+    if (items.length === 0) return;
     if (!form.fullName || !form.phone || !form.address || !form.city) {
       toast.error("Please fill all required fields"); return;
+    }
+    if (!user && !form.email) {
+      toast.error("Please enter your email address"); return;
     }
     setSubmitting(true);
 
@@ -131,37 +134,68 @@ const Checkout = () => {
       affiliateId = resolvedId || null;
     }
 
-    const { data: order, error } = await supabase.from("orders").insert({
-      user_id: user.id,
-      total_amount: total,
-      shipping_address: shippingAddress,
-      notes: form.notes || null,
-      coupon_id: appliedCoupon?.id || null,
-      discount_amount: discount,
-      points_redeemed: pointsToRedeem,
-      points_discount: pointsDiscount,
-      payment_method: "mpesa",
-      payment_status: "pending",
-      status: "received",
-      order_type: "standard",
-      affiliate_id: affiliateId,
-    }).select("id").single();
-
-    if (error || !order) {
-      toast.error("Failed to create order. Please try again.");
-      setSubmitting(false); return;
-    }
-
-    // Create order items
-    const orderItems = items.map(item => ({
-      order_id: order.id,
+    const orderItemsPayload = items.map(item => ({
       product_id: item.product_id,
       product_name: item.product.name,
       quantity: item.quantity,
       unit_price: item.product.price,
       total_price: item.product.price * item.quantity,
     }));
-    await supabase.from("order_items").insert(orderItems);
+
+    let newOrderId: string;
+
+    if (user) {
+      const { data: order, error } = await supabase.from("orders").insert({
+        user_id: user.id,
+        total_amount: total,
+        shipping_address: shippingAddress,
+        notes: form.notes || null,
+        coupon_id: appliedCoupon?.id || null,
+        discount_amount: discount,
+        points_redeemed: pointsToRedeem,
+        points_discount: pointsDiscount,
+        payment_method: "mpesa",
+        payment_status: "pending",
+        status: "received",
+        order_type: "standard",
+        affiliate_id: affiliateId,
+      }).select("id").single();
+
+      if (error || !order) {
+        toast.error("Failed to create order. Please try again.");
+        setSubmitting(false); return;
+      }
+
+      await supabase.from("order_items").insert(
+        orderItemsPayload.map(item => ({ ...item, order_id: order.id }))
+      );
+      newOrderId = order.id;
+    } else {
+      // Guest checkout — routed through a service-role edge function since
+      // orders/order_items RLS is scoped to auth.uid() and doesn't (and
+      // shouldn't) grant anon write access directly.
+      const { data, error } = await supabase.functions.invoke("create-guest-order", {
+        body: {
+          email: form.email,
+          full_name: form.fullName,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          notes: form.notes || null,
+          total_amount: total,
+          coupon_id: appliedCoupon?.id || null,
+          discount_amount: discount,
+          affiliate_id: affiliateId,
+          items: orderItemsPayload,
+        },
+      });
+
+      if (error || !data?.success || !data?.order_id) {
+        toast.error("Failed to create order. Please try again.");
+        setSubmitting(false); return;
+      }
+      newOrderId = data.order_id;
+    }
 
     // Coupon usage and points redemption are intentionally NOT applied here.
     // This order is still payment_status: "pending" — if the customer
@@ -171,11 +205,11 @@ const Checkout = () => {
 
     // Send order placed email
     await supabase.functions.invoke("send-order-email", {
-      body: { order_id: order.id, order_type: "standard", type: "order_placed" },
+      body: { order_id: newOrderId, order_type: "standard", type: "order_placed" },
     });
 
-    setOrderId(order.id);
-    setOrderRef(order.id.slice(0, 8).toUpperCase());
+    setOrderId(newOrderId);
+    setOrderRef(newOrderId.slice(0, 8).toUpperCase());
     setMpesaPhone(form.phone);
     setSubmitting(false);
     setStep("mpesa");
@@ -220,11 +254,21 @@ const Checkout = () => {
     pollIntervalRef.current = setInterval(async () => {
       attempts++;
 
-      const { data } = await supabase
-        .from("orders")
-        .select("payment_status, mpesa_receipt_number")
-        .eq("id", orderId)
-        .single();
+      // Logged-in orders are read directly (RLS: auth.uid() = user_id).
+      // Guest orders have no session to authorize that read, so they go
+      // through a SECURITY DEFINER RPC scoped to user_id IS NULL rows only.
+      let data: { payment_status: string; mpesa_receipt_number: string | null } | null = null;
+      if (user) {
+        const { data: row } = await supabase
+          .from("orders")
+          .select("payment_status, mpesa_receipt_number")
+          .eq("id", orderId)
+          .single();
+        data = row;
+      } else {
+        const { data: rows } = await supabase.rpc("get_guest_order_status", { _order_id: orderId });
+        data = rows?.[0] || null;
+      }
 
       if (data?.payment_status === "paid") {
         clearInterval(pollIntervalRef.current!);
@@ -259,16 +303,6 @@ const Checkout = () => {
     </Layout>
   );
 
-  if (!user) return (
-    <Layout>
-      <CheckoutSEO />
-      <div className="container py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Sign in to checkout</h1>
-        <Link to="/signin"><Button>Sign In</Button></Link>
-      </div>
-    </Layout>
-  );
-
   /* ── LOADING (resuming an existing order) ── */
   if (step === "loading") return (
     <Layout>
@@ -299,8 +333,13 @@ const Checkout = () => {
           <p className="text-sm text-muted-foreground mb-8">
             A confirmation email has been sent to you. We'll notify you when your order is dispatched.
           </p>
+          {!user && (
+            <p className="text-sm text-muted-foreground mb-6">
+              <Link to="/signin" className="text-primary font-medium hover:underline">Create an account</Link> to track this order and future purchases.
+            </p>
+          )}
           <div className="flex gap-3 justify-center">
-            <Link to="/profile"><Button variant="outline">View My Orders</Button></Link>
+            {user && <Link to="/profile"><Button variant="outline">View My Orders</Button></Link>}
             <Link to="/products"><Button>Continue Shopping</Button></Link>
           </div>
         </div>
@@ -438,6 +477,11 @@ const Checkout = () => {
           <div className="grid md:grid-cols-5 gap-8">
             <form onSubmit={handleSubmitDetails} className="md:col-span-3 space-y-4">
               <h2 className="font-semibold text-lg">Shipping Details</h2>
+              {!user && (
+                <p className="text-xs text-muted-foreground -mt-2">
+                  Checking out as a guest. <Link to="/signin" className="text-primary hover:underline">Sign in</Link> to track orders and earn loyalty points.
+                </p>
+              )}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="fullName">Full Name *</Label>
@@ -448,6 +492,13 @@ const Checkout = () => {
                   <Input id="phone" name="phone" value={form.phone} onChange={handleChange} required placeholder="+254..." />
                 </div>
               </div>
+              {!user && (
+                <div>
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required placeholder="you@example.com" />
+                  <p className="text-xs text-muted-foreground mt-1">We'll send your order confirmation and receipt here.</p>
+                </div>
+              )}
               <div>
                 <Label htmlFor="address">Address *</Label>
                 <Input id="address" name="address" value={form.address} onChange={handleChange} required />

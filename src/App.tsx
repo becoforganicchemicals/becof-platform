@@ -120,13 +120,13 @@ const App = () => (
                 element={<GuestOnly><SignIn /></GuestOnly>}
               />
 
+              {/* Cart and checkout allow guest access — Cart.tsx/Checkout.tsx
+                  handle the signed-out case internally rather than being
+                  gated by RequireAuth here. */}
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+
               {/* ── Any authenticated user ────────────────────────────── */}
-              <Route path="/cart"
-                element={<RequireAuth><Cart /></RequireAuth>}
-              />
-              <Route path="/checkout"
-                element={<RequireAuth><Checkout /></RequireAuth>}
-              />
               <Route path="/custom-order"
                 element={<RequireAuth><CustomOrder /></RequireAuth>}
               />

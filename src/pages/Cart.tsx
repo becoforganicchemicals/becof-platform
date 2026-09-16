@@ -14,16 +14,14 @@ const CartSEO = () => (
 );
 
 const Cart = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const { items, loading, subtotal, updateQuantity, removeFromCart } = useCart();
 
-  // AuthContext resolves asynchronously (starts as user: null, loading: true)
-  // — checking `!user` alone would flash the "sign in" wall at every hard
-  // refresh for an already-logged-in visitor, for the brief moment before
-  // the session actually resolves.
+  // Cart works for guests too (CartContext falls back to a localStorage
+  // cart when signed out) — still wait on authLoading first so a logged-in
+  // visitor's real DB-backed cart doesn't flash an empty/guest state for an
+  // instant on hard refresh before the session resolves.
   if (authLoading) return <Layout><div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
-
-  if (!user) return <Layout><CartSEO /><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Sign in to view your cart</h1><Link to="/signin"><Button>Sign In</Button></Link></div></Layout>;
 
   if (loading) return <Layout><div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
 
