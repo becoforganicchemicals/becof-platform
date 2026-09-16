@@ -171,7 +171,7 @@ const AdminPartners = () => {
             : newStatus === "rejected" ? "application_rejected"
                 : "application_reviewing";
 
-        await supabase.functions.invoke("send-partner-email", {
+        const { data: emailResult } = await supabase.functions.invoke("send-partner-email", {
             body: {
                 application_id: selectedApp.id,
                 type: emailType,
@@ -182,7 +182,15 @@ const AdminPartners = () => {
         });
 
         logAdminActivity({ action: "UPDATE", targetTable: "distributor_applications", targetId: selectedApp.id, afterData: { status: newStatus } });
-        toast({ title: `Application ${newStatus} — customer notified ✓` });
+        if (emailResult?.success) {
+            toast({ title: `Application ${newStatus} — customer notified ✓` });
+        } else {
+            toast({
+                title: `Application ${newStatus}, but email failed to send`,
+                description: emailResult?.mocked ? "RESEND_API_KEY isn't configured yet." : "Check the send-partner-email function logs.",
+                variant: "destructive",
+            });
+        }
         setReviewing(false);
         setReviewDialog(false);
         queryClient.invalidateQueries({ queryKey: ["admin-partner-applications"] });
@@ -196,10 +204,18 @@ const AdminPartners = () => {
             return;
         }
         const newTemp = `Becof@${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-        await supabase.functions.invoke("send-partner-email", {
+        const { data: emailResult } = await supabase.functions.invoke("send-partner-email", {
             body: { application_id: app.id, type: "resend_credentials", temp_password: newTemp },
         });
-        toast({ title: "New credentials sent to applicant ✓" });
+        if (emailResult?.success) {
+            toast({ title: "New credentials sent to applicant ✓" });
+        } else {
+            toast({
+                title: "Credentials reset, but email failed to send",
+                description: emailResult?.mocked ? "RESEND_API_KEY isn't configured yet." : "Check the send-partner-email function logs.",
+                variant: "destructive",
+            });
+        }
     };
 
     /* ─── Open profile dialog ─── */

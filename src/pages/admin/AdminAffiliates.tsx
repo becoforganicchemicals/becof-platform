@@ -124,9 +124,22 @@ const AdminAffiliates = () => {
         reviewed_by: user!.id,
       }).eq("id", reviewTarget.id);
       if (error) throw error;
+
+      const { data: emailResult } = await supabase.functions.invoke("send-affiliate-email", {
+        body: { affiliate_id: reviewTarget.id, type: decision === "approved" ? "application_approved" : "application_rejected" },
+      });
+      return { emailSent: !!emailResult?.success, emailMocked: !!emailResult?.mocked };
     },
-    onSuccess: (_data, decision) => {
-      toast({ title: decision === "approved" ? "Affiliate approved ✓" : "Application rejected" });
+    onSuccess: (result, decision) => {
+      if (result?.emailSent) {
+        toast({ title: decision === "approved" ? "Affiliate approved & notified ✓" : "Application rejected & notified ✓" });
+      } else {
+        toast({
+          title: decision === "approved" ? "Affiliate approved, but email failed to send" : "Application rejected, but email failed to send",
+          description: result?.emailMocked ? "RESEND_API_KEY isn't configured yet." : "Check the send-affiliate-email function logs.",
+          variant: "destructive",
+        });
+      }
       setReviewTarget(null); setReviewNote("");
       invalidateAll();
     },

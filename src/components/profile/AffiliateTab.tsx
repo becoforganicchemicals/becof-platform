@@ -45,16 +45,22 @@ const AffiliateTab = () => {
   const applyMutation = useMutation({
     mutationFn: async () => {
       if (!mpesaPhone.trim()) throw new Error("An M-Pesa phone number is required");
-      const { error } = await supabase.from("affiliates").insert({
+      const { data, error } = await supabase.from("affiliates").insert({
         user_id: user!.id,
         business_name: businessName.trim() || null,
         mpesa_phone: mpesaPhone.trim(),
         application_note: note.trim() || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({ title: "Application submitted", description: "We'll review it within 5–10 business days." });
+      if (data?.id) {
+        supabase.functions.invoke("send-affiliate-email", {
+          body: { affiliate_id: data.id, type: "application_received" },
+        }).catch(err => console.warn("Email notification failed:", err));
+      }
       refetch();
     },
     onError: (e: Error) => toast({ title: "Couldn't submit application", description: e.message, variant: "destructive" }),

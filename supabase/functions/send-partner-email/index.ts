@@ -7,14 +7,26 @@ const corsHeaders = {
 };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM_EMAIL = "Becof Organic Chemicals Limited <info@becoforganic.com>";
+const FROM_EMAIL = "Becof Organic Chemicals Limited <distributor@becoforganicchemicals.com>";
 const CC_EMAIL = "mweri@becoforganic.com";
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@becoforganicchemicals.com";
 const SITE_URL = "https://www.becoforganicchemicals.com";
 
+// Every attempt is recorded here so the caller can tell whether an email
+// actually went out, instead of always responding 200 regardless of a
+// missing recipient, a missing API key, or Resend rejecting the request.
+type SendResult = { to: string; ok: boolean; mocked: boolean; error?: string };
+const sendResults: SendResult[] = [];
+
 const sendEmail = async (to: string, subject: string, html: string, cc?: string | string[]) => {
+  if (!to) {
+    console.warn("[send-partner-email] Skipped — no recipient email:", subject);
+    sendResults.push({ to: "", ok: false, mocked: false, error: "missing recipient email" });
+    return;
+  }
   if (!RESEND_API_KEY) {
     console.log("[MOCK EMAIL] To:", to, "CC:", cc, "Subject:", subject);
+    sendResults.push({ to, ok: false, mocked: true });
     return;
   }
   const payload: Record<string, unknown> = { from: FROM_EMAIL, to, subject, html };
@@ -24,7 +36,13 @@ const sendEmail = async (to: string, subject: string, html: string, cc?: string 
     headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) console.error("Resend error:", await res.text());
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error("[send-partner-email] Resend API error", res.status, body);
+    sendResults.push({ to, ok: false, mocked: false, error: `Resend ${res.status}: ${body}` });
+    return;
+  }
+  sendResults.push({ to, ok: true, mocked: false });
 };
 
 const brandHeader = `
@@ -340,7 +358,13 @@ serve(async (req) => {
       `, CC_EMAIL);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    const success = sendResults.some(r => r.ok);
+    return new Response(JSON.stringify({
+      success,
+      mocked: sendResults.some(r => r.mocked),
+      missingRecipient: sendResults.some(r => r.error === "missing recipient email"),
+      results: sendResults,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
