@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Handshake, ShoppingBag } from "lucide-react";
+import { Handshake, ShoppingBag, Megaphone, ArrowRight } from "lucide-react";
 
 const FinalCTA = () => (
   <section className="py-24 bg-background">
@@ -50,6 +50,19 @@ const FinalCTA = () => (
               </Button>
             </Link>
           </div>
+
+          {/* Lighter-weight than the two buttons above, deliberately — this
+              keeps Shop Now / Become a Distributor as the two real choices
+              here, while still surfacing the affiliate program for anyone
+              scanning past who it happens to resonate with. */}
+          <Link
+            to="/affiliates"
+            className="group inline-flex items-center gap-1.5 mt-6 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+          >
+            <Megaphone className="h-3.5 w-3.5" />
+            Prefer to earn commission instead? Become an Affiliate
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
       </motion.div>
     </div>
