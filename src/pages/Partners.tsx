@@ -112,7 +112,9 @@ const Partners = () => {
       business_reg_cert_url = await uploadCert(certFile);
     }
 
+    const applicationId = crypto.randomUUID();
     const payload = {
+      id: applicationId,
       ...form,
       years_in_business: form.years_in_business ? Number(form.years_in_business) : null,
       products_interest: selectedProducts,
@@ -120,20 +122,18 @@ const Partners = () => {
       status: "pending",
     };
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("distributor_applications")
-      .insert(payload)
-      .select("id")
-      .single();
+      .insert(payload);
 
-    if (error || !data) {
+    if (error) {
       toast.error("Submission failed. Please try again.");
       setSubmitting(false); return;
     }
 
     // Send confirmation email (fire-and-forget, don't block on failure)
     supabase.functions.invoke("send-partner-email", {
-      body: { application_id: data.id, type: "application_received" },
+      body: { application_id: applicationId, type: "application_received" },
     }).catch(err => console.warn("Email notification failed:", err));
 
     setSubmitted(true);
