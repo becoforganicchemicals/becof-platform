@@ -110,7 +110,7 @@ const AdminOrders = () => {
       if (error) throw error;
 
       // Trigger email notification
-      await supabase.functions.invoke("send-order-email", {
+      const { data: emailResult } = await supabase.functions.invoke("send-order-email", {
         body: {
           order_id: id,
           order_type: "standard",
@@ -118,11 +118,20 @@ const AdminOrders = () => {
           status_label: status.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
         },
       });
+      return { emailSent: !!emailResult?.success, emailMocked: !!emailResult?.mocked };
     },
-    onSuccess: (_, { id, status }) => {
+    onSuccess: (result, { id, status }) => {
       logAdminActivity({ action: "UPDATE", targetTable: "orders", targetId: id, afterData: { status } });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-      toast({ title: "Order updated & customer notified ✓" });
+      if (result?.emailSent) {
+        toast({ title: "Order updated & customer notified ✓" });
+      } else {
+        toast({
+          title: "Order updated, but email failed to send",
+          description: result?.emailMocked ? "RESEND_API_KEY isn't configured yet." : "Check the send-order-email function logs.",
+          variant: "destructive",
+        });
+      }
     },
     onError: () => toast({ title: "Update failed", variant: "destructive" }),
   });
@@ -198,7 +207,7 @@ const AdminOrders = () => {
 
     // Send appropriate email
     const emailType = newCustomStatus === "ready" ? "custom_order_ready" : "order_status_update";
-    await supabase.functions.invoke("send-order-email", {
+    const { data: emailResult } = await supabase.functions.invoke("send-order-email", {
       body: {
         order_id: selectedCustom.id,
         order_type: "custom",
@@ -220,7 +229,15 @@ const AdminOrders = () => {
     }
 
     logAdminActivity({ action: "UPDATE", targetTable: "custom_orders", targetId: selectedCustom.id, afterData: { status: newCustomStatus, admin_notes: adminNotes } });
-    toast({ title: "Custom order updated & customer notified ✓" });
+    if (emailResult?.success) {
+      toast({ title: "Custom order updated & customer notified ✓" });
+    } else {
+      toast({
+        title: "Custom order updated, but email failed to send",
+        description: emailResult?.mocked ? "RESEND_API_KEY isn't configured yet." : "Check the send-order-email function logs.",
+        variant: "destructive",
+      });
+    }
     setNotifying(false);
     setUpdateDialog(false);
     queryClient.invalidateQueries({ queryKey: ["admin-custom-orders"] });
@@ -228,10 +245,18 @@ const AdminOrders = () => {
 
   /* ─── Manual email trigger ─── */
   const sendManualEmail = async (order: CustomOrder, type: string) => {
-    await supabase.functions.invoke("send-order-email", {
+    const { data: emailResult } = await supabase.functions.invoke("send-order-email", {
       body: { order_id: order.id, order_type: "custom", type },
     });
-    toast({ title: "Email sent to customer ✓" });
+    if (emailResult?.success) {
+      toast({ title: "Email sent to customer ✓" });
+    } else {
+      toast({
+        title: "Email failed to send",
+        description: emailResult?.mocked ? "RESEND_API_KEY isn't configured yet." : "Check the send-order-email function logs.",
+        variant: "destructive",
+      });
+    }
   };
 
   const orderRef = (id: string) => id.slice(0, 8).toUpperCase();

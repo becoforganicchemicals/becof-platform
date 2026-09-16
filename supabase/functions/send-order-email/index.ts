@@ -13,16 +13,36 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = "Becof Organic Chemicals <orders@becoforganicchemicals.com>";
 const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@becoforganicchemicals.com";
 
+// Every attempt is recorded here so the caller can tell whether an email
+// actually left the building, instead of the old behaviour of always
+// responding 200 regardless of a missing recipient, a missing API key, or
+// Resend rejecting the request.
+type SendResult = { to: string; ok: boolean; mocked: boolean; error?: string };
+const sendResults: SendResult[] = [];
+
 const sendEmail = async (to: string, subject: string, html: string) => {
-    if (!RESEND_API_KEY) {
-        console.log("[MOCK EMAIL] To:", to, "Subject:", subject);
+    if (!to) {
+        console.warn("[send-order-email] Skipped — no recipient email:", subject);
+        sendResults.push({ to: "", ok: false, mocked: false, error: "missing recipient email" });
         return;
     }
-    await fetch("https://api.resend.com/emails", {
+    if (!RESEND_API_KEY) {
+        console.log("[MOCK EMAIL] To:", to, "Subject:", subject);
+        sendResults.push({ to, ok: false, mocked: true });
+        return;
+    }
+    const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
     });
+    if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        console.error("[send-order-email] Resend API error", res.status, body);
+        sendResults.push({ to, ok: false, mocked: false, error: `Resend ${res.status}: ${body}` });
+        return;
+    }
+    sendResults.push({ to, ok: true, mocked: false });
 };
 
 const brandHeader = `
@@ -225,7 +245,17 @@ serve(async (req) => {
       `);
         }
 
-        return new Response(JSON.stringify({ success: true }), {
+        // success = at least one email actually went out through Resend.
+        // If RESEND_API_KEY isn't configured, or Resend rejected every send,
+        // or there was no recipient to send to at all, this is false — the
+        // caller can then tell the admin the update saved but the email didn't go out.
+        const success = sendResults.some(r => r.ok);
+        return new Response(JSON.stringify({
+            success,
+            mocked: sendResults.some(r => r.mocked),
+            missingRecipient: sendResults.some(r => r.error === "missing recipient email"),
+            results: sendResults,
+        }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
 
