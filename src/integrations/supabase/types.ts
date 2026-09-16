@@ -1507,8 +1507,8 @@ export type Database = {
       get_guest_order_status: {
         Args: { _order_id: string }
         Returns: {
-          payment_status: string
           mpesa_receipt_number: string
+          payment_status: string
           status: string
           total_amount: number
         }[]
