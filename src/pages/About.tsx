@@ -73,7 +73,7 @@ const leadership = [
   {
     name: "Andrew Omwenga",
     role: "Co-Founder & Chief Operating Officer",
-    bio: "Strategic thinker and technical leader focused on operational excellence, innovation, and sustainable agricultural impact.",
+    bio: "Chemical engineering graduate. Leads the company's operations.",
     image: "/images/andrew-omwenga.jpeg"
   },
 ];
