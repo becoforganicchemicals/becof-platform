@@ -1,6 +1,7 @@
 import Layout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
+import { Helmet } from "react-helmet-async";
 import { Target, Eye, Leaf, Users, Scale, Lightbulb, Handshake, TrendingUp, Globe, Smile, Settings, Rocket, } from "lucide-react";
 
 
@@ -63,25 +64,48 @@ const principles = [
 
 const leadership = [
   {
-    name: "Eng. Benjamin Baya",
-    role: "Founder & Chief Executive Officer",
-    bio: "Visionary engineer and sustainability advocate passionate about eco-friendly chemical innovation and agricultural transformation.",
-    image: "/images/benjamin-baya.jpg"
+    name: "Benjamin Baya",
+    role: "Co-Founder & Chief Executive Officer",
+    bio: "Chemical engineering graduate and software engineer. Leads the company's strategy and built its digital platform.",
+    image: "/images/benjamin-baya.jpg",
+    url: "https://benjaminbaya.com"
   },
   {
-    name: "Eng. Andrew Omwenga",
+    name: "Andrew Omwenga",
     role: "Co-Founder & Chief Operating Officer",
     bio: "Strategic thinker and technical leader focused on operational excellence, innovation, and sustainable agricultural impact.",
     image: "/images/andrew-omwenga.jpeg"
   },
 ];
 
+// Tells search engines who leads the company
+const leadershipSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Becof Organic Chemicals Limited",
+  url: "https://www.becoforganicchemicals.com",
+  foundingDate: "2024-11-20",
+  founder: [
+    {
+      "@type": "Person",
+      name: "Benjamin Baya",
+      jobTitle: "Co-Founder & Chief Executive Officer",
+      url: "https://benjaminbaya.com",
+    },
+    {
+      "@type": "Person",
+      name: "Andrew Omwenga",
+      jobTitle: "Co-Founder & Chief Operating Officer",
+    },
+  ],
+};
+
 const timeline = [
   {
     date: "October 2023",
     title: "Becof Chemicals Founded",
     description:
-      "Eng. Benjamin Baya registered Becof Chemicals as a business name, planting the first seeds of a sustainable chemical vision.",
+      "Benjamin Baya registered Becof Chemicals as a business name, planting the first seeds of a sustainable chemical vision.",
   },
   {
     date: "December 27, 2023",
@@ -111,6 +135,9 @@ const About = () => (
       description="Learn about our company, leadership, and commitment to sustainable organic chemical manufacturing."
       url="https://www.becoforganicchemicals.com/about"
     />
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(leadershipSchema)}</script>
+    </Helmet>
     <section className="py-16">
       <div className="container">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center mb-16">
@@ -278,6 +305,16 @@ const About = () => (
                 <p className="text-primary font-medium mb-4">
                   {leader.role}
                 </p>
+                {"url" in leader && leader.url && (
+                  <a
+                    href={leader.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mb-4 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    {leader.url.replace("https://", "")}
+                  </a>
+                )}
                 <p className="text-muted-foreground leading-relaxed">
                   {leader.bio}
                 </p>
