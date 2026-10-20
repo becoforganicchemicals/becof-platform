@@ -1,17 +1,29 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useCookieConsent } from "@/contexts/CookieConsentContext";
-import { trackPageView } from "@/lib/analytics";
+import { loadGoogleAnalytics, trackPageView } from "@/lib/analytics";
+import { loadMetaPixel, trackMetaEvent } from "@/lib/metaPixel";
 
-// Renders nothing — just fires a GA page_view on every route change, and only
-// while the visitor has actually consented to analytics.
+// Renders nothing — just fires a GA page_view / Meta PageView on every route
+// change, and only while the visitor has actually consented to each.
+// The load calls are idempotent; they're here because this effect runs before
+// CookieConsentProvider's own (child effects run first), so on a returning
+// visit the first page view would otherwise be dropped before anything loaded.
 const AnalyticsPageViewTracker = () => {
   const location = useLocation();
-  const { analyticsEnabled } = useCookieConsent();
+  const { analyticsEnabled, marketingEnabled } = useCookieConsent();
 
   useEffect(() => {
-    if (analyticsEnabled) trackPageView(location.pathname + location.search);
+    if (!analyticsEnabled) return;
+    loadGoogleAnalytics();
+    trackPageView(location.pathname + location.search);
   }, [location.pathname, location.search, analyticsEnabled]);
+
+  useEffect(() => {
+    if (!marketingEnabled) return;
+    loadMetaPixel();
+    trackMetaEvent("PageView");
+  }, [location.pathname, location.search, marketingEnabled]);
 
   return null;
 };

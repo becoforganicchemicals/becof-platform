@@ -7,6 +7,7 @@ import { MapPin, Phone, Mail, Clock, CheckCircle, Loader2, ArrowRight } from "lu
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
+import { trackMetaEvent } from "@/lib/metaPixel";
 
 const contactDetails = [
   { icon: Phone, label: "Call Us", value: "+254 735 283 397", sub: "Mon–Fri, 8AM–6PM EAT" },
@@ -60,6 +61,7 @@ const Contact = () => {
       body: { ...form, to: "info@becoforganic.com" },
     });
 
+    trackMetaEvent("Lead", { content_name: "Contact form", content_category: form.topic || undefined });
     setSubmitting(false);
     setSubmitted(true);
   };

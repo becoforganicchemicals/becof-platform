@@ -14,6 +14,7 @@ import PendingOrderBanner from "@/components/PendingOrderBanner";
 import { useLoyaltyPoints, KES_PER_POINT_REDEEMED, MAX_REDEMPTION_FRACTION } from "@/hooks/useLoyaltyPoints";
 import { getStoredAffiliate } from "@/lib/affiliate";
 import SEO from "@/components/SEO";
+import { trackMetaEvent } from "@/lib/metaPixel";
 
 // A signed-in shopper's own checkout flow — never worth indexing.
 const CheckoutSEO = () => (
@@ -274,6 +275,7 @@ const Checkout = () => {
         clearInterval(pollIntervalRef.current!);
         pollIntervalRef.current = null;
         setReceipt(data.mpesa_receipt_number || "");
+        trackMetaEvent("Purchase", { value: displayTotal, currency: "KES" }, orderId);
         await clearCart();
         setStep("success");
       } else if (data?.payment_status === "failed" || data?.payment_status === "cancelled") {

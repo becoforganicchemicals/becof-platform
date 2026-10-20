@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
+import { trackMetaEvent } from "@/lib/metaPixel";
 import {
   CheckCircle, TrendingUp, Globe, Award,
   MapPin, Phone, Mail, ExternalLink, Building2,
@@ -136,6 +137,7 @@ const Partners = () => {
       body: { application_id: applicationId, type: "application_received" },
     }).catch(err => console.warn("Email notification failed:", err));
 
+    trackMetaEvent("Lead", { content_name: "Distributor application", content_category: form.applicant_type }, applicationId);
     setSubmitted(true);
     setSubmitting(false);
   };

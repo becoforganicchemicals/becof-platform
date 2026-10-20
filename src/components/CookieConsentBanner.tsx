@@ -8,16 +8,20 @@ import { Cookie, X } from "lucide-react";
 
 const CookieConsentBanner = () => {
   const {
-    hasDecided, analyticsEnabled, preferencesOpen,
+    hasDecided, analyticsEnabled, marketingEnabled, preferencesOpen,
     openPreferences, closePreferences, acceptAll, rejectNonEssential, savePreferences,
   } = useCookieConsent();
   const [draftAnalytics, setDraftAnalytics] = useState(analyticsEnabled);
+  const [draftMarketing, setDraftMarketing] = useState(marketingEnabled);
   const [dismissed, setDismissed] = useState(false);
 
-  // Keep the dialog's draft toggle in sync with the saved value whenever it's reopened.
+  // Keep the dialog's draft toggles in sync with the saved values whenever it's reopened.
   useEffect(() => {
-    if (preferencesOpen) setDraftAnalytics(analyticsEnabled);
-  }, [preferencesOpen, analyticsEnabled]);
+    if (preferencesOpen) {
+      setDraftAnalytics(analyticsEnabled);
+      setDraftMarketing(marketingEnabled);
+    }
+  }, [preferencesOpen, analyticsEnabled, marketingEnabled]);
 
   return (
     <>
@@ -43,7 +47,7 @@ const CookieConsentBanner = () => {
 
               <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                 We use essential storage to run this site, and — only with your consent — analytics to
-                understand how it's used.{" "}
+                understand how it's used and marketing cookies to measure our ads.{" "}
                 <Link to="/legal/cookies" className="text-primary hover:underline">Learn more</Link>
               </p>
 
@@ -85,6 +89,13 @@ const CookieConsentBanner = () => {
               </div>
               <Switch checked={draftAnalytics} onCheckedChange={setDraftAnalytics} />
             </div>
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="pr-4">
+                <p className="text-sm font-medium">Marketing</p>
+                <p className="text-xs text-muted-foreground">Meta Pixel — measures how our Facebook and Instagram ads perform. Optional.</p>
+              </div>
+              <Switch checked={draftMarketing} onCheckedChange={setDraftMarketing} />
+            </div>
             <p className="text-xs text-muted-foreground">
               Full detail in our{" "}
               <Link to="/legal/cookies" className="text-primary hover:underline" onClick={closePreferences}>
@@ -94,7 +105,7 @@ const CookieConsentBanner = () => {
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={closePreferences}>Cancel</Button>
-            <Button onClick={() => savePreferences(draftAnalytics)}>Save Preferences</Button>
+            <Button onClick={() => savePreferences(draftAnalytics, draftMarketing)}>Save Preferences</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

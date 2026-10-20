@@ -8,6 +8,7 @@ const sections: LegalSection[] = [
   { id: "your-consent", title: "Your Consent Choice" },
   { id: "essential", title: "Essential Storage" },
   { id: "analytics", title: "Analytics (Optional)" },
+  { id: "marketing", title: "Marketing (Optional)" },
   { id: "third-party", title: "Third-Party Services" },
   { id: "managing", title: "Managing & Clearing This Data" },
   { id: "changes", title: "Changes to This Policy" },
@@ -15,13 +16,13 @@ const sections: LegalSection[] = [
 ];
 
 const CookiePolicy = () => {
-  const { openPreferences, hasDecided, analyticsEnabled } = useCookieConsent();
+  const { openPreferences, hasDecided, analyticsEnabled, marketingEnabled } = useCookieConsent();
 
   return (
     <LegalLayout
       title="Cookie Policy"
       description="What cookies and browser storage Becof Organic Chemicals actually uses, and how to control them."
-      lastUpdated="11 September 2026"
+      lastUpdated="20 October 2026"
       sections={sections}
     >
       <section id="what-are-cookies">
@@ -39,13 +40,14 @@ const CookiePolicy = () => {
         <p>
           When you first visit becoforganicchemicals.com, a banner asks you to Accept All, Reject Non-Essential,
           or Customize which categories you allow. Essential storage runs regardless, since the site can't
-          function without it; analytics only activates if you say yes. You can change your mind at any time —
-          see <a href="#managing">Section 6</a> below.
+          function without it; analytics and marketing only activate if you say yes. You can change your mind at
+          any time — see <a href="#managing">Section 7</a> below.
         </p>
         {hasDecided && (
           <div className="not-prose bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
             <p className="text-sm text-foreground m-0">
-              Your current choice: <strong>Analytics {analyticsEnabled ? "enabled" : "disabled"}</strong>
+              Your current choice: <strong>Analytics {analyticsEnabled ? "enabled" : "disabled"}</strong>,{" "}
+              <strong>Marketing {marketingEnabled ? "enabled" : "disabled"}</strong>
             </p>
             <Button size="sm" variant="outline" className="gap-2" onClick={openPreferences}>
               <Settings2 className="h-3.5 w-3.5" /> Manage Preferences
@@ -91,8 +93,24 @@ const CookiePolicy = () => {
         </p>
       </section>
 
+      <section id="marketing">
+        <h2>5. Marketing (Optional)</h2>
+        <p>
+          With your consent, we use the <strong>Meta Pixel</strong> to measure how our Facebook and Instagram ads
+          perform — for example, recording that a visitor who clicked one of our ads went on to view a page, send
+          an enquiry, submit a distributor application, or complete a purchase. It does not receive the contents
+          of the forms you fill in.
+        </p>
+        <p>
+          The Meta Pixel is only loaded, and only sets its cookies, after you actively choose "Accept All" or
+          enable the Marketing toggle in Customize. If you choose "Reject Non-Essential," or haven't made a
+          choice yet, it is never loaded and sets nothing. Data collected is subject to{" "}
+          <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer">Meta's own Privacy Policy</a>.
+        </p>
+      </section>
+
       <section id="third-party">
-        <h2>5. Third-Party Services</h2>
+        <h2>6. Third-Party Services</h2>
         <p>
           Some third-party services we rely on to operate the Services — such as our payment processor
           (Safaricom/M-Pesa) and cloud infrastructure provider — may set their own cookies or storage as part of
@@ -102,10 +120,10 @@ const CookiePolicy = () => {
       </section>
 
       <section id="managing">
-        <h2>6. Managing &amp; Clearing This Data</h2>
+        <h2>7. Managing &amp; Clearing This Data</h2>
         <p>You can change your cookie preferences at any time:</p>
         <ul>
-          <li>Click "Manage Preferences" above, or "Cookie Settings" in the footer of any page, to reopen the consent dialog and change your analytics choice.</li>
+          <li>Click "Manage Preferences" above, or "Cookie Settings" in the footer of any page, to reopen the consent dialog and change your analytics or marketing choice.</li>
           <li>Clear your browser's local storage / site data for becoforganicchemicals.com to reset everything, including your consent choice — the banner will reappear on your next visit.</li>
           <li>Sign out to end your authentication session specifically.</li>
         </ul>
@@ -117,7 +135,7 @@ const CookiePolicy = () => {
       </section>
 
       <section id="changes">
-        <h2>7. Changes to This Policy</h2>
+        <h2>8. Changes to This Policy</h2>
         <p>
           If we introduce new categories of cookies or tracking technology in the future, we will update this
           Policy and, where required, ask for your consent before they are used. The "Last updated" date above
@@ -126,7 +144,7 @@ const CookiePolicy = () => {
       </section>
 
       <section id="contact">
-        <h2>8. Contact Us</h2>
+        <h2>9. Contact Us</h2>
         <p>Questions about this Cookie Policy can be directed to:</p>
         <ul>
           <li>Email: <a href="mailto:info@becoforganic.com">info@becoforganic.com</a></li>

@@ -1,22 +1,27 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { loadGoogleAnalytics, unloadGoogleAnalytics } from "@/lib/analytics";
+import { loadMetaPixel, unloadMetaPixel } from "@/lib/metaPixel";
 
 const STORAGE_KEY = "becof-cookie-consent";
 
 interface StoredConsent {
   analytics: boolean;
+  // Added after launch — choices saved before then have no `marketing` key,
+  // and are treated as undecided so those visitors get asked about it.
+  marketing?: boolean;
   decidedAt: string;
 }
 
 interface CookieConsentContextValue {
   hasDecided: boolean;
   analyticsEnabled: boolean;
+  marketingEnabled: boolean;
   preferencesOpen: boolean;
   openPreferences: () => void;
   closePreferences: () => void;
   acceptAll: () => void;
   rejectNonEssential: () => void;
-  savePreferences: (analytics: boolean) => void;
+  savePreferences: (analytics: boolean, marketing: boolean) => void;
 }
 
 const CookieConsentContext = createContext<CookieConsentContextValue | null>(null);
@@ -37,27 +42,31 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
   // Apply whatever choice was already stored, once, on first load.
   useEffect(() => {
     if (stored?.analytics) loadGoogleAnalytics();
+    if (stored?.marketing) loadMetaPixel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persist = (analytics: boolean) => {
-    const next: StoredConsent = { analytics, decidedAt: new Date().toISOString() };
+  const persist = (analytics: boolean, marketing: boolean) => {
+    const next: StoredConsent = { analytics, marketing, decidedAt: new Date().toISOString() };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
     setStored(next);
     if (analytics) loadGoogleAnalytics();
     else unloadGoogleAnalytics();
+    if (marketing) loadMetaPixel();
+    else unloadMetaPixel();
     setPreferencesOpen(false);
   };
 
   const value: CookieConsentContextValue = {
-    hasDecided: stored !== null,
+    hasDecided: typeof stored?.marketing === "boolean",
     analyticsEnabled: stored?.analytics ?? false,
+    marketingEnabled: stored?.marketing ?? false,
     preferencesOpen,
     openPreferences: () => setPreferencesOpen(true),
     closePreferences: () => setPreferencesOpen(false),
-    acceptAll: () => persist(true),
-    rejectNonEssential: () => persist(false),
-    savePreferences: (analytics: boolean) => persist(analytics),
+    acceptAll: () => persist(true, true),
+    rejectNonEssential: () => persist(false, false),
+    savePreferences: (analytics: boolean, marketing: boolean) => persist(analytics, marketing),
   };
 
   return <CookieConsentContext.Provider value={value}>{children}</CookieConsentContext.Provider>;

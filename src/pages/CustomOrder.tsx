@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, ClipboardList, Loader2, PackageSearch } from "lucide-react";
 import SEO from "@/components/SEO";
+import { trackMetaEvent } from "@/lib/metaPixel";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 
 const CustomOrder = () => {
@@ -87,6 +88,7 @@ const CustomOrder = () => {
             body: { order_id: data.id, order_type: "custom", type: "custom_order_placed" },
         });
 
+        trackMetaEvent("Lead", { content_name: "Custom order request" }, data.id);
         setOrderId(data.id.slice(0, 8).toUpperCase());
         setSubmitted(true);
         setSubmitting(false);
