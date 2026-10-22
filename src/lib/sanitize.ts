@@ -1,4 +1,4 @@
-import DOMPurify from "dompurify";
+import DOMPurify, { type WindowLike } from "dompurify";
 
 // Article content is authored as raw HTML (see AdminLearn.tsx) and rendered
 // via dangerouslySetInnerHTML on a fully public page — sanitize before it
@@ -7,4 +7,12 @@ import DOMPurify from "dompurify";
 // DOMPurify's default profile already covers common rich-article markup
 // (headings, links, images, lists, tables) while stripping <script>, event
 // handler attributes, and javascript: URLs.
-export const sanitizeHtml = (html: string) => DOMPurify.sanitize(html);
+let purifier = DOMPurify;
+
+// The build-time prerender runs in Node, with no browser window for DOMPurify
+// to parse HTML in, so src/entry-server.tsx hands it a jsdom one instead.
+export const setSanitizerWindow = (win: WindowLike) => {
+  purifier = DOMPurify(win);
+};
+
+export const sanitizeHtml = (html: string) => purifier.sanitize(html);

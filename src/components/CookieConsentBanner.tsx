@@ -23,6 +23,10 @@ const CookieConsentBanner = () => {
     }
   }, [preferencesOpen, analyticsEnabled, marketingEnabled]);
 
+  // Not pre-rendered: the visitor's saved choice is only known in the browser,
+  // so baking the banner into the HTML would flash it at returning visitors.
+  if (import.meta.env.SSR) return null;
+
   return (
     <>
       {!hasDecided && !dismissed && (

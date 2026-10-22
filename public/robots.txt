@@ -1,5 +1,12 @@
+# All search engines and AI crawlers (Googlebot, Bingbot, GPTBot,
+# OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended,
+# Applebot, etc.) are welcome on every public page.
+#
+# Signed-in pages (cart, checkout, profile, sign-in…) aren't blocked here on
+# purpose: they send an X-Robots-Tag: noindex header (see vercel.json), which
+# crawlers can only see if they're allowed to fetch the page.
 User-agent: *
 Allow: /
+Disallow: /admin
 
 Sitemap: https://www.becoforganicchemicals.com/sitemap.xml
-

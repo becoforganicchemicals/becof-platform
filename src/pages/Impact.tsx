@@ -7,7 +7,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchImpactData } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
 
 /* ─── icon map ─── */
 const iconMap: Record<string, React.ElementType> = {
@@ -45,23 +46,19 @@ const StatCard = ({ metric, index }: { metric: Metric; index: number }) => {
 
 /* ═══════════════════════════════════════════════════════════ */
 const Impact = () => {
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
-  const [awards, setAwards] = useState<ImpactAward[]>([]);
-  const [loading, setLoading] = useState(true);
+  const seed = getPrerendered<{ metrics: Metric[]; reports: Report[]; awards: ImpactAward[] }>("impact");
+  const [metrics, setMetrics] = useState<Metric[]>(() => seed?.metrics ?? []);
+  const [reports, setReports] = useState<Report[]>(() => seed?.reports ?? []);
+  const [awards, setAwards] = useState<ImpactAward[]>(() => seed?.awards ?? []);
+  const [loading, setLoading] = useState(() => !seed);
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
-    setLoading(true);
-    const [{ data: m }, { data: r }, { data: a }] = await Promise.all([
-      supabase.from("impact_metrics").select("*").order("sort_order"),
-      supabase.from("esg_reports").select("*").eq("published", true).order("year", { ascending: false }),
-      supabase.from("impact_awards").select("*").order("awarded_date", { ascending: false }),
-    ]);
-    setMetrics(m || []);
-    setReports(r || []);
-    setAwards(a || []);
+    const data = await fetchImpactData();
+    setMetrics(data.metrics as Metric[]);
+    setReports(data.reports as Report[]);
+    setAwards(data.awards as ImpactAward[]);
     setLoading(false);
   };
 

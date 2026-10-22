@@ -13,6 +13,8 @@ import { Briefcase, MapPin, Clock, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import SEO from "@/components/SEO";
+import { fetchJobPositions } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
 
 const Careers = () => {
   const { toast } = useToast();
@@ -24,11 +26,10 @@ const Careers = () => {
 
   const { data: positions = [], isLoading } = useQuery({
     queryKey: ["public-jobs"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("job_positions").select("*").eq("is_active", true).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: fetchJobPositions,
+    initialData: () => getPrerendered<Awaited<ReturnType<typeof fetchJobPositions>>>("jobPositions"),
+    // Pre-rendered data is from build time — treat it as stale so it's refreshed.
+    initialDataUpdatedAt: 0,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {

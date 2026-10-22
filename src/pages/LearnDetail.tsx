@@ -3,7 +3,9 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchArticleBySlug } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
+import { articleSchema, breadcrumbSchema } from "@/lib/structuredData";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import {
@@ -211,6 +213,9 @@ interface Article {
     created_at: string;
     meta_title?: string;
     meta_description?: string;
+    updated_at?: string;
+    featured_image?: string | null;
+    tags?: string[] | null;
 }
 
 const categoryIcon = (slug?: string) => {
@@ -228,53 +233,33 @@ const LearnDetail = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
 
-    const [article, setArticle] = useState<Article | null>(null);
-    const [category, setCategory] = useState<Category | null>(null);
-    const [related, setRelated] = useState<Article[]>([]);
-    const [loading, setLoading] = useState(true);
+    const seed = getPrerendered<{ article: Article; category: Category | null; related: Article[] }>(`article:${slug}`);
+    const [article, setArticle] = useState<Article | null>(() => seed?.article ?? null);
+    const [category, setCategory] = useState<Category | null>(() => seed?.category ?? null);
+    const [related, setRelated] = useState<Article[]>(() => seed?.related ?? []);
+    const [loading, setLoading] = useState(() => !seed);
     const [notFound, setNotFound] = useState(false);
 
     useEffect(() => {
         if (slug) fetchArticle(slug);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [slug]);
 
     const fetchArticle = async (slug: string) => {
-        setLoading(true);
+        // Already showing this article (pre-rendered first load) — refresh quietly.
+        if (article?.slug !== slug) setLoading(true);
         setNotFound(false);
 
-        const { data: art } = await supabase
-            .from("learn_articles")
-            .select("*")
-            .eq("slug", slug)
-            .eq("published", true)
-            .single();
-
-        if (!art) {
+        const data = await fetchArticleBySlug(slug);
+        if (!data) {
             setNotFound(true);
             setLoading(false);
             return;
         }
 
-        setArticle(art);
-
-        const { data: cat } = await supabase
-            .from("learn_categories")
-            .select("*")
-            .eq("id", art.category_id)
-            .single();
-
-        setCategory(cat || null);
-
-        const { data: relData } = await supabase
-            .from("learn_articles")
-            .select("*")
-            .eq("published", true)
-            .eq("category_id", art.category_id)
-            .neq("id", art.id)
-            .order("created_at", { ascending: false })
-            .limit(3);
-
-        setRelated(relData || []);
+        setArticle(data.article as Article);
+        setCategory(data.category as Category | null);
+        setRelated(data.related as Article[]);
         setLoading(false);
     };
 
@@ -302,6 +287,12 @@ const LearnDetail = () => {
     if (notFound || !article) {
         return (
             <Layout>
+                <SEO
+                    title="Article not found"
+                    description="This article may have been removed or the link is incorrect."
+                    url={`https://www.becoforganicchemicals.com/learn/${slug}`}
+                    noindex
+                />
                 <div className="container py-24 text-center">
                     <BookOpen className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold mb-2">Article not found</h1>
@@ -323,6 +314,16 @@ const LearnDetail = () => {
                 title={article.meta_title || article.title}
                 description={article.meta_description || article.excerpt || ""}
                 url={`https://www.becoforganicchemicals.com/learn/${article.slug}`}
+                image={article.featured_image || undefined}
+                type="article"
+                jsonLd={[
+                    articleSchema(article, category?.name),
+                    breadcrumbSchema([
+                        { name: "Home", path: "/" },
+                        { name: "Learning Hub", path: "/learn" },
+                        { name: article.title, path: `/learn/${article.slug}` },
+                    ]),
+                ]}
             />
 
             {/* Breadcrumb */}

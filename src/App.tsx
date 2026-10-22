@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense, useState, type ComponentType, type ReactNode } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -14,30 +15,33 @@ import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import Wishlist from "./pages/Wishlist";
 import Learn from "./pages/Learn";
 import Impact from "./pages/Impact";
 import About from "./pages/About";
 import Partners from "./pages/Partners";
 import Affiliate from "./pages/Affiliate";
 import Contact from "./pages/Contact";
-import SignIn from "./pages/SignIn";
 import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 import Careers from "./pages/Careers";
-import Profile from "./pages/Profile";
 import LearnDetail from "./pages/LearnDetail";
-import CustomOrder from "./pages/CustomOrder";
-import ApplicationStatus from "./pages/ApplicationStatus";
-import DistributorDashboard from "./pages/DistributorDashboard";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
 import AccessibilityStatement from "./pages/legal/AccessibilityStatement";
 
-const queryClient = new QueryClient();
+// Signed-in, transactional and admin pages are split into their own chunks,
+// so public visitors (and crawlers) don't download the admin dashboard, rich
+// text editor and charts just to view a product. Public, indexable pages stay
+// in the main bundle so they're pre-rendered and appear without a loading state.
+const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Wishlist = lazy(() => import("./pages/Wishlist"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const CustomOrder = lazy(() => import("./pages/CustomOrder"));
+const ApplicationStatus = lazy(() => import("./pages/ApplicationStatus"));
+const DistributorDashboard = lazy(() => import("./pages/DistributorDashboard"));
 
 // ── Where each role lands after login ────────────────────────────────────────
 // Exported so SignIn.tsx can import and reuse the same logic
@@ -83,7 +87,13 @@ const GuestOnly = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
+// The browser uses BrowserRouter; the build-time prerender (entry-server.tsx)
+// passes in a StaticRouter pinned to the URL being rendered.
+type RouterComponent = ComponentType<{ children: ReactNode }>;
+
+const App = ({ Router = BrowserRouter }: { Router?: RouterComponent }) => {
+  const [queryClient] = useState(() => new QueryClient());
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
@@ -91,10 +101,11 @@ const App = () => (
           <CookieConsentProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
+          <Router>
             <ScrollToTop />
             <AnalyticsPageViewTracker />
             <CookieConsentBanner />
+            <Suspense fallback={<AuthSpinner />}>
             <Routes>
 
               {/* ── Fully public ─────────────────────────────────────── */}
@@ -147,12 +158,14 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
 
             </Routes>
-          </BrowserRouter>
+            </Suspense>
+          </Router>
           </CookieConsentProvider>
         </CartProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

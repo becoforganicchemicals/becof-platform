@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
 import { trackMetaEvent } from "@/lib/metaPixel";
+import { fetchPartnerProfiles } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
 import {
   CheckCircle, TrendingUp, Globe, Award,
   MapPin, Phone, Mail, ExternalLink, Building2,
@@ -60,7 +62,9 @@ interface PartnerProfile {
 const Partners = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [partners, setPartners] = useState<PartnerProfile[]>([]);
+  const [partners, setPartners] = useState<PartnerProfile[]>(
+    () => getPrerendered<PartnerProfile[]>("partnerProfiles") ?? []
+  );
   const [certFile, setCertFile] = useState<File | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
@@ -73,11 +77,7 @@ const Partners = () => {
   });
 
   useEffect(() => {
-    supabase.from("partner_profiles")
-      .select("*")
-      .eq("published", true)
-      .order("featured", { ascending: false })
-      .then(({ data }) => setPartners(data || []));
+    fetchPartnerProfiles().then((data) => setPartners(data as PartnerProfile[]));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

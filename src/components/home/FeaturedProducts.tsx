@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Star, ShoppingCart, ArrowRight, Package } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchFeaturedProducts } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
 import { useCart } from "@/contexts/CartContext";
 
 interface Product {
@@ -19,26 +20,16 @@ interface Product {
 }
 
 const FeaturedProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => getPrerendered<Product[]>("featuredProducts") ?? []);
+  const [loading, setLoading] = useState(() => getPrerendered("featuredProducts") === undefined);
   const [addingId, setAddingId] = useState<string | null>(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const fetchFeatured = async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, price, average_rating, short_description, images, slug, stock_quantity, categories(name)")
-        .eq("is_featured", true)
-        .eq("is_published", true)
-        .order("average_rating", { ascending: false, nullsFirst: false })
-        .limit(12);
-
-      if (!error && data) setProducts(data);
+    fetchFeaturedProducts().then((data) => {
+      setProducts(data);
       setLoading(false);
-    };
-
-    fetchFeatured();
+    });
   }, []);
 
   const handleAddToCart = async (productId: string) => {

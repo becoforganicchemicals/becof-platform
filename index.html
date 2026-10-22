@@ -10,25 +10,13 @@
        per page. Helmet appends rather than replacing static tags already in this file, so
        duplicating any of those here would produce two conflicting tags (this is exactly
        what happened with a static "index, follow" robots tag silently duplicating a page's
-       "noindex, nofollow" one). This title only shows before the JS bundle loads. -->
+       "noindex, nofollow" one). Public pages are pre-rendered at build time
+       (scripts/prerender.mjs), which swaps this title for the page's own; it only
+       remains on the bare app shell served to signed-in pages. Organization
+       structured data lives in src/lib/structuredData.ts. -->
   <title>Becof Organic Chemicals | Sustainable Agricultural Solutions</title>
   <meta name="author" content="Becof Organic Chemicals Limited" />
 
-  <!-- Structured Data (site-wide identity — not page-specific, safe to be global) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Becof Organic Chemicals Limited",
-    "url": "https://www.becoforganicchemicals.com",
-    "logo": "https://www.becoforganicchemicals.com/images/becof-logo.png",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "contactType": "customer service",
-      "email": "info@becoforganic.com"
-    }
-  }
-  </script>
 </head>
 
 

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import SEO from "@/components/SEO";
+import { fetchProductBySlug, fetchProductReviews } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
+import { productSchema, breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -17,27 +20,32 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToCart } = useCart();
-  const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const seed = getPrerendered<{ product: any; reviews: any[] }>(`product:${slug}`);
+  const [product, setProduct] = useState<any>(() => seed?.product ?? null);
+  const [loading, setLoading] = useState(() => !seed);
   const [quantity, setQuantity] = useState(1);
   const [wishlisted, setWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>(() => seed?.reviews ?? []);
 
   useEffect(() => {
     const fetchProduct = async () => {
-      setLoading(true);
       // Reset per-product UI state up front — otherwise navigating from one
       // product to another (same route, so this component instance persists)
       // can leave a stale selectedImage index pointing past the new
       // product's image count (broken image), or a quantity left over from
       // the previous product that hasn't been clamped to its stock yet.
-      setQuantity(1);
-      setSelectedImage(0);
-      setWishlisted(false);
-      setReviews([]);
-      const { data } = await supabase.from("products").select("*, categories(name)").eq("slug", slug!).maybeSingle();
+      // Skipped when this product is already showing (pre-rendered first load,
+      // or a refetch after sign-in), so its content doesn't flash out.
+      if (product?.slug !== slug) {
+        setLoading(true);
+        setQuantity(1);
+        setSelectedImage(0);
+        setWishlisted(false);
+        setReviews([]);
+      }
+      const data = await fetchProductBySlug(slug!);
       setProduct(data);
       setLoading(false);
       if (data && user) {
@@ -45,14 +53,9 @@ const ProductDetail = () => {
         setWishlisted(!!w);
       }
       if (data) {
-        const { data: r } = await supabase
-          .from("product_reviews")
-          .select("id, rating, comment, image_url, is_verified_purchase, created_at")
-          .eq("product_id", data.id)
-          .order("created_at", { ascending: false });
         // review-images is a private bucket: image_url holds the object path,
         // so signed-in visitors get a short-lived signed link for each photo.
-        const rows = r || [];
+        const rows = await fetchProductReviews(data.id);
         const withPhotos = await Promise.all(
           rows.map(async (row: any) => {
             if (!row.image_url || row.image_url.startsWith("http")) return row;
@@ -66,6 +69,7 @@ const ProductDetail = () => {
       }
     };
     if (slug) fetchProduct();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, user]);
 
   const avgRating = reviews.length
@@ -107,61 +111,35 @@ const ProductDetail = () => {
   };
 
   if (loading) return <Layout><div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
-  if (!product) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Product not found</h1><Link to="/products"><Button>Back to Products</Button></Link></div></Layout>;
+  if (!product) return <Layout><SEO title="Product not found" description="This product could not be found." url={`https://www.becoforganicchemicals.com/products/${slug}`} noindex /><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Product not found</h1><Link to="/products"><Button>Back to Products</Button></Link></div></Layout>;
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const inStock = product.stock_quantity > 0;
 
+  const productUrl = `${SITE_URL}/products/${product.slug}`;
   const whatsappMessage = inStock
-    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nQuantity: ${quantity}\nEstimated total: KES ${(product.price * quantity).toLocaleString()}\n\nProduct link: ${window.location.href}\n\nCould you help me place this order?`
-    : `Hi Becof Organic Chemicals! I'm interested in *${product.name}*, currently shown as out of stock on your website.\n\nProduct link: ${window.location.href}\n\nCould you let me know when it'll be back, or help me arrange a custom order?`;
+    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nQuantity: ${quantity}\nEstimated total: KES ${(product.price * quantity).toLocaleString()}\n\nProduct link: ${productUrl}\n\nCould you help me place this order?`
+    : `Hi Becof Organic Chemicals! I'm interested in *${product.name}*, currently shown as out of stock on your website.\n\nProduct link: ${productUrl}\n\nCould you let me know when it'll be back, or help me arrange a custom order?`;
 
   return (
     <Layout>
       <SEO
         title={product.name}
         description={product.short_description}
-        url={`https://www.becoforganicchemicals.com/products/${product.slug}`}
+        url={productUrl}
         image={images[0]}
+        type="product"
+        jsonLd={[
+          productSchema(product, images, reviews),
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Products", path: "/products" },
+            { name: product.name, path: `/products/${product.slug}` },
+          ]),
+        ]}
       />
 
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org/",
-          "@type": "Product",
-          name: product.name,
-          image: images.map((img: string) =>
-            img.startsWith("http")
-              ? img
-              : `https://www.becoforganicchemicals.com${img}`
-          ),
-          description: product.short_description,
-          sku: product.sku,
-          brand: {
-            "@type": "Brand",
-            name: "Becof Organic Chemicals",
-          },
-          offers: {
-            "@type": "Offer",
-            url: `https://www.becoforganicchemicals.com/products/${product.slug}`,
-            priceCurrency: "KES",
-            price: product.price,
-            availability:
-              product.stock_quantity > 0
-                ? "https://schema.org/InStock"
-                : "https://schema.org/OutOfStock",
-          },
-          // Google requires this to reflect genuine reviews — omit entirely
-          // rather than show a 0.0/0-reviews rating for an unreviewed product.
-          ...(reviews.length > 0 && {
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: avgRating.toFixed(1),
-              reviewCount: reviews.length,
-            },
-          }),
-        })}
-      </script>
+
 
       <section className="py-8">
         <div className="container">

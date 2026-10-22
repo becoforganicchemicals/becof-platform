@@ -13,6 +13,13 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  // Build-time prerender bundle (src/entry-server.tsx, run in Node by
+  // scripts/prerender.mjs): bundle dependencies in, since several ship as
+  // CommonJS that Node's ESM loader can't import by name. jsdom stays external.
+  ssr: {
+    noExternal: true,
+    external: ["jsdom"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

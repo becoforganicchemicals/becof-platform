@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { BookOpen, FlaskConical, FileText, Calendar, User, ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SEO from "@/components/SEO";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchLearnIndex } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
 
 interface Category {
   id: string;
@@ -40,25 +41,22 @@ const estimateReadTime = (content: string) => {
 const Learn = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("blogs-insights");
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [articles, setArticles] = useState<Article[]>(
+    () => getPrerendered<{ articles: Article[] }>("learn")?.articles ?? []
+  );
+  const [categories, setCategories] = useState<Category[]>(
+    () => getPrerendered<{ categories: Category[] }>("learn")?.categories ?? []
+  );
+  const [loading, setLoading] = useState(() => getPrerendered("learn") === undefined);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
-    const { data: catData } = await supabase.from("learn_categories").select("*");
-    const { data: artData } = await supabase
-      .from("learn_articles")
-      .select("*")
-      .eq("published", true)
-      .order("created_at", { ascending: false });
-
-    setCategories(catData || []);
-    setArticles(artData || []);
+    const data = await fetchLearnIndex();
+    setCategories(data.categories as Category[]);
+    setArticles(data.articles as Article[]);
     setLoading(false);
   };
 

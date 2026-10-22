@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchFeaturedPartners } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
 import { Building2, ArrowRight } from "lucide-react";
 
 interface FeaturedPartner {
@@ -23,17 +24,12 @@ const cardVariants = {
 };
 
 const FeaturedPartners = () => {
-  const [partners, setPartners] = useState<FeaturedPartner[]>([]);
+  const [partners, setPartners] = useState<FeaturedPartner[]>(
+    () => getPrerendered<FeaturedPartner[]>("featuredPartners") ?? []
+  );
 
   useEffect(() => {
-    supabase
-      .from("partner_profiles")
-      .select("id, display_name, tagline, logo_url")
-      .eq("published", true)
-      .eq("featured", true)
-      .order("created_at", { ascending: false })
-      .limit(8)
-      .then(({ data }) => setPartners(data || []));
+    fetchFeaturedPartners().then(setPartners);
   }, []);
 
   if (partners.length === 0) return null;

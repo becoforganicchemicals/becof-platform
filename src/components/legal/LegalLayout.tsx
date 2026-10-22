@@ -1,6 +1,8 @@
 import { ReactNode, useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
+import { useLocation } from "react-router-dom";
 import SEO from "@/components/SEO";
+import { SITE_URL } from "@/lib/structuredData";
 
 export interface LegalSection {
   id: string;
@@ -16,6 +18,7 @@ const LegalLayout = ({
   sections: LegalSection[];
   children: ReactNode;
 }) => {
+  const { pathname } = useLocation();
   const [activeId, setActiveId] = useState<string>(sections[0]?.id ?? "");
 
   // Highlight whichever section is currently in view as the visitor scrolls,
@@ -44,7 +47,7 @@ const LegalLayout = ({
 
   return (
     <Layout>
-      <SEO title={title} description={description} url="https://www.becoforganicchemicals.com" />
+      <SEO title={title} description={description} url={`${SITE_URL}${pathname}`} />
       <section className="py-10">
         <div className="container">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{title}</h1>

@@ -6,6 +6,7 @@ import PlatformHighlights from "@/components/home/PlatformHighlights";
 import FeaturedPartners from "@/components/home/FeaturedPartners";
 import FinalCTA from "@/components/home/FinalCTA";
 import SEO from "@/components/SEO";
+import { organizationSchema, websiteSchema } from "@/lib/structuredData";
 
 const Index = () => (
   <Layout>
@@ -13,6 +14,7 @@ const Index = () => (
       title="Sustainable Agricultural Solutions"
       description="Becof Organic Chemicals provides sustainable, eco-friendly agricultural solutions for farmers across Kenya and beyond. Discover our range of organic fertilizers, pesticides, and soil amendments."
       url="https://www.becoforganicchemicals.com"
+      jsonLd={[organizationSchema, websiteSchema]}
     />
     <HeroSection />
     <WhatWeDo />

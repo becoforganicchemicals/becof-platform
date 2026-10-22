@@ -1,7 +1,7 @@
 import Layout from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
-import { Helmet } from "react-helmet-async";
+import { organizationSchema, breadcrumbSchema } from "@/lib/structuredData";
 import { Target, Eye, Leaf, Users, Scale, Lightbulb, Handshake, TrendingUp, Globe, Smile, Settings, Rocket, } from "lucide-react";
 
 
@@ -78,52 +78,30 @@ const leadership = [
   },
 ];
 
-// Tells search engines who leads the company
-const leadershipSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Becof Organic Chemicals Limited",
-  url: "https://www.becoforganicchemicals.com",
-  foundingDate: "2024-11-20",
-  founder: [
-    {
-      "@type": "Person",
-      name: "Benjamin Baya",
-      jobTitle: "Co-Founder & Chief Executive Officer",
-      url: "https://benjaminbaya.com",
-    },
-    {
-      "@type": "Person",
-      name: "Andrew Omwenga",
-      jobTitle: "Co-Founder & Chief Operating Officer",
-    },
-  ],
-};
-
 const timeline = [
   {
     date: "October 2023",
-    title: "Becof Chemicals Founded",
+    title: "Where It Started",
     description:
       "Benjamin Baya registered Becof Chemicals as a business name, planting the first seeds of a sustainable chemical vision.",
   },
   {
     date: "December 27, 2023",
-    title: "Operational Launch",
+    title: "First Operations",
     description:
-      "Becof Chemicals officially began operations, focusing on redefining chemical manufacturing for environmental safety and agricultural transformation.",
+      "Trading as Becof Chemicals, the business began operations, focused on redefining chemical manufacturing for environmental safety and agricultural transformation.",
   },
   {
     date: "November 20, 2024",
-    title: "Incorporation as Limited Company",
+    title: "Becof Organic Chemicals Limited Founded",
     description:
-      "Becof Organic Chemicals Limited was officially incorporated as a Private Limited Company, marking a new era of growth and structured expansion.",
+      "The company was founded on its incorporation as a private limited company, with Benjamin Baya and Andrew Omwenga as co-founders and director shareholders, building on the work begun as Becof Chemicals.",
   },
   {
     date: "Present",
     title: "Building the Future",
     description:
-      "With two Director Shareholders, Becof continues pioneering eco-friendly agricultural solutions that protect human health and nurture the environment.",
+      "Becof continues pioneering eco-friendly agricultural solutions that protect human health and nurture the environment.",
   },
 ];
 
@@ -134,16 +112,14 @@ const About = () => (
       title="About"
       description="Learn about our company, leadership, and commitment to sustainable organic chemical manufacturing."
       url="https://www.becoforganicchemicals.com/about"
+      jsonLd={[organizationSchema, breadcrumbSchema([{ name: "Home", path: "/" }, { name: "About", path: "/about" }])]}
     />
-    <Helmet>
-      <script type="application/ld+json">{JSON.stringify(leadershipSchema)}</script>
-    </Helmet>
     <section className="py-16">
       <div className="container">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto text-center mb-16">
           <h1 className="text-4xl font-bold mb-6">About Becof</h1>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Becof Organic Chemicals Limited is an innovative agri-biotechnology company transforming agricultural sustainability in Kenya and beyond.
+            Founded in November 2024, Becof Organic Chemicals Limited is an agri-biotechnology company transforming agricultural sustainability in Kenya and beyond.
           </p>
         </motion.div>
 

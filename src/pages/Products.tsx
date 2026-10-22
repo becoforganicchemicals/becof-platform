@@ -10,14 +10,18 @@ import { Star, ShoppingCart, Search, Heart, Zap, ClipboardList } from "lucide-re
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
+import { fetchPublishedProducts } from "@/lib/publicData";
+import { getPrerendered } from "@/lib/prerenderData";
+
+type ProductsData = Awaited<ReturnType<typeof fetchPublishedProducts>>;
 
 const Products = () => {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>(() => getPrerendered<ProductsData>("products")?.products ?? []);
+  const [categories, setCategories] = useState<any[]>(() => getPrerendered<ProductsData>("products")?.categories ?? []);
+  const [loading, setLoading] = useState(() => getPrerendered("products") === undefined);
   const [activeParent, setActiveParent] = useState<string>("all");
   const [activeSub, setActiveSub] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -34,25 +38,9 @@ const Products = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      const [prodRes, catRes] = await Promise.all([
-        supabase
-          .from("products")
-          .select(`
-            *,
-            categories (
-              id,
-              name,
-              parent_id
-            )
-         `)
-          .eq("is_published", true),
-        supabase
-          .from("categories")
-          .select("id, name, slug, parent_id")
-      ]);
-      setProducts(prodRes.data || []);
-      setCategories(catRes.data || []);
+      const data = await fetchPublishedProducts();
+      setProducts(data.products);
+      setCategories(data.categories);
       setLoading(false);
 
       if (user) {

@@ -27,7 +27,7 @@ const TermsOfService = () => (
   <LegalLayout
     title="Terms of Service"
     description="The terms and conditions governing your use of Becof Organic Chemicals' website and services."
-    lastUpdated="11 September 2026"
+    lastUpdated="22 October 2026"
     sections={sections}
   >
     <section id="acceptance">
@@ -114,11 +114,27 @@ const TermsOfService = () => (
     <section id="returns">
       <h2>6. Returns, Refunds &amp; Cancellations</h2>
       <p>
-        Given the nature of agricultural chemical products, we generally cannot accept returns of products that
-        have been opened, used, or whose safety seal has been broken, for health, safety, and regulatory reasons.
-        If you receive a product that is damaged, defective, or materially different from what you ordered,
-        contact us within a reasonable time of delivery with your order reference and, where possible, photos of
-        the issue, and we will work with you in good faith toward a replacement or refund.
+        Our products contain live beneficial microorganisms whose effectiveness depends on how they are stored
+        and handled. Once a product has left our care we cannot verify those conditions, so for product quality,
+        safety, and regulatory reasons <strong>we do not accept returns</strong>, including of unopened products
+        and for change of mind.
+      </p>
+      <p>
+        We will, however, put things right if your order arrives with a problem that is our responsibility:
+      </p>
+      <ul>
+        <li>a container that is leaking, damaged, or has a broken safety seal on arrival;</li>
+        <li>a product different from the one you ordered; or</li>
+        <li>a product already past its expiry date when delivered.</li>
+      </ul>
+      <p>
+        To make a claim, contact us <strong>within 72 hours of delivery</strong> at info@becoforganic.com or
+        +254 735 283 397 with your order number, clear photos of the issue, and the batch number printed on the
+        product label. Once we confirm the claim, we will send a replacement at no cost to you, or, if a
+        replacement is not possible, refund the price of the affected product. We may ask you to keep the
+        affected product, or to hand it to our delivery agent, until the claim is resolved. Claims made after
+        72 hours, or for products that have been opened, used, or stored contrary to the label instructions, are
+        not covered, except where the law requires otherwise.
       </p>
       <p>
         Refunds, where approved, are issued to the M-Pesa number used for the original payment, or by another
