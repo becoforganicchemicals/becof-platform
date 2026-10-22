@@ -2,6 +2,8 @@
 // schema points back at the one Organization by @id, so search engines and AI
 // assistants connect products and articles to the same business entity.
 
+import { deliveryFeeFor } from "@/lib/delivery";
+
 export const SITE_URL = "https://www.becoforganicchemicals.com";
 const ORG_ID = `${SITE_URL}/#organization`;
 const WEBSITE_ID = `${SITE_URL}/#website`;
@@ -135,6 +137,12 @@ export const productSchema = (product: ProductLike, images: string[], reviews: R
         product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       seller: { "@id": ORG_ID },
       hasMerchantReturnPolicy: organizationSchema.hasMerchantReturnPolicy,
+      // Delivery cost for buying one unit (src/lib/delivery.ts)
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: { "@type": "MonetaryAmount", value: deliveryFeeFor(product.price), currency: "KES" },
+        shippingDestination: { "@type": "DefinedRegion", addressCountry: "KE" },
+      },
     },
     // Google requires this to reflect genuine reviews — omit entirely
     // rather than show a 0.0/0-reviews rating for an unreviewed product.

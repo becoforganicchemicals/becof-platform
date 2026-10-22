@@ -98,9 +98,10 @@ const TermsOfService = () => (
     <section id="delivery">
       <h2>5. Delivery</h2>
       <p>
-        <strong>Delivery is not included in the listed product price.</strong> Our sales team will contact you
-        after your order is placed to confirm the applicable delivery fee based on your location, before your
-        order is dispatched. Estimated delivery timeframes provided by our team are estimates only and not
+        We deliver anywhere in Kenya. Delivery is not included in the listed product price: a flat delivery fee
+        of <strong>KES 500</strong> per order is added at checkout and paid together with your order, and
+        delivery is <strong>free on orders with a product subtotal of KES 30,000 or more</strong> (before any
+        coupon or loyalty points discount). Estimated delivery timeframes provided by our team are estimates only and not
         guaranteed delivery dates; we are not liable for delays caused by circumstances outside our reasonable
         control, including but not limited to courier delays, weather, or events beyond our control.
       </p>

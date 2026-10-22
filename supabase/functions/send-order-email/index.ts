@@ -98,6 +98,7 @@ serve(async (req) => {
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:20px;">
               <p style="margin:0;color:#166534;font-weight:600;">Order #${orderRef}</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Total: KES ${order.total_amount?.toLocaleString()}</p>
+              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Delivery: ${order.delivery_fee ? `KES ${order.delivery_fee.toLocaleString()} (included in total)` : "Free"}</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Status: Pending Payment</p>
             </div>
             <p style="color:#475569;font-size:14px;">
@@ -116,7 +117,7 @@ serve(async (req) => {
             <h2 style="color:#166534;margin:0 0 16px;">New Order Received</h2>
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:20px;">
               <p style="margin:0;font-weight:600;color:#166534;">Order #${orderRef}</p>
-              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Amount: KES ${order.total_amount?.toLocaleString()}</p>
+              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Amount: KES ${order.total_amount?.toLocaleString()} (delivery: ${order.delivery_fee ? `KES ${order.delivery_fee.toLocaleString()}` : "free"})</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Customer: ${order.shipping_address?.full_name}</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Phone: ${order.shipping_address?.phone}</p>
             </div>

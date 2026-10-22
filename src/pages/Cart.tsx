@@ -7,6 +7,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import PendingOrderBanner from "@/components/PendingOrderBanner";
 import SEO from "@/components/SEO";
+import { deliveryFeeFor, formatKes, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
 
 // A signed-in shopper's own cart contents — never worth indexing.
 const CartSEO = () => (
@@ -16,6 +17,7 @@ const CartSEO = () => (
 const Cart = () => {
   const { loading: authLoading } = useAuth();
   const { items, loading, subtotal, updateQuantity, removeFromCart } = useCart();
+  const deliveryFee = deliveryFeeFor(subtotal);
 
   // Cart works for guests too (CartContext falls back to a localStorage
   // cart when signed out) — still wait on authLoading first so a logged-in
@@ -77,8 +79,14 @@ const Cart = () => {
               <h2 className="font-bold text-lg">Order Summary</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
-                <div className="border-t border-border pt-2 flex justify-between font-bold text-lg"><span>Total</span><span className="text-primary">KES {subtotal.toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Delivery (anywhere in Kenya)</span><span>{deliveryFee === 0 ? "Free" : formatKes(deliveryFee)}</span></div>
+                <div className="border-t border-border pt-2 flex justify-between font-bold text-lg"><span>Total</span><span className="text-primary">{formatKes(subtotal + deliveryFee)}</span></div>
               </div>
+              {deliveryFee > 0 && (
+                <p className="text-xs text-primary font-medium">
+                  Add {formatKes(FREE_DELIVERY_THRESHOLD - subtotal)} more for free delivery.
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">Have a coupon code? You can apply it on the checkout page.</p>
 
               <Link to="/checkout">

@@ -15,6 +15,7 @@ import { useLoyaltyPoints, KES_PER_POINT_REDEEMED, MAX_REDEMPTION_FRACTION } fro
 import { getStoredAffiliate } from "@/lib/affiliate";
 import SEO from "@/components/SEO";
 import { trackMetaEvent } from "@/lib/metaPixel";
+import { deliveryFeeFor, formatKes, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
 
 // A signed-in shopper's own checkout flow — never worth indexing.
 const CheckoutSEO = () => (
@@ -39,7 +40,8 @@ const Checkout = () => {
   const maxPointsByCap = Math.floor(((subtotal - discount) * MAX_REDEMPTION_FRACTION) / KES_PER_POINT_REDEEMED);
   const pointsToRedeem = usePoints ? Math.min(pointsBalance, maxPointsByCap) : 0;
   const pointsDiscount = pointsToRedeem * KES_PER_POINT_REDEEMED;
-  const total = subtotal - discount - pointsDiscount;
+  const deliveryFee = deliveryFeeFor(subtotal);
+  const total = subtotal - discount - pointsDiscount + deliveryFee;
 
   const [step, setStep] = useState<CheckoutStep>(resumeOrderId ? "loading" : "details");
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", address: "", city: "", notes: "" });
@@ -149,6 +151,7 @@ const Checkout = () => {
       const { data: order, error } = await supabase.from("orders").insert({
         user_id: user.id,
         total_amount: total,
+        delivery_fee: deliveryFee,
         shipping_address: shippingAddress,
         notes: form.notes || null,
         coupon_id: appliedCoupon?.id || null,
@@ -184,6 +187,7 @@ const Checkout = () => {
           city: form.city,
           notes: form.notes || null,
           total_amount: total,
+          delivery_fee: deliveryFee,
           coupon_id: appliedCoupon?.id || null,
           discount_amount: discount,
           affiliate_id: affiliateId,
@@ -513,9 +517,13 @@ const Checkout = () => {
                 <Label htmlFor="notes">Order Notes (optional)</Label>
                 <Textarea id="notes" name="notes" value={form.notes} onChange={handleChange} placeholder="Special delivery instructions..." />
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                <p className="font-medium mb-1">📦 Delivery Fee</p>
-                <p>Delivery is not free. Our sales team will contact you to confirm the delivery fee based on your location before dispatch.</p>
+              <div className="bg-muted/50 border border-border rounded-xl p-4 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">📦 Delivery</p>
+                <p>
+                  {deliveryFee === 0
+                    ? "Your order qualifies for free delivery anywhere in Kenya."
+                    : `${formatKes(deliveryFee)} delivery anywhere in Kenya, included in your total. Free on orders over ${formatKes(FREE_DELIVERY_THRESHOLD)}.`}
+                </p>
               </div>
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Processing…</> : `Continue to Payment · KES ${total.toLocaleString()}`}
@@ -537,6 +545,7 @@ const Checkout = () => {
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>KES {subtotal.toLocaleString()}</span></div>
                 {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({appliedCoupon?.code})</span><span>-KES {discount.toLocaleString()}</span></div>}
                 {pointsDiscount > 0 && <div className="flex justify-between text-primary"><span>Points redeemed ({pointsToRedeem} pts)</span><span>-KES {pointsDiscount.toLocaleString()}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{deliveryFee === 0 ? "Free" : formatKes(deliveryFee)}</span></div>
                 <div className="flex justify-between font-bold text-lg pt-1"><span>Total</span><span className="text-primary">KES {total.toLocaleString()}</span></div>
               </div>
 
@@ -564,7 +573,11 @@ const Checkout = () => {
                 </label>
               )}
 
-              <p className="text-xs text-muted-foreground pt-2">+ Delivery fee (confirmed by sales team)</p>
+              {deliveryFee > 0 && (
+                <p className="text-xs text-muted-foreground pt-2">
+                  Add {formatKes(FREE_DELIVERY_THRESHOLD - subtotal)} more for free delivery.
+                </p>
+              )}
             </div>
           </div>
         </div>

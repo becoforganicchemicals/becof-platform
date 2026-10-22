@@ -4,6 +4,7 @@ import SEO from "@/components/SEO";
 import { fetchProductBySlug, fetchProductReviews } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 import { productSchema, breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
+import { DELIVERY_SUMMARY } from "@/lib/delivery";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -198,6 +199,8 @@ const ProductDetail = () => {
                 </Badge>
                 {product.sku && <span className="text-xs text-muted-foreground">SKU: {product.sku}</span>}
               </div>
+
+              <p className="text-sm text-muted-foreground">📦 {DELIVERY_SUMMARY}</p>
 
               {/* Quantity & Actions */}
               <div className="space-y-3 pt-2">

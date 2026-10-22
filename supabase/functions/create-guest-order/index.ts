@@ -35,12 +35,13 @@ serve(async (req) => {
     });
 
     try {
-        const { email, phone, full_name, address, city, notes, items, total_amount, coupon_id, discount_amount, affiliate_id } = await req.json();
+        const { email, phone, full_name, address, city, notes, items, total_amount, delivery_fee, coupon_id, discount_amount, affiliate_id } = await req.json();
 
         if (!email || !String(email).trim()) return fail("Email is required");
         if (!phone || !full_name || !address || !city) return fail("Missing required shipping/contact details");
         if (!Array.isArray(items) || items.length === 0) return fail("Cart is empty");
         if (typeof total_amount !== "number" || total_amount <= 0) return fail("Invalid order total");
+        if (delivery_fee !== undefined && (typeof delivery_fee !== "number" || delivery_fee < 0)) return fail("Invalid delivery fee");
         for (const item of items) {
             if (!item?.product_id || !item?.quantity || !item?.product_name || typeof item?.unit_price !== "number") {
                 return fail("Invalid cart item");
@@ -58,6 +59,7 @@ serve(async (req) => {
             user_id: null,
             email: String(email).trim(),
             total_amount,
+            delivery_fee: delivery_fee || 0,
             shipping_address,
             notes: notes || null,
             coupon_id: coupon_id || null,
