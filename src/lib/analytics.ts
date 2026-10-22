@@ -108,8 +108,20 @@ export const trackPageView = (path: string) => {
   gtag("event", "page_view", { page_path: path, send_to: ids });
 };
 
-export const trackPurchase = (transactionId: string, value: number) => {
+// `items` lets Merchant Center report sales per product: item_id must match
+// the product's g:id in merchant-feed.xml (its SKU, else its database id).
+export const trackPurchase = (
+  transactionId: string,
+  value: number,
+  items: { item_id: string; item_name: string; price: number; quantity: number }[] = [],
+) => {
   const ids = activeIds();
   if (!ids.length) return;
-  gtag("event", "purchase", { transaction_id: transactionId, value, currency: "KES", send_to: ids });
+  gtag("event", "purchase", {
+    transaction_id: transactionId,
+    value,
+    currency: "KES",
+    ...(items.length && { items }),
+    send_to: ids,
+  });
 };

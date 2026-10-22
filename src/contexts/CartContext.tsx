@@ -14,6 +14,7 @@ interface CartItem {
     images: string[] | null;
     stock_quantity: number;
     slug: string;
+    sku: string | null;
   };
 }
 
@@ -81,7 +82,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const { data: products } = await supabase
       .from("products")
-      .select("id, name, price, images, stock_quantity, slug")
+      .select("id, name, price, images, stock_quantity, slug, sku")
       .in("id", entries.map(e => e.product_id));
 
     const productMap = new Map((products || []).map(p => [p.id, p]));
@@ -105,7 +106,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const { data } = await supabase
       .from("cart_items")
-      .select("id, product_id, quantity, products(id, name, price, images, stock_quantity, slug)")
+      .select("id, product_id, quantity, products(id, name, price, images, stock_quantity, slug, sku)")
       .eq("user_id", user.id);
     if (data) {
       // Filter out cart items whose product has been deleted (products join returns null)

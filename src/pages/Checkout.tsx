@@ -281,7 +281,20 @@ const Checkout = () => {
         pollIntervalRef.current = null;
         setReceipt(data.mpesa_receipt_number || "");
         trackMetaEvent("Purchase", { value: displayTotal, currency: "KES" }, orderId);
-        trackPurchase(orderId, displayTotal);
+        // A resumed order's items aren't necessarily what's in the cart now,
+        // so only itemise purchases placed in this checkout session.
+        trackPurchase(
+          orderId,
+          displayTotal,
+          resumeOrderId
+            ? []
+            : items.map((item) => ({
+                item_id: item.product.sku || item.product_id,
+                item_name: item.product.name,
+                price: item.product.price,
+                quantity: item.quantity,
+              })),
+        );
         await clearCart();
         setStep("success");
       } else if (data?.payment_status === "failed" || data?.payment_status === "cancelled") {
