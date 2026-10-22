@@ -2,17 +2,17 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
-        { "source": "/cart", "destination": "/app-shell.html" },
-        { "source": "/checkout", "destination": "/app-shell.html" },
-        { "source": "/wishlist", "destination": "/app-shell.html" },
-        { "source": "/signin", "destination": "/app-shell.html" },
-        { "source": "/profile", "destination": "/app-shell.html" },
-        { "source": "/custom-order", "destination": "/app-shell.html" },
-        { "source": "/application-status", "destination": "/app-shell.html" },
-        { "source": "/distributor", "destination": "/app-shell.html" },
-        { "source": "/admin/:path*", "destination": "/app-shell.html" },
-        { "source": "/products/:slug", "destination": "/app-shell.html" },
-        { "source": "/learn/:slug", "destination": "/app-shell.html" }
+        { "source": "/cart", "destination": "/app-shell" },
+        { "source": "/checkout", "destination": "/app-shell" },
+        { "source": "/wishlist", "destination": "/app-shell" },
+        { "source": "/signin", "destination": "/app-shell" },
+        { "source": "/profile", "destination": "/app-shell" },
+        { "source": "/custom-order", "destination": "/app-shell" },
+        { "source": "/application-status", "destination": "/app-shell" },
+        { "source": "/distributor", "destination": "/app-shell" },
+        { "source": "/admin/:path*", "destination": "/app-shell" },
+        { "source": "/products/:slug", "destination": "/app-shell" },
+        { "source": "/learn/:slug", "destination": "/app-shell" }
     ],
     "headers": [
         {
