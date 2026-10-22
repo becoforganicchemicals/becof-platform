@@ -23,7 +23,7 @@ const PrivacyPolicy = () => (
   <LegalLayout
     title="Privacy Policy"
     description="How Becof Organic Chemicals Limited collects, uses, and protects your personal data."
-    lastUpdated="20 October 2026"
+    lastUpdated="23 October 2026"
     sections={sections}
   >
     <section id="introduction">
@@ -137,6 +137,7 @@ const PrivacyPolicy = () => (
         <li><strong>Resend</strong> — to deliver transactional emails (order confirmations, receipts, notifications)</li>
         <li><strong>Google Analytics</strong> — only if you've consented to analytics cookies, to help us understand site traffic and usage patterns</li>
         <li><strong>Meta Platforms (Meta Pixel)</strong> — only if you've consented to marketing cookies, to measure how our Facebook and Instagram ads perform (page views, enquiries, applications and purchases — not the contents of your forms)</li>
+        <li><strong>Google (Merchant Center tag)</strong> — only if you've consented to marketing cookies, to measure how our Google Shopping listings perform (page views and purchases)</li>
         <li><strong>Professional advisers</strong> (accountants, auditors, lawyers) — where necessary for our legitimate business operations</li>
         <li><strong>Regulators and law enforcement</strong> — where required by law, court order, or to protect our legal rights</li>
       </ul>
@@ -164,7 +165,8 @@ const PrivacyPolicy = () => (
         We use browser local storage for essential functionality — keeping you signed in, capturing a referral
         code, and remembering dismissed prompts — which runs regardless of consent, since the site can't work
         without it. With your explicit consent, given via the cookie banner on your first visit, we also use
-        Google Analytics to understand site traffic and the Meta Pixel to measure our ads; neither is loaded
+        Google Analytics to understand site traffic, and the Meta Pixel and Google's Merchant Center tag to
+        measure our ads and Shopping listings; none of these is loaded
         unless you agree to it, and you can change that choice at any time. See our <a href="/legal/cookies">Cookie Policy</a> for full detail,
         including how to review or withdraw your consent.
       </p>

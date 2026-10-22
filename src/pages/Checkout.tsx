@@ -15,6 +15,7 @@ import { useLoyaltyPoints, KES_PER_POINT_REDEEMED, MAX_REDEMPTION_FRACTION } fro
 import { getStoredAffiliate } from "@/lib/affiliate";
 import SEO from "@/components/SEO";
 import { trackMetaEvent } from "@/lib/metaPixel";
+import { trackPurchase } from "@/lib/analytics";
 import { deliveryFeeFor, formatKes, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
 
 // A signed-in shopper's own checkout flow — never worth indexing.
@@ -280,6 +281,7 @@ const Checkout = () => {
         pollIntervalRef.current = null;
         setReceipt(data.mpesa_receipt_number || "");
         trackMetaEvent("Purchase", { value: displayTotal, currency: "KES" }, orderId);
+        trackPurchase(orderId, displayTotal);
         await clearCart();
         setStep("success");
       } else if (data?.payment_status === "failed" || data?.payment_status === "cancelled") {
@@ -519,11 +521,15 @@ const Checkout = () => {
               </div>
               <div className="bg-muted/50 border border-border rounded-xl p-4 text-sm text-muted-foreground">
                 <p className="font-medium text-foreground mb-1">📦 Delivery</p>
-                <p>
-                  {deliveryFee === 0
-                    ? "Your order qualifies for free delivery anywhere in Kenya."
-                    : `${formatKes(deliveryFee)} delivery anywhere in Kenya, included in your total. Free on orders over ${formatKes(FREE_DELIVERY_THRESHOLD)}.`}
-                </p>
+                {deliveryFee === 0 ? (
+                  <p>Your order qualifies for free delivery anywhere in Kenya.</p>
+                ) : (
+                  <>
+                    <p>{formatKes(deliveryFee)} delivery anywhere in Kenya.</p>
+                    <p>Included in your total.</p>
+                    <p>Free on orders over {formatKes(FREE_DELIVERY_THRESHOLD)}.</p>
+                  </>
+                )}
               </div>
               <Button type="submit" className="w-full" size="lg" disabled={submitting}>
                 {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" />Processing…</> : `Continue to Payment · KES ${total.toLocaleString()}`}

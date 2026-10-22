@@ -22,7 +22,7 @@ const CookiePolicy = () => {
     <LegalLayout
       title="Cookie Policy"
       description="What cookies and browser storage Becof Organic Chemicals actually uses, and how to control them."
-      lastUpdated="20 October 2026"
+      lastUpdated="23 October 2026"
       sections={sections}
     >
       <section id="what-are-cookies">
@@ -96,16 +96,18 @@ const CookiePolicy = () => {
       <section id="marketing">
         <h2>5. Marketing (Optional)</h2>
         <p>
-          With your consent, we use the <strong>Meta Pixel</strong> to measure how our Facebook and Instagram ads
-          perform — for example, recording that a visitor who clicked one of our ads went on to view a page, send
-          an enquiry, submit a distributor application, or complete a purchase. It does not receive the contents
-          of the forms you fill in.
+          With your consent, we use the <strong>Meta Pixel</strong> and <strong>Google's Merchant Center tag</strong>
+          to measure how our Facebook and Instagram ads and our Google Shopping listings perform — for example,
+          recording that a visitor who clicked one of our ads or listings went on to view a page, send an enquiry,
+          submit a distributor application, or complete a purchase. They do not receive the contents of the forms
+          you fill in.
         </p>
         <p>
-          The Meta Pixel is only loaded, and only sets its cookies, after you actively choose "Accept All" or
-          enable the Marketing toggle in Customize. If you choose "Reject Non-Essential," or haven't made a
-          choice yet, it is never loaded and sets nothing. Data collected is subject to{" "}
-          <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer">Meta's own Privacy Policy</a>.
+          These are only loaded, and only set their cookies, after you actively choose "Accept All" or enable the
+          Marketing toggle in Customize. If you choose "Reject Non-Essential," or haven't made a choice yet, they
+          are never loaded and set nothing. Data collected is subject to{" "}
+          <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer">Meta's Privacy Policy</a> and{" "}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>.
         </p>
       </section>
 

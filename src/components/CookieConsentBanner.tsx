@@ -96,7 +96,7 @@ const CookieConsentBanner = () => {
             <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <div className="pr-4">
                 <p className="text-sm font-medium">Marketing</p>
-                <p className="text-xs text-muted-foreground">Meta Pixel — measures how our Facebook and Instagram ads perform. Optional.</p>
+                <p className="text-xs text-muted-foreground">Meta Pixel and Google Merchant Center — measure how our ads and Google Shopping listings perform. Optional.</p>
               </div>
               <Switch checked={draftMarketing} onCheckedChange={setDraftMarketing} />
             </div>

@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { loadGoogleAnalytics, unloadGoogleAnalytics } from "@/lib/analytics";
+import {
+  enableGoogleAnalytics, disableGoogleAnalytics, enableGoogleMarketing, disableGoogleMarketing,
+} from "@/lib/analytics";
 import { loadMetaPixel, unloadMetaPixel } from "@/lib/metaPixel";
 
 const STORAGE_KEY = "becof-cookie-consent";
@@ -41,8 +43,11 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
 
   // Apply whatever choice was already stored, once, on first load.
   useEffect(() => {
-    if (stored?.analytics) loadGoogleAnalytics();
-    if (stored?.marketing) loadMetaPixel();
+    if (stored?.analytics) enableGoogleAnalytics();
+    if (stored?.marketing) {
+      loadMetaPixel();
+      enableGoogleMarketing();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -50,10 +55,15 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
     const next: StoredConsent = { analytics, marketing, decidedAt: new Date().toISOString() };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
     setStored(next);
-    if (analytics) loadGoogleAnalytics();
-    else unloadGoogleAnalytics();
-    if (marketing) loadMetaPixel();
-    else unloadMetaPixel();
+    if (analytics) enableGoogleAnalytics();
+    else disableGoogleAnalytics();
+    if (marketing) {
+      loadMetaPixel();
+      enableGoogleMarketing();
+    } else {
+      unloadMetaPixel();
+      disableGoogleMarketing();
+    }
     setPreferencesOpen(false);
   };
 
