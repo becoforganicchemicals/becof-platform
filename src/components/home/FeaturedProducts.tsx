@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, ShoppingCart, ArrowRight, Package } from "lucide-react";
 import { fetchFeaturedProducts } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
+import { packSummary, type PackSize } from "@/lib/packs";
 import { useCart } from "@/contexts/CartContext";
 
 interface Product {
@@ -17,6 +18,7 @@ interface Product {
   slug: string;
   stock_quantity: number;
   categories: { name: string } | null;
+  product_variants?: PackSize[];
 }
 
 const FeaturedProducts = () => {
@@ -145,7 +147,10 @@ const FeaturedProducts = () => {
                     )}
 
                     <div className="flex items-center justify-between pt-2 border-t border-border mt-auto">
-                      <span className="font-bold text-primary">{formatPrice(p.price)}</span>
+                      <span>
+                        <span className="font-bold text-primary">{formatPrice(p.price)}</span>
+                        <span className="block text-xs text-muted-foreground">{packSummary(p.product_variants)}</span>
+                      </span>
                       {inStock ? (
                         <Button
                           size="sm"

@@ -2,10 +2,14 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
+import { formatLitres, type PackSize } from "@/lib/packs";
 
-interface CartItem {
-  id: string;
+// One cart line per product + pack size. Quantity is a number of packs; stock
+// is in litres and shared by every pack size of the same product.
+export interface CartItem {
+  id: string; // cart_items row id, or "productId:variantId" for a guest
   product_id: string;
+  variant_id: string | null;
   quantity: number;
   product: {
     id: string;
@@ -16,6 +20,7 @@ interface CartItem {
     slug: string;
     sku: string | null;
   };
+  pack: PackSize & { id: string | null };
 }
 
 interface CartContextType {
@@ -23,9 +28,13 @@ interface CartContextType {
   loading: boolean;
   itemCount: number;
   subtotal: number;
-  addToCart: (productId: string, quantity?: number) => Promise<void>;
-  updateQuantity: (productId: string, quantity: number) => Promise<void>;
-  removeFromCart: (productId: string) => Promise<void>;
+  litresInCart: (productId: string) => number;
+  // Without a variantId, adds the product's smallest (1 L) pack.
+  addToCart: (productId: string, quantity?: number, variantId?: string) => Promise<void>;
+  // Several packs at once (calculator "add to cart"). Resolves true on success.
+  addPacksToCart: (lines: { productId: string; variantId: string; quantity: number }[]) => Promise<boolean>;
+  updateQuantity: (lineId: string, quantity: number) => Promise<void>;
+  removeFromCart: (lineId: string) => Promise<void>;
   clearCart: () => Promise<void>;
 }
 
@@ -34,7 +43,9 @@ const CartContext = createContext<CartContextType>({
   loading: false,
   itemCount: 0,
   subtotal: 0,
+  litresInCart: () => 0,
   addToCart: async () => {},
+  addPacksToCart: async () => false,
   updateQuantity: async () => {},
   removeFromCart: async () => {},
   clearCart: async () => {},
@@ -42,14 +53,33 @@ const CartContext = createContext<CartContextType>({
 
 export const useCart = () => useContext(CartContext);
 
+const PRODUCT_FIELDS = "id, name, price, images, stock_quantity, slug, sku";
+
+// A cart_items row with its product and pack joined
+interface CartRow {
+  id: string;
+  product_id: string;
+  variant_id: string | null;
+  quantity: number;
+  products: CartItem["product"] | null;
+  product_variants: PackSize | null;
+}
+const PACK_FIELDS = "id, size_liters, price, sku, is_active";
+
+// Cart lines created before pack sizes existed have no variant: treat them
+// as the product's 1 L pack at its listed price.
+const legacyPack = (product: CartItem["product"]): CartItem["pack"] => ({
+  id: null, size_liters: 1, price: product.price, sku: product.sku,
+});
+
 // ── Guest (signed-out) cart — kept client-side only, never touches the
 // cart_items table (which is RLS-scoped to auth.uid() and has no anon
 // access, deliberately, to keep a signed-in user's cart private). A guest's
-// cart is just a list of product ids + quantities in localStorage, hydrated
-// against live product data on read so price/stock/image are always current.
+// cart is a list of product + pack ids and quantities in localStorage,
+// hydrated against live product data on read so price/stock/image are current.
 const GUEST_CART_KEY = "becof-guest-cart";
 
-type GuestCartEntry = { product_id: string; quantity: number };
+type GuestCartEntry = { product_id: string; variant_id?: string | null; quantity: number };
 
 const readGuestCart = (): GuestCartEntry[] => {
   try {
@@ -67,6 +97,22 @@ const writeGuestCart = (entries: GuestCartEntry[]) => {
   } catch { /* ignore */ }
 };
 
+// The pack to add, plus the product's stock, so a request for more litres
+// than are in stock can be refused before it reaches the cart.
+const resolvePack = async (productId: string, variantId?: string) => {
+  const { data } = await supabase
+    .from("products")
+    .select(`stock_quantity, product_variants (${PACK_FIELDS})`)
+    .eq("id", productId)
+    .maybeSingle();
+  if (!data) return null;
+  const packs = ((data.product_variants || []) as PackSize[]).filter((p) => p.is_active !== false);
+  const pack = variantId
+    ? packs.find((p) => p.id === variantId)
+    : [...packs].sort((a, b) => a.size_liters - b.size_liters)[0];
+  return { pack: pack || null, stock: data.stock_quantity as number };
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
@@ -82,22 +128,35 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const { data: products } = await supabase
       .from("products")
-      .select("id, name, price, images, stock_quantity, slug, sku")
-      .in("id", entries.map(e => e.product_id));
+      .select(`${PRODUCT_FIELDS}, product_variants (${PACK_FIELDS})`)
+      .in("id", [...new Set(entries.map(e => e.product_id))]);
 
     const productMap = new Map((products || []).map(p => [p.id, p]));
-    // Drop entries for products that no longer exist/are unpublished
-    // (deleted, or auto-unpublished at 0 stock) — same convention as the
-    // signed-in cart filtering out a deleted product's join.
-    const stillValid = entries.filter(e => productMap.has(e.product_id));
-    if (stillValid.length !== entries.length) writeGuestCart(stillValid);
-
-    setItems(stillValid.map(e => ({
-      id: e.product_id,
-      product_id: e.product_id,
-      quantity: e.quantity,
-      product: productMap.get(e.product_id)!,
-    })));
+    // Resolve each entry to a live pack. Entries saved before pack sizes
+    // existed (no variant_id) become the 1 L pack; duplicates are merged.
+    // Products that no longer exist/are unpublished, and pack sizes that were
+    // withdrawn, are dropped — same as the signed-in cart.
+    const lines = new Map<string, CartItem>();
+    for (const e of entries) {
+      const product = productMap.get(e.product_id);
+      if (!product) continue;
+      const packs = ((product.product_variants || []) as PackSize[]).filter(p => p.is_active !== false);
+      const { product_variants: _packs, ...productFields } = product;
+      const pack = e.variant_id
+        ? packs.find(p => p.id === e.variant_id)
+        : [...packs].sort((a, b) => a.size_liters - b.size_liters)[0] ?? legacyPack(productFields);
+      if (!pack) continue;
+      const key = `${e.product_id}:${pack.id}`;
+      const existing = lines.get(key);
+      if (existing) existing.quantity += e.quantity;
+      else lines.set(key, {
+        id: key, product_id: e.product_id, variant_id: pack.id, quantity: e.quantity,
+        product: productFields, pack,
+      });
+    }
+    const resolved = [...lines.values()];
+    writeGuestCart(resolved.map(l => ({ product_id: l.product_id, variant_id: l.variant_id, quantity: l.quantity })));
+    setItems(resolved);
     setLoading(false);
   }, []);
 
@@ -106,14 +165,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const { data } = await supabase
       .from("cart_items")
-      .select("id, product_id, quantity, products(id, name, price, images, stock_quantity, slug, sku)")
+      .select(`id, product_id, variant_id, quantity, products(${PRODUCT_FIELDS}), product_variants(${PACK_FIELDS})`)
       .eq("user_id", user.id);
     if (data) {
-      // Filter out cart items whose product has been deleted (products join returns null)
+      const rows = data as unknown as CartRow[];
+      // Lines whose pack size was withdrawn (join hidden by RLS) are removed,
+      // so they can't block adding that size again later.
+      const withdrawn = rows.filter(d => d.variant_id && !d.product_variants).map(d => d.id);
+      if (withdrawn.length) await supabase.from("cart_items").delete().in("id", withdrawn);
       setItems(
-        data
-          .filter((d: any) => d.products != null)
-          .map((d: any) => ({ ...d, product: d.products }))
+        rows
+          // Filter out cart items whose product has been deleted (products join returns null)
+          .filter((d): d is CartRow & { products: CartItem["product"] } => d.products != null && !withdrawn.includes(d.id))
+          .map(d => ({
+            id: d.id,
+            product_id: d.product_id,
+            variant_id: d.variant_id,
+            quantity: d.quantity,
+            product: d.products,
+            pack: d.product_variants ?? legacyPack(d.products),
+          }))
       );
     }
     setLoading(false);
@@ -132,16 +203,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     (async () => {
       for (const entry of guestEntries) {
-        const { data: existing } = await supabase
+        let query = supabase
           .from("cart_items")
           .select("id, quantity")
           .eq("user_id", user.id)
-          .eq("product_id", entry.product_id)
-          .maybeSingle();
+          .eq("product_id", entry.product_id);
+        query = entry.variant_id ? query.eq("variant_id", entry.variant_id) : query.is("variant_id", null);
+        const { data: existing } = await query.maybeSingle();
         if (existing) {
           await supabase.from("cart_items").update({ quantity: existing.quantity + entry.quantity }).eq("id", existing.id);
         } else {
-          await supabase.from("cart_items").insert({ user_id: user.id, product_id: entry.product_id, quantity: entry.quantity });
+          await supabase.from("cart_items").insert({
+            user_id: user.id, product_id: entry.product_id, variant_id: entry.variant_id ?? null, quantity: entry.quantity,
+          });
         }
       }
       writeGuestCart([]);
@@ -149,52 +223,127 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, [user, fetchCart]);
 
-  const addToCart = async (productId: string, quantity = 1) => {
+  const litresInCart = (productId: string) =>
+    items.filter(i => i.product_id === productId).reduce((sum, i) => sum + i.pack.size_liters * i.quantity, 0);
+
+  const addToCart = async (productId: string, quantity = 1, variantId?: string) => {
+    const resolved = await resolvePack(productId, variantId);
+    if (!resolved?.pack) { toast.error("This product isn't available right now"); return; }
+    const { pack, stock } = resolved;
+
+    const litresAfter = litresInCart(productId) + pack.size_liters * quantity;
+    if (litresAfter > stock) {
+      toast.error(`Only ${formatLitres(stock)} in stock`, {
+        description: litresInCart(productId) > 0 ? `You already have ${formatLitres(litresInCart(productId))} in your cart.` : undefined,
+      });
+      return;
+    }
+
+    const existing = items.find(i => i.product_id === productId && i.variant_id === pack.id);
+    if (existing) {
+      await updateQuantity(existing.id, existing.quantity + quantity);
+      toast.success("Added to cart");
+      return;
+    }
+
     if (!user) {
       const entries = readGuestCart();
-      const existing = entries.find(e => e.product_id === productId);
-      if (existing) existing.quantity += quantity;
-      else entries.push({ product_id: productId, quantity });
+      entries.push({ product_id: productId, variant_id: pack.id, quantity });
       writeGuestCart(entries);
       toast.success("Added to cart");
       await fetchGuestCart();
       return;
     }
-    const existing = items.find(i => i.product_id === productId);
-    if (existing) {
-      await updateQuantity(productId, existing.quantity + quantity);
-      return;
-    }
-    const { error } = await supabase.from("cart_items").insert({ user_id: user.id, product_id: productId, quantity });
+    const { error } = await supabase.from("cart_items").insert({ user_id: user.id, product_id: productId, variant_id: pack.id, quantity });
     if (error) { toast.error("Failed to add to cart"); return; }
     toast.success("Added to cart");
     fetchCart();
   };
 
-  const updateQuantity = async (productId: string, quantity: number) => {
-    if (quantity <= 0) { await removeFromCart(productId); return; }
+  const addPacksToCart = async (lines: { productId: string; variantId: string; quantity: number }[]) => {
+    const wanted = lines.filter(l => l.quantity > 0);
+    if (!wanted.length) return false;
+
+    // Check stock per product against live data, counting what's already in the cart.
+    const productIds = [...new Set(wanted.map(l => l.productId))];
+    const { data: products } = await supabase
+      .from("products")
+      .select(`id, name, stock_quantity, product_variants (${PACK_FIELDS})`)
+      .in("id", productIds);
+    const byId = new Map((products || []).map(p => [p.id, p]));
+    for (const productId of productIds) {
+      const product = byId.get(productId);
+      const packs = (product?.product_variants || []) as PackSize[];
+      let litres = litresInCart(productId);
+      for (const l of wanted.filter(w => w.productId === productId)) {
+        const pack = packs.find(p => p.id === l.variantId && p.is_active !== false);
+        if (!product || !pack) { toast.error("Some of these packs aren't available right now"); return false; }
+        litres += pack.size_liters * l.quantity;
+      }
+      if (product && litres > product.stock_quantity) {
+        toast.error(`Only ${formatLitres(product.stock_quantity)} of ${product.name} in stock`);
+        return false;
+      }
+    }
+
     if (!user) {
-      const entries = readGuestCart();
-      const existing = entries.find(e => e.product_id === productId);
-      if (!existing) return;
-      existing.quantity = quantity;
+      const entries = items.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity }));
+      for (const l of wanted) {
+        const existing = entries.find(e => e.product_id === l.productId && e.variant_id === l.variantId);
+        if (existing) existing.quantity += l.quantity;
+        else entries.push({ product_id: l.productId, variant_id: l.variantId, quantity: l.quantity });
+      }
       writeGuestCart(entries);
+      await fetchGuestCart();
+    } else {
+      // Read the cart fresh rather than trusting state, so each line is
+      // updated or inserted exactly once.
+      const { data: current } = await supabase
+        .from("cart_items").select("id, product_id, variant_id, quantity").eq("user_id", user.id);
+      for (const l of wanted) {
+        const existing = (current || []).find(c => c.product_id === l.productId && c.variant_id === l.variantId);
+        const { error } = existing
+          ? await supabase.from("cart_items").update({ quantity: existing.quantity + l.quantity }).eq("id", existing.id)
+          : await supabase.from("cart_items").insert({ user_id: user.id, product_id: l.productId, variant_id: l.variantId, quantity: l.quantity });
+        if (error) { toast.error("Failed to add to cart"); await fetchCart(); return false; }
+      }
+      await fetchCart();
+    }
+    toast.success(wanted.length === 1 ? "Added to cart" : `Added ${wanted.length} items to cart`);
+    return true;
+  };
+
+  const updateQuantity = async (lineId: string, quantity: number) => {
+    if (quantity <= 0) { await removeFromCart(lineId); return; }
+    const line = items.find(i => i.id === lineId);
+    if (!line) return;
+    const extraLitres = (quantity - line.quantity) * line.pack.size_liters;
+    if (extraLitres > 0 && litresInCart(line.product_id) + extraLitres > line.product.stock_quantity) {
+      toast.error(`Only ${formatLitres(line.product.stock_quantity)} in stock`);
+      return;
+    }
+    if (!user) {
+      writeGuestCart(items.map(i => ({
+        product_id: i.product_id, variant_id: i.variant_id, quantity: i.id === lineId ? quantity : i.quantity,
+      })));
       await fetchGuestCart();
       return;
     }
-    const { error } = await supabase.from("cart_items").update({ quantity }).eq("user_id", user.id).eq("product_id", productId);
+    const { error } = await supabase.from("cart_items").update({ quantity }).eq("id", lineId).eq("user_id", user.id);
     if (error) { toast.error("Failed to update cart"); return; }
     fetchCart();
   };
 
-  const removeFromCart = async (productId: string) => {
+  const removeFromCart = async (lineId: string) => {
     if (!user) {
-      writeGuestCart(readGuestCart().filter(e => e.product_id !== productId));
+      writeGuestCart(items.filter(i => i.id !== lineId).map(i => ({
+        product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity,
+      })));
       toast.success("Removed from cart");
       await fetchGuestCart();
       return;
     }
-    await supabase.from("cart_items").delete().eq("user_id", user.id).eq("product_id", productId);
+    await supabase.from("cart_items").delete().eq("id", lineId).eq("user_id", user.id);
     toast.success("Removed from cart");
     fetchCart();
   };
@@ -210,10 +359,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-  const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const subtotal = items.reduce((sum, i) => sum + i.pack.price * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, loading, itemCount, subtotal, addToCart, updateQuantity, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{ items, loading, itemCount, subtotal, litresInCart, addToCart, addPacksToCart, updateQuantity, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );

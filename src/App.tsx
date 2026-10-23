@@ -24,6 +24,9 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Careers from "./pages/Careers";
 import LearnDetail from "./pages/LearnDetail";
+import Crops from "./pages/Crops";
+import CropGuide from "./pages/CropGuide";
+import Faq from "./pages/Faq";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CookiePolicy from "./pages/legal/CookiePolicy";
@@ -114,6 +117,9 @@ const App = ({ Router = BrowserRouter }: { Router?: RouterComponent }) => {
               <Route path="/products/:slug" element={<ProductDetail />} />
               <Route path="/learn" element={<Learn />} />
               <Route path="/learn/:slug" element={<LearnDetail />} />
+              <Route path="/crops" element={<Crops />} />
+              <Route path="/crops/:slug" element={<CropGuide />} />
+              <Route path="/faq" element={<Faq />} />
               <Route path="/impact" element={<Impact />} />
               <Route path="/about" element={<About />} />
               <Route path="/partners" element={<Partners />} />

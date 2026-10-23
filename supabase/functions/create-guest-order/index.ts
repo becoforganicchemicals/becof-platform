@@ -46,6 +46,10 @@ serve(async (req) => {
             if (!item?.product_id || !item?.quantity || !item?.product_name || typeof item?.unit_price !== "number") {
                 return fail("Invalid cart item");
             }
+            if (item.pack_size_liters !== undefined && item.pack_size_liters !== null
+                && (typeof item.pack_size_liters !== "number" || item.pack_size_liters <= 0)) {
+                return fail("Invalid pack size");
+            }
         }
 
         const supabase = createClient(
@@ -76,6 +80,8 @@ serve(async (req) => {
         const orderItems = items.map((item: any) => ({
             order_id: order.id,
             product_id: item.product_id,
+            variant_id: item.variant_id || null,
+            pack_size_liters: item.pack_size_liters ?? null,
             product_name: item.product_name,
             quantity: item.quantity,
             unit_price: item.unit_price,

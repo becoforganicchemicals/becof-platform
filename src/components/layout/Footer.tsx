@@ -23,7 +23,9 @@ const socialLinks = [
 
 const shopLinks = [
   { label: "Shop Products", to: "/products" },
+  { label: "Shop by Crop", to: "/crops" },
   { label: "Custom / Bulk Order", to: "/custom-order" },
+  { label: "FAQ", to: "/faq" },
   { label: "Learn", to: "/learn" },
   { label: "Our Impact", to: "/impact" },
 ];

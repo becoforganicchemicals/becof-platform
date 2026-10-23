@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import SEO from "@/components/SEO";
 import { fetchProductBySlug, fetchProductReviews } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 import { productSchema, breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
-import { DELIVERY_SUMMARY } from "@/lib/delivery";
+import { DELIVERY_SUMMARY, formatKes } from "@/lib/delivery";
+import { formatLitres, isPackInStock, maxPacks, pricePerLitre, sortPacks, type PackSize } from "@/lib/packs";
+import { programmesForProduct } from "@/lib/cropProgrammes";
+import PackCalculator from "@/components/product/PackCalculator";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -20,7 +23,8 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, litresInCart } = useCart();
+  const [searchParams, setSearchParams] = useSearchParams();
   const seed = getPrerendered<{ product: any; reviews: any[] }>(`product:${slug}`);
   const [product, setProduct] = useState<any>(() => seed?.product ?? null);
   const [loading, setLoading] = useState(() => !seed);
@@ -121,9 +125,33 @@ const ProductDetail = () => {
     setDownloadingPdf(false);
   };
 
+  // Pack sizes, smallest first. Products without any fall back to a single
+  // 1 L pack at the listed price.
+  const packs: PackSize[] = product
+    ? sortPacks(product.product_variants).length
+      ? sortPacks(product.product_variants)
+      : [{ id: "", size_liters: 1, price: product.price, sku: product.sku }]
+    : [];
+  // The selected size lives in the URL (?size=20) so each size has its own
+  // link for sharing, Google Shopping and the structured data.
+  const requestedSize = Number(searchParams.get("size"));
+  const selectedPack =
+    packs.find((p) => p.size_liters === requestedSize) ??
+    packs.find((p) => product && isPackInStock(p, product.stock_quantity)) ??
+    packs[0];
+  const selectPack = (pack: PackSize) => {
+    setQuantity(1);
+    setSearchParams(pack === packs[0] ? {} : { size: String(pack.size_liters) }, { replace: true });
+  };
+  const maxQuantity = product && selectedPack
+    ? Math.max(1, maxPacks(selectedPack, product.stock_quantity, litresInCart(product.id)))
+    : 1;
+
+  const handleAddToCart = () => addToCart(product.id, quantity, selectedPack?.id || undefined);
+
   const handleBuyNow = async () => {
     if (!user) { toast.error("Please sign in to proceed"); return; }
-    await addToCart(product.id, quantity);
+    await addToCart(product.id, quantity, selectedPack?.id || undefined);
     navigate("/checkout");
   };
 
@@ -133,10 +161,12 @@ const ProductDetail = () => {
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const inStock = product.stock_quantity > 0;
+  const packInStock = isPackInStock(selectedPack, product.stock_quantity);
+  const recommendedFor = programmesForProduct(product.slug);
 
   const productUrl = `${SITE_URL}/products/${product.slug}`;
   const whatsappMessage = inStock
-    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nQuantity: ${quantity}\nEstimated total: KES ${(product.price * quantity).toLocaleString()}\n\nProduct link: ${productUrl}\n\nCould you help me place this order?`
+    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nPack size: ${formatLitres(selectedPack.size_liters)}\nQuantity: ${quantity}\nEstimated total: KES ${(selectedPack.price * quantity).toLocaleString()}\n\nProduct link: ${productUrl}\n\nCould you help me place this order?`
     : `Hi Becof Organic Chemicals! I'm interested in *${product.name}*, currently shown as out of stock on your website.\n\nProduct link: ${productUrl}\n\nCould you let me know when it'll be back, or help me arrange a custom order?`;
 
   return (
@@ -148,7 +178,7 @@ const ProductDetail = () => {
         image={images[0]}
         type="product"
         jsonLd={[
-          productSchema(product, images, reviews),
+          productSchema(product, images, reviews, packs),
           breadcrumbSchema([
             { name: "Home", path: "/" },
             { name: "Products", path: "/products" },
@@ -201,34 +231,70 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-bold text-primary">KES {product.price.toLocaleString()}</span>
-                {product.compare_at_price && (
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="text-3xl font-bold text-primary">{formatKes(selectedPack.price)}</span>
+                <span className="text-sm text-muted-foreground">
+                  {formatLitres(selectedPack.size_liters)}
+                  {selectedPack.size_liters > 1 && <> · {formatKes(pricePerLitre(selectedPack))} per litre</>}
+                </span>
+                {product.compare_at_price && selectedPack.size_liters === 1 && (
                   <span className="text-lg text-muted-foreground line-through">KES {product.compare_at_price.toLocaleString()}</span>
                 )}
               </div>
+
+              {packs.length > 1 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Pack size</p>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Pack size">
+                    {packs.map((pack) => {
+                      const available = isPackInStock(pack, product.stock_quantity);
+                      const active = pack.id === selectedPack.id;
+                      return (
+                        <button
+                          key={pack.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          disabled={!available}
+                          onClick={() => selectPack(pack)}
+                          className={`rounded-lg border px-3 py-2 text-left transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                            active ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <span className="block text-sm font-semibold">{formatLitres(pack.size_liters)}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {available ? formatKes(pack.price) : "Out of stock"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <p className="text-muted-foreground">{product.short_description}</p>
 
               <div className="flex items-center gap-2">
                 <Badge variant={inStock ? "default" : "destructive"}>
-                  {inStock ? `${product.stock_quantity} in stock` : "Out of Stock"}
+                  {inStock ? `${formatLitres(product.stock_quantity)} in stock` : "Out of Stock"}
                 </Badge>
-                {product.sku && <span className="text-xs text-muted-foreground">SKU: {product.sku}</span>}
+                {(selectedPack.sku || product.sku) && (
+                  <span className="text-xs text-muted-foreground">SKU: {selectedPack.sku || product.sku}</span>
+                )}
               </div>
 
               <p className="text-sm text-muted-foreground">📦 {DELIVERY_SUMMARY}</p>
 
               {/* Quantity & Actions */}
               <div className="space-y-3 pt-2">
-                {inStock && (
+                {packInStock && (
                   <div className="flex items-center gap-4">
                     <div className="flex items-center border border-border rounded-lg">
                       <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus className="h-4 w-4" /></Button>
                       <span className="w-12 text-center font-medium">{quantity}</span>
-                      <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}><Plus className="h-4 w-4" /></Button>
                     </div>
-                    <Button className="flex-1 gap-2" size="lg" onClick={() => addToCart(product.id, quantity)}>
+                    <Button className="flex-1 gap-2" size="lg" onClick={handleAddToCart}>
                       <ShoppingCart className="h-4 w-4" /> Add to Cart
                     </Button>
                     <Button variant="outline" size="icon" onClick={toggleWishlist} className={wishlisted ? "text-destructive border-destructive" : ""}>
@@ -237,7 +303,7 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-                {inStock ? (
+                {packInStock ? (
                   <Button className="w-full gap-2" size="lg" variant="secondary" onClick={handleBuyNow}>
                     <Zap className="h-4 w-4" /> Buy Now
                   </Button>
@@ -249,6 +315,20 @@ const ProductDetail = () => {
 
                 <WhatsAppOrderButton message={whatsappMessage} label="Order via WhatsApp" />
               </div>
+
+              {inStock && <PackCalculator product={product} packs={packs.filter((p) => p.id)} />}
+
+              {recommendedFor.length > 0 && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Recommended for: </span>
+                  {recommendedFor.map(({ crop }, i) => (
+                    <span key={crop.slug}>
+                      {i > 0 && ", "}
+                      <Link to={`/crops/${crop.slug}`} className="text-primary hover:underline">{crop.name}</Link>
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {product.safety_sheet_url && (
                 <button

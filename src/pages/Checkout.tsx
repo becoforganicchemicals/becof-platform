@@ -16,6 +16,7 @@ import { getStoredAffiliate } from "@/lib/affiliate";
 import SEO from "@/components/SEO";
 import { trackMetaEvent } from "@/lib/metaPixel";
 import { trackPurchase } from "@/lib/analytics";
+import { formatLitres } from "@/lib/packs";
 import { deliveryFeeFor, formatKes, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
 
 // A signed-in shopper's own checkout flow — never worth indexing.
@@ -138,12 +139,16 @@ const Checkout = () => {
       affiliateId = resolvedId || null;
     }
 
+    // The pack size goes in the name too, so every existing view of an order
+    // (admin, profile, emails) shows it without changes.
     const orderItemsPayload = items.map(item => ({
       product_id: item.product_id,
-      product_name: item.product.name,
+      variant_id: item.variant_id,
+      pack_size_liters: item.pack.size_liters,
+      product_name: `${item.product.name} — ${formatLitres(item.pack.size_liters)}`,
       quantity: item.quantity,
-      unit_price: item.product.price,
-      total_price: item.product.price * item.quantity,
+      unit_price: item.pack.price,
+      total_price: item.pack.price * item.quantity,
     }));
 
     let newOrderId: string;
@@ -289,9 +294,11 @@ const Checkout = () => {
           resumeOrderId
             ? []
             : items.map((item) => ({
-                item_id: item.product.sku || item.product_id,
+                // Same ID as the pack's g:id in merchant-feed.xml
+                item_id: item.pack.sku || item.pack.id || item.product_id,
                 item_name: item.product.name,
-                price: item.product.price,
+                item_variant: formatLitres(item.pack.size_liters),
+                price: item.pack.price,
                 quantity: item.quantity,
               })),
         );
@@ -555,8 +562,8 @@ const Checkout = () => {
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {items.map(item => (
                   <div key={item.id} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
-                    <span>KES {(item.product.price * item.quantity).toLocaleString()}</span>
+                    <span className="text-muted-foreground">{item.product.name} ({formatLitres(item.pack.size_liters)}) × {item.quantity}</span>
+                    <span>KES {(item.pack.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>

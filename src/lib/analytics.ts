@@ -109,11 +109,11 @@ export const trackPageView = (path: string) => {
 };
 
 // `items` lets Merchant Center report sales per product: item_id must match
-// the product's g:id in merchant-feed.xml (its SKU, else its database id).
+// the pack's g:id in merchant-feed.xml (its SKU, else its database id).
 export const trackPurchase = (
   transactionId: string,
   value: number,
-  items: { item_id: string; item_name: string; price: number; quantity: number }[] = [],
+  items: { item_id: string; item_name: string; item_variant?: string; price: number; quantity: number }[] = [],
 ) => {
   const ids = activeIds();
   if (!ids.length) return;

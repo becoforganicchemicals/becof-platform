@@ -19,14 +19,25 @@ import {
 
 setSanitizerWindow(new JSDOM("").window as unknown as WindowLike);
 
+// For the crop pages, sitemap and llms.txt
+export { CROP_PROGRAMMES, HANDLING_NOTES } from "@/lib/cropProgrammes";
+export { FAQS } from "@/lib/faq";
+
 // Every published product and article, for the route list, sitemap, llms.txt
-// and product feed.
+// and product feed. Products and articles load independently, so a failure in
+// one doesn't take the other down; `errors` says what couldn't be loaded.
 export const loadSiteData = async () => {
-  const [{ products, categories }, { articles, categories: learnCategories }] = await Promise.all([
-    fetchPublishedProducts(),
-    fetchLearnIndex(),
-  ]);
-  return { products, categories, articles, learnCategories };
+  const [productsRes, learnRes] = await Promise.allSettled([fetchPublishedProducts(), fetchLearnIndex()]);
+  const errors: string[] = [];
+  if (productsRes.status === "rejected") errors.push(`products: ${productsRes.reason?.message ?? productsRes.reason}`);
+  if (learnRes.status === "rejected") errors.push(`articles: ${learnRes.reason?.message ?? learnRes.reason}`);
+  return {
+    products: productsRes.status === "fulfilled" ? productsRes.value.products : [],
+    categories: productsRes.status === "fulfilled" ? productsRes.value.categories : [],
+    articles: learnRes.status === "fulfilled" ? learnRes.value.articles : [],
+    learnCategories: learnRes.status === "fulfilled" ? learnRes.value.categories : [],
+    errors,
+  };
 };
 
 // Data each public route needs for its first render, keyed as the pages read
@@ -44,6 +55,10 @@ export const loadRouteData = async (path: string): Promise<Record<string, unknow
       r.image_url && !r.image_url.startsWith("http") ? { ...r, image_url: null } : r
     );
     return { [`product:${product[1]}`]: { product: data, reviews: safeReviews } };
+  }
+
+  if (path === "/crops" || path.startsWith("/crops/")) {
+    return { products: await fetchPublishedProducts() };
   }
 
   const article = path.match(/^\/learn\/([^/]+)$/);

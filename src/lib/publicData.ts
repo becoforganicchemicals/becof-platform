@@ -9,6 +9,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Active pack sizes (RLS hides inactive ones from the public)
+const PACKS = "product_variants (id, size_liters, price, sku, is_active)";
+
 const must = <T>({ data, error }: { data: T; error: { message: string } | null }): T => {
   if (error) throw new Error(error.message);
   return data;
@@ -17,7 +20,7 @@ const must = <T>({ data, error }: { data: T; error: { message: string } | null }
 export const fetchFeaturedProducts = async () => {
   const data = must(await supabase
     .from("products")
-    .select("id, name, price, average_rating, short_description, images, slug, stock_quantity, categories(name)")
+    .select(`id, name, price, average_rating, short_description, images, slug, stock_quantity, categories(name), ${PACKS}`)
     .eq("is_featured", true)
     .eq("is_published", true)
     .order("average_rating", { ascending: false, nullsFirst: false })
@@ -40,7 +43,7 @@ export const fetchPublishedProducts = async () => {
   const [prodRes, catRes] = await Promise.all([
     supabase
       .from("products")
-      .select("*, categories (id, name, parent_id)")
+      .select(`*, categories (id, name, parent_id), ${PACKS}`)
       .eq("is_published", true),
     supabase.from("categories").select("id, name, slug, parent_id"),
   ]);
@@ -51,7 +54,7 @@ export const fetchPublishedProducts = async () => {
 export const fetchProductBySlug = async (slug: string) =>
   must(await supabase
     .from("products")
-    .select("*, categories(name)")
+    .select(`*, categories(name), ${PACKS}`)
     .eq("slug", slug)
     .maybeSingle());
 

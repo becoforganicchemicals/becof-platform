@@ -3,6 +3,7 @@
 // assistants connect products and articles to the same business entity.
 
 import { deliveryFeeFor } from "@/lib/delivery";
+import { formatLitres, isPackInStock, sortPacks, type PackSize } from "@/lib/packs";
 
 export const SITE_URL = "https://www.becoforganicchemicals.com";
 const ORG_ID = `${SITE_URL}/#organization`;
@@ -112,38 +113,50 @@ interface ReviewLike {
   rating: number;
 }
 
-export const productSchema = (product: ProductLike, images: string[], reviews: ReviewLike[]) => {
+// The page URL that preselects a pack size (ProductDetail reads ?size=)
+export const packUrl = (slug: string, sizeLitres: number, isDefault: boolean) =>
+  `${SITE_URL}/products/${slug}${isDefault ? "" : `?size=${sizeLitres}`}`;
+
+// One pack size → one Offer
+const packOffer = (product: ProductLike, pack: PackSize, url: string) => ({
+  "@type": "Offer",
+  url,
+  priceCurrency: "KES",
+  price: pack.price,
+  itemCondition: "https://schema.org/NewCondition",
+  availability: isPackInStock(pack, product.stock_quantity)
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock",
+  seller: { "@id": ORG_ID },
+  hasMerchantReturnPolicy: organizationSchema.hasMerchantReturnPolicy,
+  // Delivery cost for buying one pack (src/lib/delivery.ts)
+  shippingDetails: {
+    "@type": "OfferShippingDetails",
+    shippingRate: { "@type": "MonetaryAmount", value: deliveryFeeFor(pack.price), currency: "KES" },
+    shippingDestination: { "@type": "DefinedRegion", addressCountry: "KE" },
+  },
+});
+
+// A product with several pack sizes is a ProductGroup with one variant per
+// size (Google's product variant markup); a single size stays a Product.
+export const productSchema = (
+  product: ProductLike,
+  images: string[],
+  reviews: ReviewLike[],
+  packsIn?: PackSize[],
+) => {
   const url = `${SITE_URL}/products/${product.slug}`;
+  const packs = sortPacks(packsIn);
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
-  return {
+  const shared = {
     "@context": "https://schema.org",
-    "@type": "Product",
-    "@id": `${url}#product`,
     name: product.name,
     url,
     image: images.map(absolute),
     description: product.short_description || product.long_description || undefined,
-    sku: product.sku || undefined,
     category: product.categories?.name,
     brand: { "@type": "Brand", name: "Becof Organic Chemicals" },
     manufacturer: { "@id": ORG_ID },
-    offers: {
-      "@type": "Offer",
-      url,
-      priceCurrency: "KES",
-      price: product.price,
-      itemCondition: "https://schema.org/NewCondition",
-      availability:
-        product.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      seller: { "@id": ORG_ID },
-      hasMerchantReturnPolicy: organizationSchema.hasMerchantReturnPolicy,
-      // Delivery cost for buying one unit (src/lib/delivery.ts)
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        shippingRate: { "@type": "MonetaryAmount", value: deliveryFeeFor(product.price), currency: "KES" },
-        shippingDestination: { "@type": "DefinedRegion", addressCountry: "KE" },
-      },
-    },
     // Google requires this to reflect genuine reviews — omit entirely
     // rather than show a 0.0/0-reviews rating for an unreviewed product.
     ...(reviews.length > 0 && {
@@ -154,6 +167,38 @@ export const productSchema = (product: ProductLike, images: string[], reviews: R
         bestRating: 5,
         worstRating: 1,
       },
+    }),
+  };
+
+  if (packs.length <= 1) {
+    const pack = packs[0] ?? { id: "", size_liters: 1, price: product.price, sku: product.sku ?? null };
+    return {
+      ...shared,
+      "@type": "Product",
+      "@id": `${url}#product`,
+      sku: pack.sku || product.sku || undefined,
+      size: formatLitres(pack.size_liters),
+      offers: packOffer(product, pack, url),
+    };
+  }
+
+  return {
+    ...shared,
+    "@type": "ProductGroup",
+    "@id": `${url}#product`,
+    productGroupID: product.sku || product.slug,
+    variesBy: "https://schema.org/size",
+    hasVariant: packs.map((pack, i) => {
+      const variantUrl = packUrl(product.slug, pack.size_liters, i === 0);
+      return {
+        "@type": "Product",
+        name: `${product.name} — ${formatLitres(pack.size_liters)}`,
+        sku: pack.sku || undefined,
+        size: formatLitres(pack.size_liters),
+        image: images.map(absolute)[0],
+        url: variantUrl,
+        offers: packOffer(product, pack, variantUrl),
+      };
     }),
   };
 };

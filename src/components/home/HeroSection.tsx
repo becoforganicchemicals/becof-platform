@@ -132,6 +132,7 @@ const HeroSection = () => {
                       <span className="font-bold text-primary text-lg">
                         KES {product.price.toLocaleString("en-KE")}
                       </span>
+                      <span className="text-xs text-muted-foreground">/ 1 L</span>
                       {product.compare_at_price && (
                         <span className="text-xs text-muted-foreground line-through">
                           KES {product.compare_at_price.toLocaleString("en-KE")}

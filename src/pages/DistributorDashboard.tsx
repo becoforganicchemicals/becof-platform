@@ -495,7 +495,7 @@ const DistributorDashboard = () => {
                               <h4 className="font-semibold text-sm leading-tight mb-1">{product.name}</h4>
                               {product.categories?.name && <p className="text-xs text-muted-foreground mb-1">{product.categories.name}</p>}
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-primary">KES {product.price?.toLocaleString()}</span>
+                                <span className="font-bold text-primary">KES {product.price?.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">/ 1 L</span></span>
                                 <Badge variant={product.stock_quantity > 0 ? "secondary" : "destructive"} className="text-xs">
                                   {product.stock_quantity > 0 ? "In Stock" : "Out of Stock"}
                                 </Badge>

@@ -10,6 +10,8 @@ import { Star, ShoppingCart, Search, Heart, Zap, ClipboardList } from "lucide-re
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
+import { packSummary } from "@/lib/packs";
+import { CROP_PROGRAMMES } from "@/lib/cropProgrammes";
 import { fetchPublishedProducts } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 
@@ -125,6 +127,15 @@ const Products = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
             <h1 className="text-4xl font-bold mb-2">Our Products</h1>
             <p className="text-muted-foreground">Explore our range of sustainable organic chemical products designed for agriculture.</p>
+            <p className="text-sm mt-3">
+              <span className="text-muted-foreground">Not sure which to choose? Shop by crop: </span>
+              {CROP_PROGRAMMES.map((c, i) => (
+                <span key={c.slug}>
+                  {i > 0 && " · "}
+                  <Link to={`/crops/${c.slug}`} className="text-primary font-medium hover:underline">{c.name}</Link>
+                </span>
+              ))}
+            </p>
           </motion.div>
 
           <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -235,6 +246,7 @@ const Products = () => {
                         <div>
                           <span className="font-bold text-primary">KES {p.price.toLocaleString()}</span>
                           {p.compare_at_price && <span className="text-xs text-muted-foreground line-through ml-2">KES {p.compare_at_price.toLocaleString()}</span>}
+                          <span className="block text-xs text-muted-foreground">{packSummary(p.product_variants)}</span>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleWishlist(p.id)}>
