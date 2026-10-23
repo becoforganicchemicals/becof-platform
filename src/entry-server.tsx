@@ -36,7 +36,8 @@ export const loadRouteData = async (path: string): Promise<Record<string, unknow
   if (product) {
     const data = await fetchProductBySlug(product[1]);
     if (!data) return null;
-    const reviews = await fetchProductReviews(data.id);
+    // Reviews are a nice-to-have — don't lose the whole product page over them
+    const reviews = await fetchProductReviews(data.id).catch(() => []);
     // Review photos live in a private bucket and need a short-lived signed
     // link, which the browser fetches itself — don't bake in a broken path.
     const safeReviews = reviews.map((r) =>

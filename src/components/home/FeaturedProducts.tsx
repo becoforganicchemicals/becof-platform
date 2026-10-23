@@ -26,10 +26,11 @@ const FeaturedProducts = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    fetchFeaturedProducts().then((data) => {
-      setProducts(data);
-      setLoading(false);
-    });
+    // On failure, keep what's showing (pre-rendered content) — see publicData.ts
+    fetchFeaturedProducts()
+      .then(setProducts)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const handleAddToCart = async (productId: string) => {

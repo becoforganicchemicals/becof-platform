@@ -38,9 +38,13 @@ const Products = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchPublishedProducts();
-      setProducts(data.products);
-      setCategories(data.categories);
+      try {
+        const data = await fetchPublishedProducts();
+        setProducts(data.products);
+        setCategories(data.categories);
+      } catch {
+        // Keep what's showing (pre-rendered content) — see publicData.ts
+      }
       setLoading(false);
 
       if (user) {

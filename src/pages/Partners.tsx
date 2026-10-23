@@ -77,7 +77,8 @@ const Partners = () => {
   });
 
   useEffect(() => {
-    fetchPartnerProfiles().then((data) => setPartners(data as PartnerProfile[]));
+    // On failure, keep what's showing (pre-rendered content) — see publicData.ts
+    fetchPartnerProfiles().then((data) => setPartners(data as PartnerProfile[])).catch(() => {});
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

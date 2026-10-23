@@ -54,9 +54,13 @@ const Learn = () => {
   }, []);
 
   const fetchData = async () => {
-    const data = await fetchLearnIndex();
-    setCategories(data.categories as Category[]);
-    setArticles(data.articles as Article[]);
+    try {
+      const data = await fetchLearnIndex();
+      setCategories(data.categories as Category[]);
+      setArticles(data.articles as Article[]);
+    } catch {
+      // Keep what's showing (pre-rendered content) — see publicData.ts
+    }
     setLoading(false);
   };
 

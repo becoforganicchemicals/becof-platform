@@ -55,10 +55,14 @@ const Impact = () => {
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
-    const data = await fetchImpactData();
-    setMetrics(data.metrics as Metric[]);
-    setReports(data.reports as Report[]);
-    setAwards(data.awards as ImpactAward[]);
+    try {
+      const data = await fetchImpactData();
+      setMetrics(data.metrics as Metric[]);
+      setReports(data.reports as Report[]);
+      setAwards(data.awards as ImpactAward[]);
+    } catch {
+      // Keep what's showing (pre-rendered content) — see publicData.ts
+    }
     setLoading(false);
   };
 

@@ -239,6 +239,8 @@ const LearnDetail = () => {
     const [related, setRelated] = useState<Article[]>(() => seed?.related ?? []);
     const [loading, setLoading] = useState(() => !seed);
     const [notFound, setNotFound] = useState(false);
+    // A failed request is not "not found" — never noindex a page over a network error.
+    const [loadFailed, setLoadFailed] = useState(false);
 
     useEffect(() => {
         if (slug) fetchArticle(slug);
@@ -249,8 +251,17 @@ const LearnDetail = () => {
         // Already showing this article (pre-rendered first load) — refresh quietly.
         if (article?.slug !== slug) setLoading(true);
         setNotFound(false);
+        setLoadFailed(false);
 
-        const data = await fetchArticleBySlug(slug);
+        let data;
+        try {
+            data = await fetchArticleBySlug(slug);
+        } catch {
+            // Keep the article if it's already showing (pre-rendered) — see publicData.ts
+            if (article?.slug !== slug) setLoadFailed(true);
+            setLoading(false);
+            return;
+        }
         if (!data) {
             setNotFound(true);
             setLoading(false);
@@ -278,6 +289,19 @@ const LearnDetail = () => {
                         ))}
                     </div>
                   </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    /* ─── couldn't load (network) — no noindex ─── */
+    if (loadFailed && !article) {
+        return (
+            <Layout>
+                <div className="container py-24 text-center">
+                    <h1 className="text-2xl font-bold mb-2">We couldn't load this article</h1>
+                    <p className="text-muted-foreground mb-6">Please check your connection and try again.</p>
+                    <Button onClick={() => slug && fetchArticle(slug)}>Try again</Button>
                 </div>
             </Layout>
         );

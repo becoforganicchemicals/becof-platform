@@ -24,6 +24,8 @@ const ProductDetail = () => {
   const seed = getPrerendered<{ product: any; reviews: any[] }>(`product:${slug}`);
   const [product, setProduct] = useState<any>(() => seed?.product ?? null);
   const [loading, setLoading] = useState(() => !seed);
+  // A failed request is not "not found" — never noindex a page over a network error.
+  const [loadFailed, setLoadFailed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [wishlisted, setWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -46,7 +48,16 @@ const ProductDetail = () => {
         setWishlisted(false);
         setReviews([]);
       }
-      const data = await fetchProductBySlug(slug!);
+      setLoadFailed(false);
+      let data;
+      try {
+        data = await fetchProductBySlug(slug!);
+      } catch {
+        // Keep the product if it's already showing (pre-rendered) — see publicData.ts
+        if (product?.slug !== slug) setLoadFailed(true);
+        setLoading(false);
+        return;
+      }
       setProduct(data);
       setLoading(false);
       if (data && user) {
@@ -56,7 +67,12 @@ const ProductDetail = () => {
       if (data) {
         // review-images is a private bucket: image_url holds the object path,
         // so signed-in visitors get a short-lived signed link for each photo.
-        const rows = await fetchProductReviews(data.id);
+        let rows: any[];
+        try {
+          rows = await fetchProductReviews(data.id);
+        } catch {
+          return; // keep the reviews already showing
+        }
         const withPhotos = await Promise.all(
           rows.map(async (row: any) => {
             if (!row.image_url || row.image_url.startsWith("http")) return row;
@@ -112,6 +128,7 @@ const ProductDetail = () => {
   };
 
   if (loading) return <Layout><div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div></Layout>;
+  if (loadFailed && !product) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-2">We couldn't load this product</h1><p className="text-muted-foreground mb-6">Please check your connection and try again.</p><Button onClick={() => window.location.reload()}>Try again</Button></div></Layout>;
   if (!product) return <Layout><SEO title="Product not found" description="This product could not be found." url={`https://www.becoforganicchemicals.com/products/${slug}`} noindex /><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Product not found</h1><Link to="/products"><Button>Back to Products</Button></Link></div></Layout>;
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];

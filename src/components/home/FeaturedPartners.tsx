@@ -29,7 +29,8 @@ const FeaturedPartners = () => {
   );
 
   useEffect(() => {
-    fetchFeaturedPartners().then(setPartners);
+    // On failure, keep what's showing (pre-rendered content) — see publicData.ts
+    fetchFeaturedPartners().then(setPartners).catch(() => {});
   }, []);
 
   if (partners.length === 0) return null;
