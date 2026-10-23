@@ -74,6 +74,22 @@ export const CookieConsentProvider = ({ children }: { children: ReactNode }) => 
 
 export const useCookieConsent = () => {
   const ctx = useContext(CookieConsentContext);
-  if (!ctx) throw new Error("useCookieConsent must be used within CookieConsentProvider");
+  if (!ctx) {
+    // Fail soft instead of blanking the page (e.g. after a hot-reload of this
+    // file detaches the tree from the provider). Conservative defaults: no
+    // analytics/marketing tracking without consent, banner can still be shown.
+    console.warn("useCookieConsent used outside CookieConsentProvider — tracking disabled");
+    return {
+      hasDecided: false,
+      analyticsEnabled: false,
+      marketingEnabled: false,
+      preferencesOpen: false,
+      openPreferences: () => {},
+      closePreferences: () => {},
+      acceptAll: () => {},
+      rejectNonEssential: () => {},
+      savePreferences: () => {},
+    } satisfies CookieConsentContextValue;
+  }
   return ctx;
 };
