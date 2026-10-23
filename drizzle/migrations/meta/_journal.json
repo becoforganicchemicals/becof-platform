@@ -8,6 +8,13 @@
       "when": 1792743123964,
       "tag": "0000_order_delivery_fee",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792796769108,
+      "tag": "0001_product_pack_sizes",
+      "breakpoints": true
     }
   ]
 }
