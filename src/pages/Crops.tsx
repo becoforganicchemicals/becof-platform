@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
-import { CROP_PROGRAMMES } from "@/lib/cropProgrammes";
+import { CROP_PROGRAMMES, cropNamesList } from "@/lib/cropProgrammes";
 import { breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
 import { LITRES_PER_ACRE, WATER_LITRES_PER_ACRE } from "@/lib/packs";
 
@@ -10,7 +10,7 @@ const Crops = () => (
   <Layout>
     <SEO
       title="Shop by Crop"
-      description="Find the right Becof organic biofertilizers for maize, potatoes and vegetables: which products to use, when to apply them, and how much you need per acre."
+      description={`Find the right Becof organic biofertilizers for ${cropNamesList()}: which products to use, when to apply them, and how much you need per acre.`}
       url={`${SITE_URL}/crops`}
       jsonLd={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Crop guides", path: "/crops" }])}
     />

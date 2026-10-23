@@ -59,6 +59,43 @@ export const CROP_PROGRAMMES: CropProgramme[] = [
     ],
   },
   {
+    slug: "beans",
+    name: "Beans",
+    title: "Organic Biofertilizers for Beans",
+    description:
+      "Becof's biofertilizer programme for dry beans and French beans in Kenya: natural nitrogen-fixing nodules, stronger roots and protection from root rot, with litres needed per acre.",
+    intro:
+      "Beans are a short crop, so this programme does most of its work at planting and in the first weeks. NitroFix™ contains Rhizobium, which works with bean roots to form nodules that fix nitrogen directly for the plant — the earlier it reaches young roots, the better.",
+    crops: "Dry beans (rosecoco, mwitemania, yellow beans and others) and French beans",
+    steps: [
+      {
+        productSlug: "becof-nitrofix",
+        purpose: "Rhizobium forms nitrogen-fixing nodules on bean roots, plus natural nitrogen for strong growth",
+        timing: "At planting, close to the seed so the bacteria reach young roots early, and again at 3 weeks",
+        applications: 2,
+      },
+      {
+        productSlug: "becof-rootmax",
+        purpose: "Stronger roots and better nutrient uptake",
+        timing: "At planting, and again at 3 weeks",
+        applications: 2,
+      },
+      {
+        productSlug: "becof-trichoshield",
+        purpose: "Protects roots from soil-borne disease such as root rot",
+        timing: "At planting; repeat at 3–4 weeks where root rot is a known problem",
+        applications: 1,
+        note: "Use 2 applications where root rot is a known problem.",
+      },
+      {
+        productSlug: "becof-soilfix",
+        purpose: "Rebuilds soil health and stabilises pH",
+        timing: "At land preparation or planting, and again before flowering",
+        applications: 2,
+      },
+    ],
+  },
+  {
     slug: "potatoes",
     name: "Potatoes",
     title: "Organic Biofertilizers for Potatoes",
@@ -125,6 +162,12 @@ export const CROP_PROGRAMMES: CropProgramme[] = [
     ],
   },
 ];
+
+// "maize, beans, potatoes and vegetables"
+export const cropNamesList = () => {
+  const names = CROP_PROGRAMMES.map((c) => c.name.toLowerCase());
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names.join("");
+};
 
 export const findProgramme = (slug: string | undefined) => CROP_PROGRAMMES.find((c) => c.slug === slug);
 

@@ -5,6 +5,7 @@ import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
 import NotFound from "./NotFound";
 import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
+import CropButtons from "@/components/CropButtons";
 import ProgrammeCalculator, { type ProgrammeProduct } from "@/components/product/ProgrammeCalculator";
 import { findProgramme, HANDLING_NOTES } from "@/lib/cropProgrammes";
 import { fetchPublishedProducts } from "@/lib/publicData";
@@ -39,7 +40,7 @@ const CropGuide = () => {
     {
       question: `Which Becof products should I use on ${programme.name.toLowerCase()}?`,
       answer: programme.steps
-        .map((s) => `${productFor(s.productSlug)?.name ?? s.productSlug}: ${s.purpose.toLowerCase()}`)
+        .map((s) => `${productFor(s.productSlug)?.name ?? s.productSlug} — ${s.purpose}`)
         .join(". ") + ".",
     },
     {
@@ -49,7 +50,7 @@ const CropGuide = () => {
     {
       question: `When should I apply biofertilizers on ${programme.name.toLowerCase()}?`,
       answer: programme.steps
-        .map((s) => `${productFor(s.productSlug)?.name ?? s.productSlug}: ${s.timing.charAt(0).toLowerCase()}${s.timing.slice(1)}`)
+        .map((s) => `${productFor(s.productSlug)?.name ?? s.productSlug} — ${s.timing}`)
         .join(". ") + ".",
     },
   ];
@@ -152,6 +153,8 @@ const CropGuide = () => {
               className="sm:w-auto px-6"
             />
           </div>
+
+          <CropButtons title="Crop guides" />
         </div>
       </section>
     </Layout>

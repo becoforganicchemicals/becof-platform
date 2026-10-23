@@ -5,6 +5,7 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import PlatformHighlights from "@/components/home/PlatformHighlights";
 import FeaturedPartners from "@/components/home/FeaturedPartners";
 import FinalCTA from "@/components/home/FinalCTA";
+import ShopByCrop from "@/components/home/ShopByCrop";
 import SEO from "@/components/SEO";
 import { organizationSchema, websiteSchema } from "@/lib/structuredData";
 
@@ -19,6 +20,7 @@ const Index = () => (
     <HeroSection />
     <WhatWeDo />
     <FeaturedProducts />
+    <ShopByCrop />
     <PlatformHighlights />
     <FeaturedPartners />
     <FinalCTA />

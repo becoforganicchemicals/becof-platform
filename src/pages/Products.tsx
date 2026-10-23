@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
 import { packSummary } from "@/lib/packs";
-import { CROP_PROGRAMMES } from "@/lib/cropProgrammes";
+import CropButtons from "@/components/CropButtons";
 import { fetchPublishedProducts } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 
@@ -127,16 +127,9 @@ const Products = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
             <h1 className="text-4xl font-bold mb-2">Our Products</h1>
             <p className="text-muted-foreground">Explore our range of sustainable organic chemical products designed for agriculture.</p>
-            <p className="text-sm mt-3">
-              <span className="text-muted-foreground">Not sure which to choose? Shop by crop: </span>
-              {CROP_PROGRAMMES.map((c, i) => (
-                <span key={c.slug}>
-                  {i > 0 && " · "}
-                  <Link to={`/crops/${c.slug}`} className="text-primary font-medium hover:underline">{c.name}</Link>
-                </span>
-              ))}
-            </p>
           </motion.div>
+
+          <CropButtons className="mb-8" title="Not sure which to choose? Shop by crop" />
 
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             <div className="relative flex-1">

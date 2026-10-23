@@ -197,7 +197,9 @@ const ProductDetail = () => {
 
           <div className="grid lg:grid-cols-2 gap-10">
             {/* Images */}
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+            {/* min-w-0: grid columns otherwise refuse to shrink below their
+                widest content, which pushed the page wider than phone screens */}
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="min-w-0">
               <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3">
                 <img src={images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
               </div>
@@ -214,7 +216,7 @@ const ProductDetail = () => {
             </motion.div>
 
             {/* Details */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-5 min-w-0">
               {product.categories?.name && <Badge variant="secondary">{product.categories.name}</Badge>}
               <h1 className="text-3xl font-bold">{product.name}</h1>
 
