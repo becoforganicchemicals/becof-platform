@@ -957,6 +957,7 @@ export type Database = {
           affiliate_id: string | null
           coupon_id: string | null
           created_at: string
+          delivery_fee: number
           delivery_partner: string | null
           discount_amount: number | null
           email: string | null
@@ -982,6 +983,7 @@ export type Database = {
           affiliate_id?: string | null
           coupon_id?: string | null
           created_at?: string
+          delivery_fee?: number
           delivery_partner?: string | null
           discount_amount?: number | null
           email?: string | null
@@ -1007,6 +1009,7 @@ export type Database = {
           affiliate_id?: string | null
           coupon_id?: string | null
           created_at?: string
+          delivery_fee?: number
           delivery_partner?: string | null
           discount_amount?: number | null
           email?: string | null
