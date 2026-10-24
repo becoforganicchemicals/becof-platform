@@ -72,24 +72,24 @@ const CropGuide = () => {
       />
 
       <section className="py-12 bg-muted/30 border-b border-border">
-        <div className="container max-w-4xl">
+        <div className="container">
           <nav className="text-sm text-muted-foreground mb-4">
             <Link to="/crops" className="hover:text-primary">Crop guides</Link> / {programme.name}
           </nav>
           <h1 className="text-3xl md:text-4xl font-bold mb-4">{programme.title}</h1>
-          <p className="text-lg text-muted-foreground">{programme.intro}</p>
+          <p className="text-lg text-muted-foreground max-w-3xl">{programme.intro}</p>
           {programme.crops && <p className="text-sm text-muted-foreground mt-3">Covers: {programme.crops}.</p>}
         </div>
       </section>
 
       <section className="py-12">
-        <div className="container max-w-4xl space-y-10">
+        <div className="container space-y-12">
           <div>
             <h2 className="text-2xl font-semibold mb-2">The {programme.name.toLowerCase()} programme</h2>
             <p className="text-muted-foreground mb-6">
               Every application is {LITRES_PER_ACRE} L per acre, mixed with {WATER_LITRES_PER_ACRE} L of water.
             </p>
-            <div className="grid gap-4">
+            <div className="grid lg:grid-cols-2 gap-4">
               {programme.steps.map((step) => {
                 const product = productFor(step.productSlug);
                 return (
@@ -122,26 +122,28 @@ const CropGuide = () => {
 
           <ProgrammeCalculator programme={programme} products={products} />
 
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2"><Droplets className="h-5 w-5 text-primary" />Mixing and handling</h2>
-            <ul className="list-disc pl-5 space-y-1.5 text-muted-foreground">
-              {HANDLING_NOTES.map((n) => <li key={n}>{n}</li>)}
-            </ul>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">Questions about {programme.name.toLowerCase()}</h2>
-            <div className="space-y-5">
-              {faqs.map((f) => (
-                <div key={f.question}>
-                  <h3 className="font-semibold mb-1">{f.question}</h3>
-                  <p className="text-muted-foreground">{f.answer}</p>
-                </div>
-              ))}
+          <div className="grid lg:grid-cols-2 gap-10">
+            <div>
+              <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2"><Droplets className="h-5 w-5 text-primary" />Mixing and handling</h2>
+              <ul className="list-disc pl-5 space-y-1.5 text-muted-foreground">
+                {HANDLING_NOTES.map((n) => <li key={n}>{n}</li>)}
+              </ul>
             </div>
-            <p className="mt-6 text-sm">
-              More answers in our <Link to="/faq" className="text-primary hover:underline">FAQ</Link>.
-            </p>
+
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Questions about {programme.name.toLowerCase()}</h2>
+              <div className="space-y-5">
+                {faqs.map((f) => (
+                  <div key={f.question}>
+                    <h3 className="font-semibold mb-1">{f.question}</h3>
+                    <p className="text-muted-foreground">{f.answer}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-6 text-sm">
+                More answers in our <Link to="/faq" className="text-primary hover:underline">FAQ</Link>.
+              </p>
+            </div>
           </div>
 
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-6 space-y-3">

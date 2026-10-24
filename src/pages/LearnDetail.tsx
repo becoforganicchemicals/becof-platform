@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchArticleBySlug } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 import { articleSchema, breadcrumbSchema } from "@/lib/structuredData";
+import CropButtons from "@/components/CropButtons";
+import WhatsAppOrderButton from "@/components/WhatsAppOrderButton";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { Button } from "@/components/ui/button";
 import {
@@ -374,7 +376,7 @@ const LearnDetail = () => {
             {/* Article hero */}
             <section className="bg-gradient-to-br from-primary/5 to-primary/10 border-b border-primary/10 py-12">
                 <div className="container">
-                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto">
+                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
                         {category && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full border border-primary/20 mb-4">
                                 <CatIcon className="h-3.5 w-3.5" />
@@ -387,7 +389,7 @@ const LearnDetail = () => {
                         </h1>
 
                         {article.excerpt && (
-                            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">{article.excerpt}</p>
+                            <p className="text-lg text-muted-foreground mb-6 leading-relaxed max-w-3xl">{article.excerpt}</p>
                         )}
 
                         {/* Meta row */}
@@ -418,11 +420,14 @@ const LearnDetail = () => {
             {/* Article body */}
             <section className="py-12">
                 <div className="container">
+                  {/* Article + sidebar fill the container; the article column
+                      keeps a comfortable line length for reading. */}
+                  <div className="grid lg:grid-cols-[minmax(0,1fr)_20rem] gap-12">
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="max-w-3xl mx-auto"
+                        className="min-w-0"
                     >
                         <div
                             className="
@@ -441,6 +446,19 @@ const LearnDetail = () => {
                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
                         />
                     </motion.div>
+
+                    <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+                        <CropButtons stacked title="Shop by crop" />
+                        <div className="rounded-xl bg-primary/5 border border-primary/20 p-5 space-y-3">
+                            <p className="font-semibold">Questions about your farm?</p>
+                            <p className="text-sm text-muted-foreground">Tell us your crop and farm size and our team will help you choose.</p>
+                            <WhatsAppOrderButton
+                                message={`Hi Becof Organic Chemicals! I just read "${article.title}" and have a question.\n\nCrop: ___\nFarm size: ___ acres`}
+                                label="Ask on WhatsApp"
+                            />
+                        </div>
+                    </aside>
+                  </div>
 
                     {/* Footer row */}
                     <div className="flex flex-wrap items-center justify-between gap-4 mt-12 pt-8 border-t border-border">
@@ -461,9 +479,9 @@ const LearnDetail = () => {
             {related.length > 0 && (
                 <section className="py-12 bg-muted/30 border-t border-border">
                     <div className="container">
-                      <div className="max-w-3xl mx-auto">
+                      <div>
                         <h2 className="text-xl font-bold mb-6">More from {category?.name || "this category"}</h2>
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {related.map((r) => (
                                 <motion.article
                                     key={r.id}

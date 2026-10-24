@@ -15,13 +15,13 @@ const Crops = () => (
       jsonLd={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Crop guides", path: "/crops" }])}
     />
     <section className="py-12">
-      <div className="container max-w-4xl">
+      <div className="container">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">Shop by crop</h1>
-        <p className="text-lg text-muted-foreground mb-10">
+        <p className="text-lg text-muted-foreground mb-10 max-w-3xl">
           Choose your crop to see which Becof products to use, when to apply them, and exactly how much you need for
           your farm. Every application is {LITRES_PER_ACRE} L per acre, mixed with {WATER_LITRES_PER_ACRE} L of water.
         </p>
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CROP_PROGRAMMES.map((crop) => (
             <Link
               key={crop.slug}

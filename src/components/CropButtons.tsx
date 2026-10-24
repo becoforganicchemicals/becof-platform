@@ -13,11 +13,14 @@ const CROP_ICONS: Record<string, LucideIcon> = {
 };
 
 // "Shop by crop" buttons, linking to each crop guide. Used on the products
-// page, the homepage and the FAQ so they look the same everywhere.
-const CropButtons = ({ className, title = "Shop by crop" }: { className?: string; title?: string | null }) => (
+// page, the homepage, the FAQ and article sidebars so they look the same
+// everywhere. `stacked` puts them in one column, for narrow sidebars.
+const CropButtons = ({
+  className, title = "Shop by crop", stacked = false,
+}: { className?: string; title?: string | null; stacked?: boolean }) => (
   <nav aria-label="Shop by crop" className={className}>
     {title && <p className="text-sm font-semibold mb-3">{title}</p>}
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className={stacked ? "grid gap-3" : "grid grid-cols-2 md:grid-cols-4 gap-3"}>
       {CROP_PROGRAMMES.map((crop) => {
         const Icon = CROP_ICONS[crop.slug] ?? Sprout;
         return (
@@ -36,7 +39,12 @@ const CropButtons = ({ className, title = "Shop by crop" }: { className?: string
             </span>
             <span className="flex-1 min-w-0">{crop.name}</span>
             {/* Two buttons per row on phones leaves no room for the arrow */}
-            <ArrowRight className="hidden sm:block h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight
+              className={cn(
+                stacked ? "block" : "hidden sm:block",
+                "h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5",
+              )}
+            />
           </Link>
         );
       })}

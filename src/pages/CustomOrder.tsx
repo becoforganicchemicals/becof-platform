@@ -145,7 +145,7 @@ const CustomOrder = () => {
             />
             <section className="py-10">
                 <div className="container">
-                  <div className="max-w-2xl mx-auto">
+                  <div>
                     <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-6">
                         <ArrowLeft className="h-4 w-4" /> Back
                     </button>

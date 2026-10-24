@@ -173,13 +173,13 @@ const Impact = () => {
           </motion.div>
 
           {loading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {[1, 2, 3].map(n => <Skeleton key={n} className="h-56" />)}
             </div>
           ) : awards.length === 0 ? (
             <p className="text-center text-muted-foreground py-10">Awards and recognitions will appear here.</p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {awards.map((a, i) => (
                 <motion.div
                   key={a.id}

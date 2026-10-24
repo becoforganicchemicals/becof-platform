@@ -108,7 +108,7 @@ const Affiliate = () => {
       <section className="py-16 bg-muted/30">
         <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="max-w-3xl mx-auto bg-card rounded-2xl border border-border p-8 shadow-sm text-center">
+            className="bg-card rounded-2xl border border-border p-8 shadow-sm text-center">
             <ShieldCheck className="h-10 w-10 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-bold text-foreground mb-2">You're only credited for real sales</h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -122,7 +122,7 @@ const Affiliate = () => {
 
       {/* ── FAQ ── */}
       <section className="py-20 bg-background">
-        <div className="container max-w-3xl">
+        <div className="container">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
             <h2 className="text-3xl font-bold text-foreground mb-2">Common Questions</h2>
           </motion.div>

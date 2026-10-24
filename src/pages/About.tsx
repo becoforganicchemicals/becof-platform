@@ -157,7 +157,7 @@ const About = () => (
             The principles that guide every innovation, partnership, and decision we make.
           </p>
         </motion.div>
-        <div className="grid gap-8 lg:grid-cols-3 max-w-6xl mx-auto">
+        <div className="grid gap-8 lg:grid-cols-3">
           {values.slice(0, 3).map((v, i) => (
             <motion.div
               key={v.title}
@@ -176,7 +176,7 @@ const About = () => (
           ))}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 mt-8 max-w-4xl mx-auto">
+        <div className="grid gap-8 lg:grid-cols-2 mt-8">
           {values.slice(3).map((v, i) => (
             <motion.div
               key={v.title}
@@ -206,7 +206,7 @@ const About = () => (
             The operational commitments that shape how we build, serve, and grow.
           </p>
         </motion.div>
-        <div className="grid gap-8 lg:grid-cols-3 max-w-6xl mx-auto">
+        <div className="grid gap-8 lg:grid-cols-3">
           {principles.slice(0, 3).map((p, i) => (
             <motion.div
               key={p.title}
@@ -225,7 +225,7 @@ const About = () => (
           ))}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 mt-8 max-w-4xl mx-auto">
+        <div className="grid gap-8 lg:grid-cols-2 mt-8">
           {principles.slice(3).map((p, i) => (
             <motion.div
               key={p.title}
@@ -260,7 +260,7 @@ const About = () => (
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-10">
             {leadership.map((leader, i) => (
               <motion.div
                 key={leader.name}
@@ -315,7 +315,7 @@ const About = () => (
             </p>
           </div>
 
-          <div className="relative max-w-4xl mx-auto">
+          <div className="relative">
             <div className="absolute left-4 top-0 bottom-0 w-1 bg-border hidden md:block" />
 
             {timeline.map((item, i) => (

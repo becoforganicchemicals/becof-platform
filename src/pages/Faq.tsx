@@ -49,7 +49,7 @@ const Faq = () => {
       />
 
       <section className="py-12 md:py-16 bg-muted/30 border-b border-border">
-        <div className="container max-w-3xl text-center">
+        <div className="container text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-3">Frequently asked questions</h1>
           <p className="text-muted-foreground mb-8">
             Everything farmers ask us about our products, how to use them, ordering and delivery.
@@ -74,7 +74,7 @@ const Faq = () => {
             )}
           </div>
           {!q && (
-            <nav aria-label="FAQ categories" className="flex flex-wrap justify-center gap-2 mt-6">
+            <nav aria-label="FAQ categories" className="flex flex-wrap justify-center gap-2 mt-6 lg:hidden">
               {FAQ_CATEGORIES.map((c) => (
                 <a
                   key={c.id}
@@ -90,27 +90,47 @@ const Faq = () => {
       </section>
 
       <section className="py-12">
-        <div className="container max-w-3xl space-y-12">
-          {q ? (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {matches.length} result{matches.length === 1 ? "" : "s"} for “{query.trim()}”
-              </p>
-              {matches.map((f) => <Question key={`search-${f.question}`} faq={f} open />)}
-              {matches.length === 0 && (
-                <p className="text-muted-foreground">
-                  No questions match that. Ask us directly on WhatsApp below — we're happy to help.
-                </p>
+        <div className="container space-y-12">
+          <div className="grid lg:grid-cols-[15rem_minmax(0,1fr)] gap-10">
+            {/* Desktop: categories as a sticky sidebar (phones get the buttons above) */}
+            <aside className="hidden lg:block">
+              <nav aria-label="FAQ categories" className="sticky top-24 space-y-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Categories</p>
+                {FAQ_CATEGORIES.map((c) => (
+                  <a
+                    key={c.id}
+                    href={`#${c.id}`}
+                    className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-primary/5 hover:text-primary transition-colors"
+                  >
+                    {c.title}
+                  </a>
+                ))}
+              </nav>
+            </aside>
+
+            <div className="min-w-0 space-y-12">
+              {q ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {matches.length} result{matches.length === 1 ? "" : "s"} for “{query.trim()}”
+                  </p>
+                  {matches.map((f) => <Question key={`search-${f.question}`} faq={f} open />)}
+                  {matches.length === 0 && (
+                    <p className="text-muted-foreground">
+                      No questions match that. Ask us directly on WhatsApp below — we're happy to help.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                FAQ_CATEGORIES.map((c) => (
+                  <div key={c.id} id={c.id} className="scroll-mt-24 space-y-3">
+                    <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">{c.title}</h2>
+                    {FAQS.filter((f) => f.category === c.id).map((f) => <Question key={f.question} faq={f} />)}
+                  </div>
+                ))
               )}
             </div>
-          ) : (
-            FAQ_CATEGORIES.map((c) => (
-              <div key={c.id} id={c.id} className="scroll-mt-24 space-y-3">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">{c.title}</h2>
-                {FAQS.filter((f) => f.category === c.id).map((f) => <Question key={f.question} faq={f} />)}
-              </div>
-            ))
-          )}
+          </div>
 
           <div className="rounded-2xl bg-primary/5 border border-primary/20 p-6 md:p-8 space-y-4">
             <div className="flex items-start gap-3">

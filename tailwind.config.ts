@@ -6,6 +6,8 @@ export default {
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
+    // The one page width: navbar, footer and every section use `container`.
+    // Never narrow it with max-w-* — see "Layout width" in CLAUDE.md.
     container: {
       center: true,
       padding: "2rem",
