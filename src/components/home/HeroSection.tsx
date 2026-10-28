@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { packSummary, unitOf, type PackSize } from "@/lib/packs";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,8 @@ interface SpotlightProduct {
   images: string[] | null;
   slug: string;
   stock_quantity: number;
+  unit: string;
+  product_variants: PackSize[];
 }
 
 const HeroSection = () => {
@@ -27,7 +30,7 @@ const HeroSection = () => {
     const fetchLatest = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, compare_at_price, short_description, images, slug, stock_quantity")
+        .select("id, name, price, compare_at_price, short_description, images, slug, stock_quantity, unit, product_variants (id, size_liters, price, sku, is_active)")
         .eq("is_published", true)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -132,7 +135,7 @@ const HeroSection = () => {
                       <span className="font-bold text-primary text-lg">
                         KES {product.price.toLocaleString("en-KE")}
                       </span>
-                      <span className="text-xs text-muted-foreground">/ 1 L</span>
+                      <span className="text-xs text-muted-foreground">/ {packSummary(product.product_variants, unitOf(product.unit)).split(" · ")[0]}</span>
                       {product.compare_at_price && (
                         <span className="text-xs text-muted-foreground line-through">
                           KES {product.compare_at_price.toLocaleString("en-KE")}

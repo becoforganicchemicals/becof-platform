@@ -156,7 +156,11 @@ write(join(DIST, "sitemap.xml"), sitemap);
 
 // ── Pack sizes ───────────────────────────────────────────────────────────────
 const kes = (n) => `KES ${Number(n).toLocaleString("en-KE")}`;
-const litres = (n) => `${Number(n).toLocaleString("en-KE")} L`;
+// Pack sizes are in each product's own unit: L, kg or g (products.unit)
+const unitOf = (p) => (p.unit === "kg" || p.unit === "g" ? p.unit : "L");
+const size = (p, n) => `${Number(n).toLocaleString("en-KE")} ${unitOf(p)}`;
+// Merchant Center unit pricing uses lower-case units: "1 l", "5 kg", "100 g"
+const gUnit = (p) => unitOf(p).toLowerCase();
 // Active pack sizes, smallest first; a product without any is one 1 L pack.
 const packsOf = (p) => {
   const packs = (p.product_variants || []).filter((v) => v.is_active !== false).sort((a, b) => a.size_liters - b.size_liters);
@@ -167,15 +171,13 @@ const packUrl = (p, pack, i) => `${SITE_URL}/products/${p.slug}${i === 0 ? "" : 
 const nameOfSlug = (slug) => site.products.find((p) => p.slug === slug)?.name ?? slug;
 
 // ── llms.txt / llms-full.txt ─────────────────────────────────────────────────
-const packList = (p) => packsOf(p).map((v) => `${litres(v.size_liters)} ${kes(v.price)}`).join(" · ");
+const packList = (p) => packsOf(p).map((v) => `${size(p, v.size_liters)} ${kes(v.price)}`).join(" · ");
 const productLine = (p) =>
   `- [${p.name}](${SITE_URL}/products/${p.slug}): ${p.short_description || ""} Packs: ${packList(p)}${p.stock_quantity > 0 ? "" : " (currently out of stock)"}`;
 
 const llms = `# Becof Organic Chemicals
 
-> Becof Organic Chemicals Limited is a Kenyan agri-biotechnology company that makes microbial biofertilizers, biopesticides and organic soil amendments for farmers across Kenya and beyond. All products are 100% natural and formulated for organic farming. Products can be ordered online at ${SITE_URL} in 1, 5, 10, 20 and 50 litre packs, and paid for with M-Pesa. Delivery anywhere in Kenya costs a flat KES 500 per order, and is free on orders of KES 30,000 or more.
-
-Dose: every product is applied at 2 litres per acre per application, mixed with 30 litres of water, usually 2 applications per season.
+> Becof Organic Chemicals Limited is a Kenyan agri-biotechnology company that makes microbial biofertilizers, biopesticides and organic soil amendments for farmers across Kenya and beyond. Its biofertilizers are 100% natural and formulated for organic farming, and NeemShield is a neem-based botanical insecticide. Products can be ordered online at ${SITE_URL} and paid for with M-Pesa. Delivery anywhere in Kenya costs a flat KES 500 per order, and is free on orders of KES 30,000 or more.
 
 Contact: info@becoforganic.com, +254 735 283 397 (Mon–Fri, 8AM–6PM EAT). Based in Nairobi and Kilifi, Kenya.
 
@@ -227,7 +229,7 @@ ${site.products
       `\n## ${p.name}`,
       `URL: ${SITE_URL}/products/${p.slug}`,
       `${p.stock_quantity > 0 ? "In stock" : "Out of stock"}${p.categories?.name ? ` · Category: ${p.categories.name}` : ""}`,
-      `### Pack sizes and prices\n${packsOf(p).map((v) => `- ${litres(v.size_liters)}: ${kes(v.price)} (${kes(Math.round(v.price / v.size_liters))} per litre)`).join("\n")}`,
+      `### Pack sizes and prices\n${packsOf(p).map((v) => `- ${size(p, v.size_liters)}: ${kes(v.price)}`).join("\n")}`,
       p.short_description,
       p.long_description ? stripHtml(p.long_description) : null,
       p.usage_instructions ? `### How to use\n${stripHtml(p.usage_instructions)}` : null,
@@ -237,14 +239,14 @@ ${site.products
   .join("\n")}
 
 # Crop programmes
-Every application is 2 litres of product per acre, mixed with 30 litres of water.
+Rates are per acre.
 ${CROP_PROGRAMMES.map((c) => `
 ## ${c.title}
 URL: ${SITE_URL}/crops/${c.slug}
 
 ${c.intro}${c.crops ? `\n\nCovers: ${c.crops}.` : ""}
 
-${c.steps.map((st) => `- ${nameOfSlug(st.productSlug)} — ${st.purpose}. When: ${st.timing}. Applications per season: ${st.applications}.${st.note ? ` ${st.note}` : ""}`).join("\n")}`).join("\n")}
+${c.steps.map((st) => `- ${nameOfSlug(st.productSlug)} — ${st.purpose}. Rate: ${st.rateText}. When: ${st.timing}. Applications per season: ${st.applications}.${st.note ? ` ${st.note}` : ""}`).join("\n")}`).join("\n")}
 
 Mixing and handling:
 ${HANDLING_NOTES.map((n) => `- ${n}`).join("\n")}
@@ -275,7 +277,7 @@ ${site.products
     const packs = packsOf(p);
     return packs.map((pack, i) => `    <item>
       <g:id>${escapeXml(pack.sku || pack.id)}</g:id>
-${packs.length > 1 ? `      <g:item_group_id>${escapeXml(p.sku || p.id)}</g:item_group_id>\n` : ""}      <g:title>${escapeXml(`${p.name} — ${litres(pack.size_liters)}`)}</g:title>
+${packs.length > 1 ? `      <g:item_group_id>${escapeXml(p.sku || p.id)}</g:item_group_id>\n` : ""}      <g:title>${escapeXml(`${p.name} — ${size(p, pack.size_liters)}`)}</g:title>
       <g:description>${escapeXml(stripHtml(p.long_description) || p.short_description || p.name)}</g:description>
       <g:link>${escapeXml(packUrl(p, pack, i))}</g:link>
 ${images[0] ? `      <g:image_link>${escapeXml(images[0])}</g:image_link>\n` : ""}${images
@@ -283,9 +285,9 @@ ${images[0] ? `      <g:image_link>${escapeXml(images[0])}</g:image_link>\n` : "
       .map((img) => `      <g:additional_image_link>${escapeXml(img)}</g:additional_image_link>\n`)
       .join("")}      <g:availability>${p.stock_quantity >= pack.size_liters ? "in_stock" : "out_of_stock"}</g:availability>
       <g:price>${Number(pack.price).toFixed(2)} KES</g:price>
-      <g:size>${litres(pack.size_liters)}</g:size>
-      <g:unit_pricing_measure>${pack.size_liters} l</g:unit_pricing_measure>
-      <g:unit_pricing_base_measure>1 l</g:unit_pricing_base_measure>
+      <g:size>${size(p, pack.size_liters)}</g:size>
+      <g:unit_pricing_measure>${pack.size_liters} ${gUnit(p)}</g:unit_pricing_measure>
+      <g:unit_pricing_base_measure>${unitOf(p) === "g" ? "100 g" : `1 ${gUnit(p)}`}</g:unit_pricing_base_measure>
       <g:brand>Becof Organic Chemicals</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>

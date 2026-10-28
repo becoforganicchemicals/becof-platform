@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { packSummary, unitOf } from "@/lib/packs";
 import { Navigate, useSearchParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -118,7 +119,7 @@ const DistributorDashboard = () => {
     queryKey: ["distributor-products"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("products").select("id, name, price, images, slug, stock_quantity, short_description, categories(name)")
+        .from("products").select("id, name, price, images, slug, stock_quantity, short_description, unit, categories(name), product_variants (id, size_liters, price, sku, is_active)")
         .eq("is_published", true).order("name");
       if (error) throw error;
       return data;
@@ -495,7 +496,7 @@ const DistributorDashboard = () => {
                               <h4 className="font-semibold text-sm leading-tight mb-1">{product.name}</h4>
                               {product.categories?.name && <p className="text-xs text-muted-foreground mb-1">{product.categories.name}</p>}
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-primary">KES {product.price?.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">/ 1 L</span></span>
+                                <span className="font-bold text-primary">KES {product.price?.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">/ {packSummary(product.product_variants, unitOf(product.unit)).split(" · ")[0]}</span></span>
                                 <Badge variant={product.stock_quantity > 0 ? "secondary" : "destructive"} className="text-xs">
                                   {product.stock_quantity > 0 ? "In Stock" : "Out of Stock"}
                                 </Badge>

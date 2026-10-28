@@ -20,7 +20,7 @@ const must = <T>({ data, error }: { data: T; error: { message: string } | null }
 export const fetchFeaturedProducts = async () => {
   const data = must(await supabase
     .from("products")
-    .select(`id, name, price, average_rating, short_description, images, slug, stock_quantity, categories(name), ${PACKS}`)
+    .select(`id, name, price, average_rating, short_description, images, slug, stock_quantity, unit, categories(name), ${PACKS}`)
     .eq("is_featured", true)
     .eq("is_published", true)
     .order("average_rating", { ascending: false, nullsFirst: false })

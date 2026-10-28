@@ -16,7 +16,7 @@ import { getStoredAffiliate } from "@/lib/affiliate";
 import SEO from "@/components/SEO";
 import { trackMetaEvent } from "@/lib/metaPixel";
 import { trackPurchase } from "@/lib/analytics";
-import { formatLitres } from "@/lib/packs";
+import { formatSize, unitOf } from "@/lib/packs";
 import { deliveryFeeFor, formatKes, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
 
 // A signed-in shopper's own checkout flow — never worth indexing.
@@ -145,7 +145,7 @@ const Checkout = () => {
       product_id: item.product_id,
       variant_id: item.variant_id,
       pack_size_liters: item.pack.size_liters,
-      product_name: `${item.product.name} — ${formatLitres(item.pack.size_liters)}`,
+      product_name: `${item.product.name} — ${formatSize(item.pack.size_liters, unitOf(item.product.unit))}`,
       quantity: item.quantity,
       unit_price: item.pack.price,
       total_price: item.pack.price * item.quantity,
@@ -297,7 +297,7 @@ const Checkout = () => {
                 // Same ID as the pack's g:id in merchant-feed.xml
                 item_id: item.pack.sku || item.pack.id || item.product_id,
                 item_name: item.product.name,
-                item_variant: formatLitres(item.pack.size_liters),
+                item_variant: formatSize(item.pack.size_liters, unitOf(item.product.unit)),
                 price: item.pack.price,
                 quantity: item.quantity,
               })),
@@ -562,7 +562,7 @@ const Checkout = () => {
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {items.map(item => (
                   <div key={item.id} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{item.product.name} ({formatLitres(item.pack.size_liters)}) × {item.quantity}</span>
+                    <span className="text-muted-foreground">{item.product.name} ({formatSize(item.pack.size_liters, unitOf(item.product.unit))}) × {item.quantity}</span>
                     <span>KES {(item.pack.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}

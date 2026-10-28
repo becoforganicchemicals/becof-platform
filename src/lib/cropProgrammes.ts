@@ -1,12 +1,16 @@
-// Crop application programmes, approved by Becof's technical team (October
-// 2026). Shown on the crop pages, used by the "How much do I need?"
-// calculator, and published in llms.txt. Every application is the label dose:
-// 2 L per acre mixed with 30 L of water (see LITRES_PER_ACRE in packs.ts).
+// Crop application programmes. Shown on the crop pages, used by the "How much
+// do I need?" calculators, and published in llms.txt.
+//
+// DRAFT (October 2026 range): rates come from each product's label; timings
+// and numbers of applications are proposed and need Becof's technical team to
+// approve before going live.
 
 export interface ProgrammeStep {
   productSlug: string;
   purpose: string;
   timing: string;
+  ratePerAcre: number; // in the product's unit (products.unit)
+  rateText: string; // how farmers see the rate
   applications: number; // recommended per season
   note?: string;
 }
@@ -21,39 +25,58 @@ export interface CropProgramme {
   steps: ProgrammeStep[];
 }
 
+// Default use of each product, for crops without a programme ("Other crop")
+export const PRODUCT_USAGE: Record<string, { ratePerAcre: number; rateText: string; applications: number; how: string }> = {
+  "becof-nitrofix": { ratePerAcre: 100, rateText: "100 g per acre of seed", applications: 1, how: "Coat the seed just before planting." },
+  "becof-rootmax": { ratePerAcre: 5, rateText: "4–5 kg per acre (1–2 kg for cereals)", applications: 1, how: "Apply once, at planting." },
+  "becof-trichoshield": { ratePerAcre: 0.4, rateText: "400 g per acre as a drench", applications: 2, how: "Drench at planting or transplanting, and again 3–4 weeks later." },
+  "becof-soilfix": { ratePerAcre: 1, rateText: "1 L per acre as a drench (1 L in 1,000 L of water)", applications: 2, how: "Drench at planting, and again mid-season." },
+  "becof-neemshield": { ratePerAcre: 1.2, rateText: "1.2 L per acre as a foliar spray", applications: 2, how: "Spray when pests appear, and repeat as needed." },
+};
+
+const ROOTMAX_CEREALS = { ratePerAcre: 2, rateText: "1–2 kg per acre" };
+const ROOTMAX_OTHER = { ratePerAcre: 5, rateText: "4–5 kg per acre" };
+const TRICHO_DRENCH = { ratePerAcre: 0.4, rateText: "400 g per acre as a drench" };
+const SOILFIX_DRENCH = { ratePerAcre: 1, rateText: "1 L per acre (1 L in 1,000 L of water)" };
+const NEEM_FOLIAR = { ratePerAcre: 1.2, rateText: "1.2 L per acre as a foliar spray" };
+
 export const CROP_PROGRAMMES: CropProgramme[] = [
   {
     slug: "maize",
     name: "Maize",
-    title: "Organic Biofertilizers for Maize",
+    title: "Organic Inputs for Maize",
     description:
-      "Becof's biofertilizer programme for maize in Kenya: which products to use, when to apply them, and how many litres you need per acre.",
+      "Becof's programme for maize in Kenya: stronger roots with mycorrhiza, healthier soil and botanical pest control — which products to use, when, and how much per acre.",
     intro:
-      "A complete biological programme for maize: natural nitrogen for strong vegetative growth, stronger roots for better nutrient uptake, protection against soil-borne disease, and healthier soil season after season.",
+      "A biological programme for maize: mycorrhiza granules at planting for a stronger root system and better drought resistance, healthier soil through the season, and botanical protection when pests appear.",
     steps: [
       {
-        productSlug: "becof-nitrofix",
-        purpose: "Natural nitrogen for strong vegetative growth and greener leaves",
-        timing: "At planting, and again at 4–6 weeks (knee-high, around top-dressing time)",
-        applications: 2,
+        productSlug: "becof-rootmax",
+        purpose: "Builds a stronger root system for better water and nutrient uptake and drought resistance",
+        timing: "Once at planting — mix with your planting fertilizer",
+        ...ROOTMAX_CEREALS,
+        applications: 1,
       },
       {
-        productSlug: "becof-rootmax",
-        purpose: "Stronger roots and better nutrient uptake",
-        timing: "At planting, and again at 3–4 weeks",
+        productSlug: "becof-soilfix",
+        purpose: "Revitalizes the soil, unlocks nutrients and stabilizes pH and EC",
+        timing: "Drench at planting, and again at 4–6 weeks",
+        ...SOILFIX_DRENCH,
         applications: 2,
       },
       {
         productSlug: "becof-trichoshield",
-        purpose: "Protects roots from soil-borne disease",
-        timing: "At planting; repeat at 4 weeks where soil-borne disease pressure is high",
+        purpose: "Protects roots from soil-borne fungal disease",
+        timing: "Drench at planting where soil-borne disease is a known problem",
+        ...TRICHO_DRENCH,
         applications: 1,
-        note: "Use 2 applications where soil-borne disease is a known problem.",
+        note: "Optional — use where soil-borne disease has affected previous crops.",
       },
       {
-        productSlug: "becof-soilfix",
-        purpose: "Rebuilds soil health and stabilises pH",
-        timing: "At land preparation or planting, and again mid-season",
+        productSlug: "becof-neemshield",
+        purpose: "Botanical control of cutworm, aphids, leafhoppers and other pests",
+        timing: "Spray when pests first appear, and repeat as needed",
+        ...NEEM_FOLIAR,
         applications: 2,
       },
     ],
@@ -61,36 +84,49 @@ export const CROP_PROGRAMMES: CropProgramme[] = [
   {
     slug: "beans",
     name: "Beans",
-    title: "Organic Biofertilizers for Beans",
+    title: "Organic Inputs for Beans",
     description:
-      "Becof's biofertilizer programme for dry beans and French beans in Kenya: natural nitrogen-fixing nodules, stronger roots and protection from root rot, with litres needed per acre.",
+      "Becof's programme for dry beans and French beans in Kenya: NitroFix rhizobium seed inoculation, mycorrhiza granules, root protection and botanical pest control, with amounts per acre.",
     intro:
-      "Beans are a short crop, so this programme does most of its work at planting and in the first weeks. NitroFix™ contains Rhizobium, which works with bean roots to form nodules that fix nitrogen directly for the plant — the earlier it reaches young roots, the better.",
-    crops: "Dry beans (rosecoco, mwitemania, yellow beans and others) and French beans",
+      "Beans can make their own nitrogen from the air — with the right bacteria. This programme starts with NitroFix™ rhizobium on the seed, adds RootMax™ mycorrhiza for a stronger root system, protects the roots from disease, and controls pests naturally.",
+    crops: "Dry beans (rosecoco, mwitemania, yellow beans, kidney beans and others) and French beans",
     steps: [
       {
         productSlug: "becof-nitrofix",
-        purpose: "Rhizobium forms nitrogen-fixing nodules on bean roots, plus natural nitrogen for strong growth",
-        timing: "At planting, close to the seed so the bacteria reach young roots early, and again at 3 weeks",
-        applications: 2,
+        purpose: "Rhizobium bacteria form nitrogen-fixing nodules, so beans make their own nitrogen",
+        timing: "Coat the seed just before planting, and plant within 4 hours",
+        ratePerAcre: 100,
+        rateText: "100 g per acre of seed (15–25 kg of seed)",
+        applications: 1,
+        note: "NitroFix is for common dry beans and kidney beans. Don't top-dress with nitrogen after planting.",
       },
       {
         productSlug: "becof-rootmax",
-        purpose: "Stronger roots and better nutrient uptake",
-        timing: "At planting, and again at 3 weeks",
-        applications: 2,
+        purpose: "Builds a stronger root system for better water and nutrient uptake",
+        timing: "Once at planting — mix with your starter fertilizer, away from the coated seed",
+        ...ROOTMAX_OTHER,
+        applications: 1,
       },
       {
         productSlug: "becof-trichoshield",
         purpose: "Protects roots from soil-borne disease such as root rot",
-        timing: "At planting; repeat at 3–4 weeks where root rot is a known problem",
+        timing: "Drench at planting; repeat at 3–4 weeks where root rot is a known problem",
+        ...TRICHO_DRENCH,
         applications: 1,
         note: "Use 2 applications where root rot is a known problem.",
       },
       {
         productSlug: "becof-soilfix",
-        purpose: "Rebuilds soil health and stabilises pH",
-        timing: "At land preparation or planting, and again before flowering",
+        purpose: "Revitalizes the soil and stabilizes pH and EC",
+        timing: "Drench at planting, and again before flowering",
+        ...SOILFIX_DRENCH,
+        applications: 2,
+      },
+      {
+        productSlug: "becof-neemshield",
+        purpose: "Botanical control of aphids, whitefly, thrips and other pests",
+        timing: "Spray when pests first appear, and repeat as needed",
+        ...NEEM_FOLIAR,
         applications: 2,
       },
     ],
@@ -98,28 +134,38 @@ export const CROP_PROGRAMMES: CropProgramme[] = [
   {
     slug: "potatoes",
     name: "Potatoes",
-    title: "Organic Biofertilizers for Potatoes",
+    title: "Organic Inputs for Potatoes",
     description:
-      "Becof's biofertilizer programme for potatoes in Kenya: protect tubers and roots from soil-borne disease, build stronger roots and healthier soil, with litres needed per acre.",
+      "Becof's programme for potatoes in Kenya: root protection from soil-borne disease, mycorrhiza granules, healthier soil and botanical control of aphids and nematodes, with amounts per acre.",
     intro:
-      "Potatoes are especially exposed to soil-borne disease. This programme protects the root zone from planting through hilling, builds a stronger root system, and improves the soil the crop grows in.",
+      "Potatoes are especially exposed to soil-borne disease and nematodes. This programme protects the root zone from planting through hilling, builds a stronger root system, and keeps pests in check naturally.",
     steps: [
       {
         productSlug: "becof-trichoshield",
-        purpose: "Protects roots and tubers from soil-borne disease",
-        timing: "At planting (in the furrow, over the seed tubers), and again at hilling (4–5 weeks)",
+        purpose: "Protects roots and tubers from soil-borne fungal disease",
+        timing: "Drench the furrow at planting, and again at hilling (4–5 weeks)",
+        ...TRICHO_DRENCH,
         applications: 2,
       },
       {
         productSlug: "becof-rootmax",
-        purpose: "Stronger roots and better nutrient uptake",
-        timing: "At planting, and again at hilling",
-        applications: 2,
+        purpose: "Builds a stronger root system for better water and nutrient uptake",
+        timing: "Once at planting — mix with your planting fertilizer",
+        ...ROOTMAX_OTHER,
+        applications: 1,
       },
       {
         productSlug: "becof-soilfix",
-        purpose: "Rebuilds soil health and stabilises pH",
-        timing: "At planting, and again at about 6 weeks",
+        purpose: "Revitalizes the soil and stabilizes pH and EC",
+        timing: "Drench at planting, and again at about 6 weeks",
+        ...SOILFIX_DRENCH,
+        applications: 2,
+      },
+      {
+        productSlug: "becof-neemshield",
+        purpose: "Botanical control of aphids, leaf miners and parasitic nematodes",
+        timing: "Spray when pests appear; for nematodes, drench at 2–3.2 L per acre",
+        ...NEEM_FOLIAR,
         applications: 2,
       },
     ],
@@ -127,37 +173,41 @@ export const CROP_PROGRAMMES: CropProgramme[] = [
   {
     slug: "vegetables",
     name: "Vegetables",
-    title: "Organic Biofertilizers for Vegetables",
+    title: "Organic Inputs for Vegetables",
     description:
-      "Becof's biofertilizer programme for onions, tomatoes, cabbage, kale and other vegetables in Kenya, with application timing and litres needed per acre.",
+      "Becof's programme for tomatoes, onions, cabbage, kale and other vegetables in Kenya: root protection at transplanting, mycorrhiza, healthier soil and botanical pest control, with amounts per acre.",
     intro:
-      "For onions, tomatoes, cabbages, kales (sukuma wiki), spinach, peppers and other vegetables. Start in the nursery or at transplanting to protect young roots, then keep feeding the soil and plant through the season.",
-    crops: "Onions, tomatoes, cabbage, kale (sukuma wiki), spinach, capsicum, carrots and other vegetables",
+      "For tomatoes, onions, cabbages, kales (sukuma wiki), spinach, peppers and other vegetables. Protect young roots at transplanting, build a strong root system, keep the soil healthy, and control whitefly, aphids, thrips and mites naturally.",
+    crops: "Tomatoes, onions, cabbage, kale (sukuma wiki), spinach, capsicum, chilli, carrots and other vegetables",
     steps: [
       {
         productSlug: "becof-trichoshield",
-        purpose: "Protects young roots from soil-borne disease",
-        timing: "As a nursery or transplanting drench, and again 3–4 weeks later",
+        purpose: "Protects young roots from soil-borne fungal disease",
+        timing: "Dip seedling roots at transplanting (200 g in 20 L of water), or drench; drench again 3–4 weeks later",
+        ...TRICHO_DRENCH,
         applications: 2,
       },
       {
         productSlug: "becof-rootmax",
-        purpose: "Faster establishment and stronger roots after transplanting",
-        timing: "At transplanting, and again 3 weeks later",
-        applications: 2,
-      },
-      {
-        productSlug: "becof-nitrofix",
-        purpose: "Natural nitrogen for vigorous leaf growth",
-        timing: "At transplanting, and again at 4 weeks (especially for leafy vegetables)",
-        applications: 2,
+        purpose: "Faster establishment and a stronger root system",
+        timing: "Once at transplanting — apply in the planting holes or with planting fertilizer",
+        ...ROOTMAX_OTHER,
+        applications: 1,
       },
       {
         productSlug: "becof-soilfix",
-        purpose: "Rebuilds soil health and stabilises pH",
-        timing: "At transplanting, then every 4–6 weeks for long-season crops such as tomatoes",
+        purpose: "Revitalizes the soil and stabilizes pH and EC",
+        timing: "Drench at transplanting, then every 4–6 weeks for long-season crops such as tomatoes",
+        ...SOILFIX_DRENCH,
         applications: 2,
         note: "Use 3 applications for long-season crops such as tomatoes.",
+      },
+      {
+        productSlug: "becof-neemshield",
+        purpose: "Botanical control of whitefly, aphids, thrips, spider mites and leaf miners",
+        timing: "Spray when pests first appear, and repeat as needed",
+        ...NEEM_FOLIAR,
+        applications: 3,
       },
     ],
   },
@@ -177,10 +227,11 @@ export const programmesForProduct = (productSlug: string) =>
     crop.steps.filter((s) => s.productSlug === productSlug).map((step) => ({ crop, step }))
   );
 
-// General handling advice, shown on crop pages and in the FAQ.
+// General handling advice, shown on crop pages and in the FAQ (from labels).
 export const HANDLING_NOTES = [
-  "Mix each 2 L dose with 30 L of clean, non-chlorinated water and apply the same day.",
-  "Apply to moist soil, ideally in the early morning or late afternoon, out of strong sun.",
-  "Store products in a cool, shaded place — they contain live beneficial microorganisms.",
-  "Leave at least 7 days between TrichoShield™ and any copper-based or chemical fungicide.",
+  "Use clean, non-chlorinated water — chlorine kills the live organisms in NitroFix™, TrichoShield™ and SoilFix™.",
+  "NitroFix™: coat seed in a plastic (never metal) container, keep coated seed out of the sun, and plant within 4 hours.",
+  "TrichoShield™: apply to moist (not waterlogged) soil, and never at the same time as chemical fungicides or fumigants.",
+  "NeemShield™: add water to NeemShield, not NeemShield to water, and stir to a good emulsion.",
+  "Store all products in a cool, dry, shaded place, away from direct sunlight.",
 ];

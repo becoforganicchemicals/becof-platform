@@ -3,7 +3,7 @@
 // assistants connect products and articles to the same business entity.
 
 import { deliveryFeeFor } from "@/lib/delivery";
-import { formatLitres, isPackInStock, sortPacks, type PackSize } from "@/lib/packs";
+import { formatSize, isPackInStock, sortPacks, unitOf, type PackSize } from "@/lib/packs";
 
 export const SITE_URL = "https://www.becoforganicchemicals.com";
 const ORG_ID = `${SITE_URL}/#organization`;
@@ -104,6 +104,7 @@ interface ProductLike {
   sku?: string | null;
   price: number;
   stock_quantity: number;
+  unit?: string | null;
   short_description?: string | null;
   long_description?: string | null;
   categories?: { name: string } | null;
@@ -114,8 +115,8 @@ interface ReviewLike {
 }
 
 // The page URL that preselects a pack size (ProductDetail reads ?size=)
-export const packUrl = (slug: string, sizeLitres: number, isDefault: boolean) =>
-  `${SITE_URL}/products/${slug}${isDefault ? "" : `?size=${sizeLitres}`}`;
+export const packUrl = (slug: string, size: number, isDefault: boolean) =>
+  `${SITE_URL}/products/${slug}${isDefault ? "" : `?size=${size}`}`;
 
 // One pack size → one Offer
 const packOffer = (product: ProductLike, pack: PackSize, url: string) => ({
@@ -177,7 +178,7 @@ export const productSchema = (
       "@type": "Product",
       "@id": `${url}#product`,
       sku: pack.sku || product.sku || undefined,
-      size: formatLitres(pack.size_liters),
+      size: formatSize(pack.size_liters, unitOf(product.unit)),
       offers: packOffer(product, pack, url),
     };
   }
@@ -192,9 +193,9 @@ export const productSchema = (
       const variantUrl = packUrl(product.slug, pack.size_liters, i === 0);
       return {
         "@type": "Product",
-        name: `${product.name} — ${formatLitres(pack.size_liters)}`,
+        name: `${product.name} — ${formatSize(pack.size_liters, unitOf(product.unit))}`,
         sku: pack.sku || undefined,
-        size: formatLitres(pack.size_liters),
+        size: formatSize(pack.size_liters, unitOf(product.unit)),
         image: images.map(absolute)[0],
         url: variantUrl,
         offers: packOffer(product, pack, variantUrl),

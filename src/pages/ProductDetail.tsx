@@ -5,7 +5,7 @@ import { fetchProductBySlug, fetchProductReviews } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 import { productSchema, breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
 import { DELIVERY_SUMMARY, formatKes } from "@/lib/delivery";
-import { formatLitres, isPackInStock, maxPacks, pricePerLitre, sortPacks, type PackSize } from "@/lib/packs";
+import { formatSize, isPackInStock, maxPacks, pricePerUnit, sortPacks, unitOf, type PackSize } from "@/lib/packs";
 import { programmesForProduct } from "@/lib/cropProgrammes";
 import PackCalculator from "@/components/product/PackCalculator";
 import Layout from "@/components/layout/Layout";
@@ -23,7 +23,7 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart, litresInCart } = useCart();
+  const { addToCart, amountInCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const seed = getPrerendered<{ product: any; reviews: any[] }>(`product:${slug}`);
   const [product, setProduct] = useState<any>(() => seed?.product ?? null);
@@ -125,14 +125,15 @@ const ProductDetail = () => {
     setDownloadingPdf(false);
   };
 
-  // Pack sizes, smallest first. Products without any fall back to a single
-  // 1 L pack at the listed price.
+  // Pack sizes, smallest first, in the product's unit (L, kg or g). Products
+  // without any fall back to a single 1-unit pack at the listed price.
+  const unit = unitOf(product?.unit);
   const packs: PackSize[] = product
     ? sortPacks(product.product_variants).length
       ? sortPacks(product.product_variants)
       : [{ id: "", size_liters: 1, price: product.price, sku: product.sku }]
     : [];
-  // The selected size lives in the URL (?size=20) so each size has its own
+  // The selected size lives in the URL (?size=5) so each size has its own
   // link for sharing, Google Shopping and the structured data.
   const requestedSize = Number(searchParams.get("size"));
   const selectedPack =
@@ -144,7 +145,7 @@ const ProductDetail = () => {
     setSearchParams(pack === packs[0] ? {} : { size: String(pack.size_liters) }, { replace: true });
   };
   const maxQuantity = product && selectedPack
-    ? Math.max(1, maxPacks(selectedPack, product.stock_quantity, litresInCart(product.id)))
+    ? Math.max(1, maxPacks(selectedPack, product.stock_quantity, amountInCart(product.id)))
     : 1;
 
   const handleAddToCart = () => addToCart(product.id, quantity, selectedPack?.id || undefined);
@@ -162,11 +163,14 @@ const ProductDetail = () => {
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const inStock = product.stock_quantity > 0;
   const packInStock = isPackInStock(selectedPack, product.stock_quantity);
+  // Exact stock isn't useful to shoppers (and is in grams for some products):
+  // say "In stock", or how many of the selected pack are left when it's low.
+  const packsLeft = maxPacks(selectedPack, product.stock_quantity);
   const recommendedFor = programmesForProduct(product.slug);
 
   const productUrl = `${SITE_URL}/products/${product.slug}`;
   const whatsappMessage = inStock
-    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nPack size: ${formatLitres(selectedPack.size_liters)}\nQuantity: ${quantity}\nEstimated total: KES ${(selectedPack.price * quantity).toLocaleString()}\n\nProduct link: ${productUrl}\n\nCould you help me place this order?`
+    ? `Hi Becof Organic Chemicals! I'd like to order:\n\n*${product.name}*\nPack size: ${formatSize(selectedPack.size_liters, unit)}\nQuantity: ${quantity}\nEstimated total: KES ${(selectedPack.price * quantity).toLocaleString()}\n\nProduct link: ${productUrl}\n\nCould you help me place this order?`
     : `Hi Becof Organic Chemicals! I'm interested in *${product.name}*, currently shown as out of stock on your website.\n\nProduct link: ${productUrl}\n\nCould you let me know when it'll be back, or help me arrange a custom order?`;
 
   return (
@@ -236,8 +240,8 @@ const ProductDetail = () => {
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-primary">{formatKes(selectedPack.price)}</span>
                 <span className="text-sm text-muted-foreground">
-                  {formatLitres(selectedPack.size_liters)}
-                  {selectedPack.size_liters > 1 && <> · {formatKes(pricePerLitre(selectedPack))} per litre</>}
+                  {formatSize(selectedPack.size_liters, unit)}
+                  {packs.length > 1 && <> · {formatKes(pricePerUnit(selectedPack))} per {unit}</>}
                 </span>
                 {product.compare_at_price && selectedPack.size_liters === 1 && (
                   <span className="text-lg text-muted-foreground line-through">KES {product.compare_at_price.toLocaleString()}</span>
@@ -263,7 +267,7 @@ const ProductDetail = () => {
                             active ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border hover:border-primary/50"
                           }`}
                         >
-                          <span className="block text-sm font-semibold">{formatLitres(pack.size_liters)}</span>
+                          <span className="block text-sm font-semibold">{formatSize(pack.size_liters, unit)}</span>
                           <span className="block text-xs text-muted-foreground">
                             {available ? formatKes(pack.price) : "Out of stock"}
                           </span>
@@ -278,7 +282,7 @@ const ProductDetail = () => {
 
               <div className="flex items-center gap-2">
                 <Badge variant={inStock ? "default" : "destructive"}>
-                  {inStock ? `${formatLitres(product.stock_quantity)} in stock` : "Out of Stock"}
+                  {!inStock ? "Out of Stock" : packInStock && packsLeft < 10 ? `Only ${packsLeft} left` : "In stock"}
                 </Badge>
                 {(selectedPack.sku || product.sku) && (
                   <span className="text-xs text-muted-foreground">SKU: {selectedPack.sku || product.sku}</span>

@@ -10,7 +10,7 @@ import { Star, ShoppingCart, Search, Heart, Zap, ClipboardList } from "lucide-re
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import SEO from "@/components/SEO";
-import { packSummary } from "@/lib/packs";
+import { packSummary, unitOf } from "@/lib/packs";
 import CropButtons from "@/components/CropButtons";
 import { fetchPublishedProducts } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
@@ -239,7 +239,7 @@ const Products = () => {
                         <div>
                           <span className="font-bold text-primary">KES {p.price.toLocaleString()}</span>
                           {p.compare_at_price && <span className="text-xs text-muted-foreground line-through ml-2">KES {p.compare_at_price.toLocaleString()}</span>}
-                          <span className="block text-xs text-muted-foreground">{packSummary(p.product_variants)}</span>
+                          <span className="block text-xs text-muted-foreground">{packSummary(p.product_variants, unitOf(p.unit))}</span>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleWishlist(p.id)}>

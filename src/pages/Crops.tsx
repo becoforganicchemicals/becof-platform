@@ -4,7 +4,6 @@ import Layout from "@/components/layout/Layout";
 import SEO from "@/components/SEO";
 import { CROP_PROGRAMMES, cropNamesList } from "@/lib/cropProgrammes";
 import { breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
-import { LITRES_PER_ACRE, WATER_LITRES_PER_ACRE } from "@/lib/packs";
 
 const Crops = () => (
   <Layout>
@@ -19,7 +18,7 @@ const Crops = () => (
         <h1 className="text-3xl md:text-4xl font-bold mb-4">Shop by crop</h1>
         <p className="text-lg text-muted-foreground mb-10 max-w-3xl">
           Choose your crop to see which Becof products to use, when to apply them, and exactly how much you need for
-          your farm. Every application is {LITRES_PER_ACRE} L per acre, mixed with {WATER_LITRES_PER_ACRE} L of water.
+          your farm.
         </p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CROP_PROGRAMMES.map((crop) => (

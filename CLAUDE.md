@@ -33,3 +33,13 @@ so its left and right edges line up with the logo and the "Shop Now" button in t
 **How to check:** view the page at 1440 px wide. The outermost content edges of every section
 should line up with the navbar's logo (left) and "Shop Now" button (right), and at 390 px wide
 nothing should scroll sideways.
+
+## Products, pack sizes and units
+
+- Each product is sold in its own unit — `products.unit` is `L`, `kg` or `g`. Pack sizes
+  (`product_variants.size_liters`) and stock (`products.stock_quantity`) are amounts **in that
+  unit**; the `size_liters` / `pack_size_liters` column names predate kg and g packs.
+- Never hard-code litres. Format sizes with `formatSize` / `formatAmount` from `src/lib/packs.ts`.
+- `products.price` is the smallest pack on sale's price; the admin keeps it in step.
+- Doses per acre live in `src/lib/cropProgrammes.ts` (per crop step, plus `PRODUCT_USAGE` for
+  other crops). Prices quoted in `src/lib/faq.ts` must be updated when pack prices change.

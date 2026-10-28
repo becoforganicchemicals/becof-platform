@@ -16,12 +16,14 @@ import {
   LayoutGrid, List, RefreshCw,
 } from "lucide-react";
 
-// Pack sizes larger than 1 L. The 1 L pack is kept in step with the
-// product's own Price and SKU fields when the product is saved.
+// Every pack size the product is sold in, in the product's unit (L, kg or g).
+// The product's listed price is its smallest active pack's price, and that
+// pack uses the product SKU unless one is entered.
 interface PackForm { id?: string; size: string; price: string; sku: string; is_active: boolean }
+type Unit = "L" | "kg" | "g";
 
 interface ProductForm {
-  name: string; slug: string; price: string; stock_quantity: string;
+  name: string; slug: string; unit: Unit; stock_quantity: string;
   short_description: string; long_description: string; usage_instructions: string;
   sku: string; is_published: boolean; is_featured: boolean;
   parent_category_id: string; subcategory_id: string;
@@ -29,11 +31,11 @@ interface ProductForm {
 }
 
 const emptyForm: ProductForm = {
-  name: "", slug: "", price: "", stock_quantity: "", short_description: "",
+  name: "", slug: "", unit: "L", stock_quantity: "", short_description: "",
   long_description: "", usage_instructions: "", sku: "",
   is_published: true, is_featured: false,
   parent_category_id: "", subcategory_id: "",
-  packs: [],
+  packs: [{ size: "1", price: "", sku: "", is_active: true }],
 };
 
 type ViewMode = "grid" | "list";
@@ -150,16 +152,24 @@ const AdminProducts = () => {
         const finalCategoryId = product.subcategory_id || product.parent_category_id || null;
         if (!finalCategoryId) throw new Error("Category is required");
 
-        const packs = (product.packs as PackForm[]).map(p => ({ ...p, sizeNum: Number(p.size), priceNum: Number(p.price) }));
+        const unit = product.unit as Unit;
+        const packs = (product.packs as PackForm[])
+          .map(p => ({ ...p, sizeNum: Number(p.size), priceNum: Number(p.price) }))
+          .sort((a, b) => a.sizeNum - b.sizeNum);
         const sizes = packs.map(p => p.sizeNum);
-        if (packs.some(p => !(p.sizeNum > 1) || !Number.isInteger(p.sizeNum))) throw new Error("Pack sizes must be whole litres above 1 L");
+        if (!packs.length) throw new Error("Add at least one pack size");
+        if (packs.some(p => !(p.sizeNum > 0) || !Number.isInteger(p.sizeNum))) throw new Error(`Pack sizes must be whole numbers of ${unit}`);
         if (packs.some(p => !(p.priceNum > 0))) throw new Error("Every pack size needs a price");
         if (new Set(sizes).size !== sizes.length) throw new Error("Each pack size can only be listed once");
+        const onSale = packs.filter(p => p.is_active);
+        if (!onSale.length) throw new Error("At least one pack size must be on sale");
 
         const payload = {
           name: product.name,
           slug: product.slug || generateSlug(product.name),
-          price: Number(product.price),
+          // Listed price (cards, sorting, search) = the smallest pack on sale
+          price: onSale[0].priceNum,
+          unit,
           stock_quantity: Number(product.stock_quantity),
           short_description: product.short_description || null,
           long_description: product.long_description || null,
@@ -186,21 +196,18 @@ const AdminProducts = () => {
           productId = data.id;
         }
 
-        // Pack sizes: the 1 L pack mirrors the product's price and SKU; larger
-        // packs come from the editor; sizes removed in the editor are deleted.
+        // Pack sizes: saved from the editor (the smallest uses the product SKU
+        // unless one is entered); sizes removed in the editor are deleted.
         const { error: packErr } = await supabase.from("product_variants").upsert(
-          [
-            { product_id: productId, size_liters: 1, price: payload.price, sku: payload.sku, is_active: true },
-            ...packs.map(p => ({
-              product_id: productId, size_liters: p.sizeNum, price: p.priceNum,
-              sku: p.sku.trim() || `${payload.sku}-${p.sizeNum}L`, is_active: p.is_active,
-            })),
-          ],
+          packs.map((p, i) => ({
+            product_id: productId, size_liters: p.sizeNum, price: p.priceNum, is_active: p.is_active,
+            sku: p.sku.trim() || (i === 0 ? payload.sku : `${payload.sku}-${p.sizeNum}${unit.toUpperCase()}`),
+          })),
           { onConflict: "product_id,size_liters" }
         );
         if (packErr) throw packErr;
         const removed = (editingProduct?.product_variants || [])
-          .filter((v: any) => Number(v.size_liters) !== 1 && !sizes.includes(Number(v.size_liters)))
+          .filter((v: any) => !sizes.includes(Number(v.size_liters)))
           .map((v: any) => v.id);
         if (removed.length) {
           const { error } = await supabase.from("product_variants").delete().in("id", removed);
@@ -215,7 +222,7 @@ const AdminProducts = () => {
         action: product.id ? "UPDATE" : "INSERT",
         targetTable: "products",
         targetId: product.id || null,
-        afterData: { name: product.name, price: product.price, is_published: product.is_published },
+        afterData: { name: product.name, unit: product.unit, packs: product.packs, is_published: product.is_published },
       });
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       setDialogOpen(false);
@@ -278,7 +285,7 @@ const AdminProducts = () => {
     const cat = p.categories;
     const isSub = cat?.parent_id;
     setForm({
-      name: p.name, slug: p.slug, price: String(p.price),
+      name: p.name, slug: p.slug, unit: (p.unit || "L") as Unit,
       stock_quantity: String(p.stock_quantity),
       short_description: p.short_description || "",
       long_description: p.long_description || "",
@@ -288,7 +295,6 @@ const AdminProducts = () => {
       parent_category_id: isSub ? cat.parent_id : (p.category_id || ""),
       subcategory_id: isSub ? p.category_id : "",
       packs: (p.product_variants || [])
-        .filter((v: any) => Number(v.size_liters) !== 1)
         .sort((a: any, b: any) => a.size_liters - b.size_liters)
         .map((v: any) => ({ id: v.id, size: String(v.size_liters), price: String(v.price), sku: v.sku || "", is_active: v.is_active })),
     });
@@ -423,16 +429,18 @@ const AdminProducts = () => {
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Pricing & Stock</p>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold text-muted-foreground">Price per 1 L (KES) *</Label>
-                      <Input
-                        type="number" min="0" className="mt-1"
-                        value={form.price}
-                        onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                        required
-                      />
+                      <Label className="text-xs font-semibold text-muted-foreground">Sold by *</Label>
+                      <Select value={form.unit} onValueChange={(v) => setForm(f => ({ ...f, unit: v as Unit }))}>
+                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="L">Litres (L)</SelectItem>
+                          <SelectItem value="kg">Kilograms (kg)</SelectItem>
+                          <SelectItem value="g">Grams (g)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold text-muted-foreground">Stock (litres) *</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">Stock ({form.unit}) *</Label>
                       <Input
                         type="number" min="0" className="mt-1"
                         value={form.stock_quantity}
@@ -446,13 +454,13 @@ const AdminProducts = () => {
                     </div>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Stock is total litres on hand, shared by every pack size. A pack size shows as out of stock when fewer litres remain than it holds.
+                    Stock is the total amount on hand in {form.unit}, shared by every pack size — e.g. 50 × 100 g packs = 5000 g. A pack size shows as out of stock when less remains than it holds.
                   </p>
 
                   {/* Pack sizes */}
                   <div className="rounded-lg border border-border p-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs font-semibold text-muted-foreground">Larger pack sizes</Label>
+                      <Label className="text-xs font-semibold text-muted-foreground">Pack sizes *</Label>
                       <Button
                         type="button" variant="outline" size="sm" className="h-7 text-xs gap-1"
                         onClick={() => setForm(f => ({ ...f, packs: [...f.packs, { size: "", price: "", sku: "", is_active: true }] }))}
@@ -460,17 +468,17 @@ const AdminProducts = () => {
                         <Plus className="h-3 w-3" /> Add size
                       </Button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">The 1 L pack uses the price and SKU above.</p>
-                    {form.packs.length === 0 && <p className="text-xs text-muted-foreground">Only sold in 1 L.</p>}
+                    <p className="text-[11px] text-muted-foreground">Size in {form.unit}, price in KES. The smallest pack on sale sets the listed price.</p>
+                    {form.packs.length === 0 && <p className="text-xs text-destructive">Add at least one pack size.</p>}
                     {form.packs.map((pack, i) => {
                       const setPack = (patch: Partial<PackForm>) =>
                         setForm(f => ({ ...f, packs: f.packs.map((p, j) => (j === i ? { ...p, ...patch } : p)) }));
-                      const perLitre = Number(pack.size) > 0 && Number(pack.price) > 0
+                      const perUnit = Number(pack.size) > 0 && Number(pack.price) > 0
                         ? Math.round(Number(pack.price) / Number(pack.size)) : null;
                       return (
                         <div key={pack.id ?? `new-${i}`} className="grid grid-cols-[4.5rem_1fr_1fr_auto_auto] gap-2 items-center">
                           <Input
-                            type="number" min="2" step="1" placeholder="L" aria-label="Size in litres" className="h-8 text-sm"
+                            type="number" min="1" step="1" placeholder={form.unit} aria-label={`Size in ${form.unit}`} className="h-8 text-sm"
                             value={pack.size} onChange={e => setPack({ size: e.target.value })} required
                           />
                           <div>
@@ -478,10 +486,10 @@ const AdminProducts = () => {
                               type="number" min="1" placeholder="Price (KES)" aria-label="Pack price" className="h-8 text-sm"
                               value={pack.price} onChange={e => setPack({ price: e.target.value })} required
                             />
-                            {perLitre && <p className="text-[10px] text-muted-foreground mt-0.5">KES {perLitre.toLocaleString()} / L</p>}
+                            {perUnit && form.unit !== "g" && <p className="text-[10px] text-muted-foreground mt-0.5">KES {perUnit.toLocaleString()} / {form.unit}</p>}
                           </div>
                           <Input
-                            placeholder={form.sku && pack.size ? `${form.sku}-${pack.size}L` : "SKU (auto)"} aria-label="Pack SKU"
+                            placeholder="SKU (auto)" aria-label="Pack SKU"
                             className="h-8 font-mono text-xs" value={pack.sku} onChange={e => setPack({ sku: e.target.value })}
                           />
                           <Switch checked={pack.is_active} onCheckedChange={v => setPack({ is_active: v })} aria-label="On sale" />
@@ -713,7 +721,7 @@ const AdminProducts = () => {
                 {/* Stock */}
                 <p className={`text-sm font-medium ${isLow ? "text-red-500" : "text-muted-foreground"}`}>
                   {isLow && <AlertTriangle className="h-3 w-3 inline mr-0.5" />}
-                  {p.stock_quantity} L
+                  {p.stock_quantity} {p.unit || "L"}
                 </p>
 
                 {/* Published toggle */}
@@ -793,7 +801,7 @@ const AdminProducts = () => {
                   <p className="font-semibold text-foreground text-sm leading-tight truncate">{p.name}</p>
                   <p className="text-primary font-bold mt-1">KES {Number(p.price).toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Stock: {p.stock_quantity} L · {(p.product_variants || []).filter((v: any) => v.is_active).length || 1} pack size{(p.product_variants || []).filter((v: any) => v.is_active).length === 1 ? "" : "s"}
+                    Stock: {p.stock_quantity} {p.unit || "L"} · {(p.product_variants || []).filter((v: any) => v.is_active).length || 1} pack size{(p.product_variants || []).filter((v: any) => v.is_active).length === 1 ? "" : "s"}
                   </p>
 
                   <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border/50">

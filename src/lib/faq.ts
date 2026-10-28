@@ -4,7 +4,6 @@
 // the approved crop programmes and handling notes, delivery and return terms.
 
 import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD, formatKes } from "@/lib/delivery";
-import { LITRES_PER_ACRE, WATER_LITRES_PER_ACRE } from "@/lib/packs";
 import { cropNamesList } from "@/lib/cropProgrammes";
 
 export const FAQ_CATEGORIES = [
@@ -29,25 +28,26 @@ export const FAQS: Faq[] = [
     category: "products",
     question: "Are Becof products suitable for organic farming?",
     answer:
-      "Yes. All Becof products are 100% natural, made from beneficial microorganisms, and formulated for organic farming systems.",
+      "Yes. Becof's biofertilizers — NitroFix™, RootMax™, TrichoShield™ and SoilFix™ — are 100% natural, made from beneficial microorganisms, and formulated for organic farming systems. NeemShield™ is a botanical product made from neem oil.",
   },
   {
     category: "products",
     question: "How do I choose the right product for my crop?",
-    answer: `Start with what your crop needs. NitroFix™ supplies natural nitrogen for strong leaf and stem growth (maize, beans and vegetables). RootMax™ builds stronger roots and better nutrient uptake (vegetables, fruits and cereals). TrichoShield™ protects roots from soil-borne disease (all crops). SoilFix™ rebuilds soil health and stabilises pH (all crops). Our crop guides for ${cropNamesList()} set out exactly which products to use and when.`,
+    answer: `Start with what your crop needs. NitroFix™ is a rhizobium seed inoculant that lets dry beans and kidney beans make their own nitrogen. RootMax™ is a mycorrhiza granule that builds a stronger root system for better water and nutrient uptake (all crops). TrichoShield™ protects roots from soil-borne fungal disease. SoilFix™ revitalizes degraded soil and stabilizes pH and EC. NeemShield™ is a botanical insecticide, miticide and nematicide for pests such as whitefly, aphids, thrips and spider mites. Our crop guides for ${cropNamesList()} set out exactly which products to use and when.`,
     link: { to: "/crops", label: "See the crop guides" },
   },
   {
     category: "products",
     question: "What are the benefits of using Becof products?",
     answer:
-      "Becof biofertilizers work with the living soil instead of against it. They supply natural nitrogen and reduce your dependence on synthetic nitrogen fertilizer over time, build stronger roots that take up nutrients better, protect roots from soil-borne disease as a biological alternative to chemical fungicides, and improve soil health by stabilising pH and electrical conductivity. All are 100% natural and suited to organic farming.",
+      "Becof products work with the living soil instead of against it. NitroFix™ lets beans fix their own nitrogen from the air, cutting top-dressing costs. RootMax™ grows a stronger root system that takes up more water and nutrients and resists drought. TrichoShield™ protects roots from soil-borne fungal disease as a biological alternative to chemical fungicides, with a zero pre-harvest interval. SoilFix™ revitalizes degraded soils and stabilizes pH and EC. NeemShield™ controls a wide range of pests with neem's natural compounds.",
   },
   {
+    // States prices — update this answer whenever pack prices change in the admin.
     category: "products",
     question: "What pack sizes are available?",
     answer:
-      "Every product comes in 1 L, 5 L, 10 L, 20 L and 50 L packs. Larger packs cost less per litre: KES 2,800 per litre from 5 L upwards for NitroFix™, TrichoShield™ and RootMax™ (KES 2,950 for 1 L), and KES 2,500 per litre for SoilFix™ (KES 2,650 for 1 L). Choose the size on the product page.",
+      "NeemShield™ 1 L — KES 2,325. RootMax™ 1 kg — KES 2,100, or 5 kg — KES 10,000. NitroFix™ 100 g (with 30 g gum arabic adhesive) — KES 1,950. TrichoShield™ 1 kg — KES 3,200. SoilFix™ 1 L — KES 2,200.",
     link: { to: "/products", label: "Shop products" },
   },
 
@@ -55,7 +55,7 @@ export const FAQS: Faq[] = [
   {
     category: "using",
     question: "How much do I need per acre?",
-    answer: `Each application is ${LITRES_PER_ACRE} litres per acre, mixed with ${WATER_LITRES_PER_ACRE} litres of water. Most crops get 2 applications per season, so a 5-acre farm needs about 20 litres of each product for the season. The calculator on every product page and crop guide works out the exact amount and the best-value packs for your farm size.`,
+    answer: `It depends on the product. NitroFix™: one 100 g pack coats the seed for one acre. RootMax™: 1–2 kg per acre for maize and other cereals, 4–5 kg per acre for beans, vegetables and other crops. TrichoShield™: about 400 g per acre as a drench. NeemShield™: about 1.2 L per acre as a foliar spray, or 2–3.2 L per acre as a drench. SoilFix™: 1 L in 1,000 L of water as a drench, or 10 ml in 20 L as a foliar spray. The calculator on every product page and crop guide works out the exact amount and the best-value packs for your farm size.`,
   },
   {
     category: "using",
@@ -66,19 +66,20 @@ export const FAQS: Faq[] = [
   {
     category: "using",
     question: "How do I mix and apply the products?",
-    answer: `Mix each ${LITRES_PER_ACRE} L dose with ${WATER_LITRES_PER_ACRE} L of clean, non-chlorinated water and apply it the same day. Apply to moist soil, ideally in the early morning or late afternoon, out of strong sun.`,
+    answer:
+      "Use clean, non-chlorinated water — chlorine kills live organisms. NitroFix™ is coated onto bean seed with the gum arabic adhesive included in the pack, then planted within 4 hours. RootMax™ granules go in at planting, mixed with your planting fertilizer. TrichoShield™ is mixed with water and applied to moist soil as a drench, drip or root dip. For NeemShield™, add water to the product (not the product to water) and stir to a good emulsion. Each product page has full step-by-step directions.",
   },
   {
     category: "using",
     question: "Can I use TrichoShield™ with chemical fungicides?",
     answer:
-      "TrichoShield™ contains a living beneficial fungus, so leave at least 7 days between applying it and any copper-based or chemical fungicide.",
+      "Not at the same time. TrichoShield™ contains a living beneficial fungus, and chemical fungicides, harsh chemicals and fumigants will kill it. It is compatible with fertilizers, organic fertilizers and biostimulants.",
   },
   {
     category: "using",
     question: "How do I store the products?",
     answer:
-      "Becof products contain live beneficial microorganisms. Store them in a cool, shaded place and mix each dose with clean water on the day you apply it.",
+      "Store all Becof products in a cool, dry place away from direct sunlight. NitroFix™ contains live bacteria: keep unopened packs below 25°C, and use a whole pack once it is opened.",
   },
 
   // ── Ordering & delivery ──
@@ -95,9 +96,9 @@ export const FAQS: Faq[] = [
   },
   {
     category: "ordering",
-    question: "I need more than 50 litres. How do I order?",
+    question: "I need a large quantity. How do I order?",
     answer:
-      "Add as many packs as you need to your cart — for example two 50 L packs for 100 litres. For very large or recurring orders, contact us on WhatsApp or use the custom order form and our team will arrange it with you.",
+      "Add as many packs as you need to your cart — the calculator on each product page and crop guide adds the right number for your farm in one click. For very large or recurring orders, contact us on WhatsApp or use the custom order form and our team will arrange it with you.",
     link: { to: "/contact", label: "Contact us" },
   },
 

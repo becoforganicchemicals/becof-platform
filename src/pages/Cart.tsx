@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import PendingOrderBanner from "@/components/PendingOrderBanner";
 import SEO from "@/components/SEO";
 import { deliveryFeeFor, formatKes, FREE_DELIVERY_THRESHOLD } from "@/lib/delivery";
-import { formatLitres, pricePerLitre } from "@/lib/packs";
+import { formatSize, unitOf } from "@/lib/packs";
 
 // A signed-in shopper's own cart contents — never worth indexing.
 const CartSEO = () => (
@@ -17,7 +17,7 @@ const CartSEO = () => (
 
 const Cart = () => {
   const { loading: authLoading } = useAuth();
-  const { items, loading, subtotal, updateQuantity, removeFromCart, litresInCart } = useCart();
+  const { items, loading, subtotal, updateQuantity, removeFromCart, amountInCart } = useCart();
   const deliveryFee = deliveryFeeFor(subtotal);
 
   // Cart works for guests too (CartContext falls back to a localStorage
@@ -59,8 +59,7 @@ const Cart = () => {
                   <div className="flex-1 min-w-0">
                     <Link to={`/products/${item.product.slug}`} className="font-semibold hover:text-primary">{item.product.name}</Link>
                     <p className="text-sm text-muted-foreground">
-                      {formatLitres(item.pack.size_liters)} pack
-                      {item.pack.size_liters > 1 && <> · {formatKes(pricePerLitre(item.pack))}/L</>}
+                      {formatSize(item.pack.size_liters, unitOf(item.product.unit))} pack
                     </p>
                     <p className="text-primary font-bold mt-1">{formatKes(item.pack.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
@@ -69,7 +68,7 @@ const Cart = () => {
                         <span className="w-8 text-center text-sm">{item.quantity}</span>
                         <Button
                           variant="ghost" size="icon" className="h-8 w-8"
-                          disabled={litresInCart(item.product_id) + item.pack.size_liters > item.product.stock_quantity}
+                          disabled={amountInCart(item.product_id) + item.pack.size_liters > item.product.stock_quantity}
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         ><Plus className="h-3 w-3" /></Button>
                       </div>

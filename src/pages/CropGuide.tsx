@@ -12,7 +12,7 @@ import { fetchPublishedProducts } from "@/lib/publicData";
 import { getPrerendered } from "@/lib/prerenderData";
 import { breadcrumbSchema, SITE_URL } from "@/lib/structuredData";
 import { faqSchema, type Faq } from "@/lib/faq";
-import { formatLitres, LITRES_PER_ACRE, WATER_LITRES_PER_ACRE, packSummary } from "@/lib/packs";
+import { packSummary, unitOf } from "@/lib/packs";
 
 type ProductRow = ProgrammeProduct & { price: number; images: string[] | null };
 type ProductsData = { products: ProductRow[] };
@@ -34,7 +34,6 @@ const CropGuide = () => {
 
   const url = `${SITE_URL}/crops/${programme.slug}`;
   const productFor = (productSlug: string) => products.find((p) => p.slug === productSlug);
-  const exampleAcres = 5;
 
   const faqs: Faq[] = [
     {
@@ -45,10 +44,12 @@ const CropGuide = () => {
     },
     {
       question: `How much do I need per acre of ${programme.name.toLowerCase()}?`,
-      answer: `Each application is ${LITRES_PER_ACRE} litres of product per acre, mixed with ${WATER_LITRES_PER_ACRE} litres of water. With ${programme.steps[0].applications} applications per season, a ${exampleAcres}-acre farm needs ${formatLitres(LITRES_PER_ACRE * exampleAcres * programme.steps[0].applications)} of ${productFor(programme.steps[0].productSlug)?.name ?? "each product"}.`,
+      answer: programme.steps
+        .map((s) => `${productFor(s.productSlug)?.name ?? s.productSlug} — ${s.rateText}`)
+        .join(". ") + `. The calculator on this page works out the exact amounts for your farm size.`,
     },
     {
-      question: `When should I apply biofertilizers on ${programme.name.toLowerCase()}?`,
+      question: `When should I apply Becof products on ${programme.name.toLowerCase()}?`,
       answer: programme.steps
         .map((s) => `${productFor(s.productSlug)?.name ?? s.productSlug} — ${s.timing}`)
         .join(". ") + ".",
@@ -87,7 +88,7 @@ const CropGuide = () => {
           <div>
             <h2 className="text-2xl font-semibold mb-2">The {programme.name.toLowerCase()} programme</h2>
             <p className="text-muted-foreground mb-6">
-              Every application is {LITRES_PER_ACRE} L per acre, mixed with {WATER_LITRES_PER_ACRE} L of water.
+              Rates are per acre. The calculator below works out exactly how much your farm needs.
             </p>
             <div className="grid lg:grid-cols-2 gap-4">
               {programme.steps.map((step) => {
@@ -107,10 +108,11 @@ const CropGuide = () => {
                       <p className="flex gap-2 text-sm"><CalendarClock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                         <span><span className="font-medium">When:</span> {step.timing} — {step.applications} application{step.applications === 1 ? "" : "s"} per season.</span>
                       </p>
+                      <p className="text-sm"><span className="font-medium">Rate:</span> {step.rateText}</p>
                       {step.note && <p className="text-xs text-muted-foreground">{step.note}</p>}
                       {product && (
                         <p className="text-xs text-muted-foreground">
-                          KES {product.price.toLocaleString("en-KE")} {packSummary(product.product_variants)}
+                          KES {product.price.toLocaleString("en-KE")} {packSummary(product.product_variants, unitOf(product.unit))}
                         </p>
                       )}
                     </div>

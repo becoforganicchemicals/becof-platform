@@ -5,37 +5,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
 import { formatKes } from "@/lib/delivery";
-import {
-  bestPackPlan, formatLitres, LITRES_PER_ACRE, litresForArea, sortPacks, WATER_LITRES_PER_ACRE, type PackSize,
-} from "@/lib/packs";
-import { programmesForProduct } from "@/lib/cropProgrammes";
+import { amountForArea, bestPackPlan, formatAmount, formatSize, sortPacks, unitOf, type PackSize } from "@/lib/packs";
+import { PRODUCT_USAGE, programmesForProduct } from "@/lib/cropProgrammes";
 
 interface Props {
-  product: { id: string; slug: string; name: string; stock_quantity: number };
+  product: { id: string; slug: string; name: string; stock_quantity: number; unit?: string | null };
   packs: PackSize[];
 }
 
-// "How much do I need?" for one product: farm size × applications → litres
-// → the cheapest pack combination, added to the cart in one click.
+// "How much do I need?" for one product: farm size × the product's rate for the
+// chosen crop × applications → amount → the cheapest packs, in one click.
 const PackCalculator = ({ product, packs }: Props) => {
   const { addPacksToCart } = useCart();
+  const unit = unitOf(product.unit);
   const crops = programmesForProduct(product.slug);
+  const usage = PRODUCT_USAGE[product.slug];
   const [cropSlug, setCropSlug] = useState(crops[0]?.crop.slug ?? "");
   const [acres, setAcres] = useState("");
   const selected = crops.find((c) => c.crop.slug === cropSlug);
-  const [applications, setApplications] = useState(selected?.step.applications ?? 2);
+  const [applications, setApplications] = useState(selected?.step.applications ?? usage?.applications ?? 1);
   const [adding, setAdding] = useState(false);
+
+  const rate = selected?.step.ratePerAcre ?? usage?.ratePerAcre;
+  if (!rate) return null;
+  const rateText = selected?.step.rateText ?? usage?.rateText;
 
   const chooseCrop = (slug: string) => {
     setCropSlug(slug);
     const step = crops.find((c) => c.crop.slug === slug)?.step;
-    setApplications(step?.applications ?? 2);
+    setApplications(step?.applications ?? usage?.applications ?? 1);
   };
 
   const acreage = Number(acres) > 0 ? Number(acres) : 0;
-  const litres = litresForArea(acreage, applications);
-  const plan = litres > 0 ? bestPackPlan(sortPacks(packs), litres) : null;
-  const enoughStock = litres <= product.stock_quantity;
+  const needed = amountForArea(acreage, rate, applications);
+  const plan = needed > 0 ? bestPackPlan(sortPacks(packs), needed) : null;
+  const enoughStock = (plan?.amount ?? 0) <= product.stock_quantity;
 
   const add = async () => {
     if (!plan) return;
@@ -81,51 +85,46 @@ const PackCalculator = ({ product, packs }: Props) => {
             value={applications}
             onChange={(e) => setApplications(Number(e.target.value))}
           >
-            {[1, 2, 3, 4].map((n) => <option key={n} value={n}>{n}</option>)}
+            {[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
       </div>
 
-      {selected && (
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">When to apply on {selected.crop.name.toLowerCase()}:</span>{" "}
-          {selected.step.timing}.{selected.step.note && ` ${selected.step.note}`}
-        </p>
-      )}
+      <p className="text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">Rate:</span> {rateText}.{" "}
+        <span className="font-medium text-foreground">When:</span>{" "}
+        {selected ? `${selected.step.timing}.` : usage?.how}
+        {selected?.step.note && ` ${selected.step.note}`}
+      </p>
 
       {plan ? (
         <div className="space-y-3 border-t border-border pt-4">
           <p className="text-sm">
-            You need <span className="font-semibold">{formatLitres(litres)}</span> for the season
+            You need <span className="font-semibold">{formatAmount(needed, unit)}</span> for the season
             <span className="text-muted-foreground">
-              {" "}({LITRES_PER_ACRE} L per acre × {acreage} acre{acreage === 1 ? "" : "s"} × {applications} application{applications === 1 ? "" : "s"})
+              {" "}({acreage} acre{acreage === 1 ? "" : "s"} × {applications} application{applications === 1 ? "" : "s"})
             </span>
           </p>
           <ul className="text-sm space-y-1">
             {plan.lines.map((l) => (
               <li key={l.pack.id} className="flex justify-between">
-                <span>{l.quantity} × {formatLitres(l.pack.size_liters)}</span>
+                <span>{l.quantity} × {formatSize(l.pack.size_liters, unit)}</span>
                 <span>{formatKes(l.pack.price * l.quantity)}</span>
               </li>
             ))}
             <li className="flex justify-between font-semibold border-t border-border pt-1">
-              <span>Total ({formatLitres(plan.litres)})</span>
+              <span>Total ({formatAmount(plan.amount, unit)})</span>
               <span className="text-primary">{formatKes(plan.price)}</span>
             </li>
           </ul>
-          <p className="text-xs text-muted-foreground">
-            Mix each {LITRES_PER_ACRE} L with {WATER_LITRES_PER_ACRE} L of water: about{" "}
-            {formatLitres(Math.ceil(acreage * WATER_LITRES_PER_ACRE))} of water per application for your farm.
-          </p>
           {enoughStock ? (
             <Button className="w-full gap-2" onClick={add} disabled={adding}>
               {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingCart className="h-4 w-4" />}
-              Add {formatLitres(plan.litres)} to cart
+              Add {formatAmount(plan.amount, unit)} to cart
             </Button>
           ) : (
             <p className="text-sm text-destructive">
-              We have {formatLitres(product.stock_quantity)} in stock right now. Contact us on WhatsApp and we'll arrange
-              the full {formatLitres(litres)} for you.
+              We don't have enough in stock for this amount right now. Contact us on WhatsApp and we'll arrange it.
             </p>
           )}
         </div>

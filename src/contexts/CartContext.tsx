@@ -2,10 +2,10 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
-import { formatLitres, type PackSize } from "@/lib/packs";
+import { formatSize, maxPacks, unitOf, type PackSize } from "@/lib/packs";
 
 // One cart line per product + pack size. Quantity is a number of packs; stock
-// is in litres and shared by every pack size of the same product.
+// is in the product's unit (L, kg or g) and shared by every pack size of the same product.
 export interface CartItem {
   id: string; // cart_items row id, or "productId:variantId" for a guest
   product_id: string;
@@ -19,6 +19,7 @@ export interface CartItem {
     stock_quantity: number;
     slug: string;
     sku: string | null;
+    unit: string; // L, kg or g — see packs.ts
   };
   pack: PackSize & { id: string | null };
 }
@@ -28,7 +29,8 @@ interface CartContextType {
   loading: boolean;
   itemCount: number;
   subtotal: number;
-  litresInCart: (productId: string) => number;
+  // Amount of a product already in the cart, in its unit (all pack sizes)
+  amountInCart: (productId: string) => number;
   // Without a variantId, adds the product's smallest (1 L) pack.
   addToCart: (productId: string, quantity?: number, variantId?: string) => Promise<void>;
   // Several packs at once (calculator "add to cart"). Resolves true on success.
@@ -43,7 +45,7 @@ const CartContext = createContext<CartContextType>({
   loading: false,
   itemCount: 0,
   subtotal: 0,
-  litresInCart: () => 0,
+  amountInCart: () => 0,
   addToCart: async () => {},
   addPacksToCart: async () => false,
   updateQuantity: async () => {},
@@ -53,7 +55,7 @@ const CartContext = createContext<CartContextType>({
 
 export const useCart = () => useContext(CartContext);
 
-const PRODUCT_FIELDS = "id, name, price, images, stock_quantity, slug, sku";
+const PRODUCT_FIELDS = "id, name, price, images, stock_quantity, slug, sku, unit";
 
 // A cart_items row with its product and pack joined
 interface CartRow {
@@ -97,12 +99,12 @@ const writeGuestCart = (entries: GuestCartEntry[]) => {
   } catch { /* ignore */ }
 };
 
-// The pack to add, plus the product's stock, so a request for more litres
-// than are in stock can be refused before it reaches the cart.
+// The pack to add, plus the product's stock, so a request for more than is in
+// stock can be refused before it reaches the cart.
 const resolvePack = async (productId: string, variantId?: string) => {
   const { data } = await supabase
     .from("products")
-    .select(`stock_quantity, product_variants (${PACK_FIELDS})`)
+    .select(`stock_quantity, unit, product_variants (${PACK_FIELDS})`)
     .eq("id", productId)
     .maybeSingle();
   if (!data) return null;
@@ -110,7 +112,7 @@ const resolvePack = async (productId: string, variantId?: string) => {
   const pack = variantId
     ? packs.find((p) => p.id === variantId)
     : [...packs].sort((a, b) => a.size_liters - b.size_liters)[0];
-  return { pack: pack || null, stock: data.stock_quantity as number };
+  return { pack: pack || null, stock: data.stock_quantity as number, unit: unitOf(data.unit) };
 };
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
@@ -223,19 +225,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     })();
   }, [user, fetchCart]);
 
-  const litresInCart = (productId: string) =>
+  const amountInCart = (productId: string) =>
     items.filter(i => i.product_id === productId).reduce((sum, i) => sum + i.pack.size_liters * i.quantity, 0);
 
   const addToCart = async (productId: string, quantity = 1, variantId?: string) => {
     const resolved = await resolvePack(productId, variantId);
     if (!resolved?.pack) { toast.error("This product isn't available right now"); return; }
-    const { pack, stock } = resolved;
+    const { pack, stock, unit } = resolved;
 
-    const litresAfter = litresInCart(productId) + pack.size_liters * quantity;
-    if (litresAfter > stock) {
-      toast.error(`Only ${formatLitres(stock)} in stock`, {
-        description: litresInCart(productId) > 0 ? `You already have ${formatLitres(litresInCart(productId))} in your cart.` : undefined,
-      });
+    // Stock is shared by all pack sizes, so count what's already in the cart
+    const available = maxPacks(pack, stock, amountInCart(productId));
+    if (quantity > available) {
+      const size = formatSize(pack.size_liters, unit);
+      toast.error(available > 0 ? `Only ${available} more ${size} pack${available === 1 ? "" : "s"} available` : `No more ${size} packs in stock`);
       return;
     }
 
@@ -274,14 +276,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     for (const productId of productIds) {
       const product = byId.get(productId);
       const packs = (product?.product_variants || []) as PackSize[];
-      let litres = litresInCart(productId);
+      let amount = amountInCart(productId);
       for (const l of wanted.filter(w => w.productId === productId)) {
         const pack = packs.find(p => p.id === l.variantId && p.is_active !== false);
         if (!product || !pack) { toast.error("Some of these packs aren't available right now"); return false; }
-        litres += pack.size_liters * l.quantity;
+        amount += pack.size_liters * l.quantity;
       }
-      if (product && litres > product.stock_quantity) {
-        toast.error(`Only ${formatLitres(product.stock_quantity)} of ${product.name} in stock`);
+      if (product && amount > product.stock_quantity) {
+        toast.error(`Not enough ${product.name} in stock for this amount`, { description: "Contact us on WhatsApp and we'll arrange it." });
         return false;
       }
     }
@@ -317,9 +319,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (quantity <= 0) { await removeFromCart(lineId); return; }
     const line = items.find(i => i.id === lineId);
     if (!line) return;
-    const extraLitres = (quantity - line.quantity) * line.pack.size_liters;
-    if (extraLitres > 0 && litresInCart(line.product_id) + extraLitres > line.product.stock_quantity) {
-      toast.error(`Only ${formatLitres(line.product.stock_quantity)} in stock`);
+    const extra = (quantity - line.quantity) * line.pack.size_liters;
+    if (extra > 0 && amountInCart(line.product_id) + extra > line.product.stock_quantity) {
+      toast.error(`No more ${formatSize(line.pack.size_liters, unitOf(line.product.unit))} packs in stock`);
       return;
     }
     if (!user) {
@@ -362,7 +364,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const subtotal = items.reduce((sum, i) => sum + i.pack.price * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, loading, itemCount, subtotal, litresInCart, addToCart, addPacksToCart, updateQuantity, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{ items, loading, itemCount, subtotal, amountInCart, addToCart, addPacksToCart, updateQuantity, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );

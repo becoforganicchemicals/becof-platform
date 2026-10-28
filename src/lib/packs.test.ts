@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestPackPlan, litresForArea, maxPacks, pricePerLitre, type PackSize } from "./packs";
+import { amountForArea, bestPackPlan, formatAmount, formatSize, maxPacks, packSummary, pricePerUnit, type PackSize } from "./packs";
 
 // NitroFix price list (October 2026)
 const nitrofix: PackSize[] = [
@@ -35,7 +35,7 @@ describe("bestPackPlan", () => {
 
   it("covers awkward amounts at the lowest cost", () => {
     const plan = bestPackPlan(nitrofix, 23)!;
-    expect(plan.litres).toBeGreaterThanOrEqual(23);
+    expect(plan.amount).toBeGreaterThanOrEqual(23);
     // 20 L + 3 x 1 L = 64,850 vs 25 L (20 + 5) = 70,000
     expect(plan.price).toBe(64850);
     expect(describePlan(23)).toBe("1x20 + 3x1");
@@ -57,10 +57,10 @@ describe("bestPackPlan", () => {
 });
 
 describe("helpers", () => {
-  it("calculates litres from acres and applications at 2 L per acre", () => {
-    expect(litresForArea(5, 2)).toBe(20);
-    expect(litresForArea(2.5, 1)).toBe(5);
-    expect(litresForArea(-1, 2)).toBe(0);
+  it("calculates amounts from acres, rate per acre and applications", () => {
+    expect(amountForArea(5, 2, 2)).toBe(20);
+    expect(amountForArea(2.5, 0.4, 2)).toBe(2);
+    expect(amountForArea(-1, 2, 2)).toBe(0);
   });
 
   it("limits packs to the litres left in stock", () => {
@@ -69,8 +69,51 @@ describe("helpers", () => {
     expect(maxPacks(nitrofix[4], 30)).toBe(0);
   });
 
-  it("works out the price per litre", () => {
-    expect(pricePerLitre(nitrofix[4])).toBe(2800);
-    expect(pricePerLitre(nitrofix[0])).toBe(2950);
+  it("works out the price per unit", () => {
+    expect(pricePerUnit(nitrofix[4])).toBe(2800);
+    expect(pricePerUnit(nitrofix[0])).toBe(2950);
+  });
+});
+
+// October 2026 range: products sold in kg and g packs
+const rootmax: PackSize[] = [
+  { id: "1", size_liters: 1, price: 2100, sku: "R" },
+  { id: "5", size_liters: 5, price: 10000, sku: "R-5KG" },
+];
+const nitrofix100g: PackSize[] = [{ id: "100", size_liters: 100, price: 1950, sku: "N" }];
+const tricho: PackSize[] = [{ id: "1", size_liters: 1, price: 3200, sku: "T" }];
+
+describe("kg and g packs", () => {
+  const plan = (packs: PackSize[], amount: number) =>
+    bestPackPlan(packs, amount)!.lines.map((l) => `${l.quantity}x${l.pack.size_liters}`).join(" + ");
+
+  it("RootMax: 5 kg pack when it is cheaper than five 1 kg packs", () => {
+    // 5 x 1 kg = 10,500 vs 5 kg = 10,000
+    expect(plan(rootmax, 5)).toBe("1x5");
+    // 3 acres of maize at 2 kg = 6 kg → 5 kg + 1 kg
+    expect(plan(rootmax, amountForArea(3, 2, 1))).toBe("1x5 + 1x1");
+    expect(bestPackPlan(rootmax, 6)!.price).toBe(12100);
+  });
+
+  it("NitroFix: one 100 g pack per acre, rounding up part acres", () => {
+    expect(plan(nitrofix100g, amountForArea(1, 100, 1))).toBe("1x100");
+    expect(plan(nitrofix100g, amountForArea(2.5, 100, 1))).toBe("3x100");
+    expect(bestPackPlan(nitrofix100g, 250)!.price).toBe(5850);
+  });
+
+  it("TrichoShield: whole 1 kg packs for a fractional need", () => {
+    // 3 acres x 0.4 kg x 2 applications = 2.4 kg → 3 packs
+    expect(plan(tricho, amountForArea(3, 0.4, 2))).toBe("3x1");
+    // floating point: 0.4 x 5 = 2.0000000000000004 must not round up to 3
+    expect(plan(tricho, amountForArea(5, 0.4, 1))).toBe("2x1");
+  });
+
+  it("formats sizes and amounts in the right unit", () => {
+    expect(formatSize(100, "g")).toBe("100 g");
+    expect(formatSize(5, "kg")).toBe("5 kg");
+    expect(formatAmount(1.2, "L")).toBe("1.2 L");
+    expect(formatAmount(1500, "g")).toBe("1.5 kg");
+    expect(packSummary(rootmax, "kg")).toBe("1 kg · also 5 kg");
+    expect(packSummary(nitrofix100g, "g")).toBe("100 g");
   });
 });

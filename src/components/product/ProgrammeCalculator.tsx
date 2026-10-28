@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
 import { formatKes } from "@/lib/delivery";
-import { bestPackPlan, formatLitres, litresForArea, sortPacks, type PackSize } from "@/lib/packs";
+import { amountForArea, bestPackPlan, formatAmount, formatSize, sortPacks, unitOf, type PackSize } from "@/lib/packs";
 import type { CropProgramme } from "@/lib/cropProgrammes";
 
 export interface ProgrammeProduct {
@@ -14,6 +14,7 @@ export interface ProgrammeProduct {
   slug: string;
   name: string;
   stock_quantity: number;
+  unit?: string | null;
   product_variants?: PackSize[];
 }
 
@@ -22,8 +23,8 @@ interface Props {
   products: ProgrammeProduct[];
 }
 
-// A whole season's programme for one crop: farm size → litres of each
-// product → best-value packs, all added to the cart in one click.
+// A whole season's programme for one crop: farm size → amount of each product
+// (at that crop's rate) → best-value packs, all added to the cart in one click.
 const ProgrammeCalculator = ({ programme, products }: Props) => {
   const { addPacksToCart } = useCart();
   const [acres, setAcres] = useState("");
@@ -38,9 +39,10 @@ const ProgrammeCalculator = ({ programme, products }: Props) => {
       const product = products.find((p) => p.slug === step.productSlug);
       if (!product) return null;
       const apps = applications[step.productSlug] ?? step.applications;
-      const litres = litresForArea(acreage, apps);
-      const plan = litres > 0 ? bestPackPlan(sortPacks(product.product_variants), litres) : null;
-      return { step, product, apps, litres, plan, enoughStock: litres <= product.stock_quantity };
+      const unit = unitOf(product.unit);
+      const needed = amountForArea(acreage, step.ratePerAcre, apps);
+      const plan = needed > 0 ? bestPackPlan(sortPacks(product.product_variants), needed) : null;
+      return { step, product, unit, apps, needed, plan, enoughStock: (plan?.amount ?? 0) <= product.stock_quantity };
     })
     .filter((r): r is NonNullable<typeof r> => r !== null);
 
@@ -76,7 +78,7 @@ const ProgrammeCalculator = ({ programme, products }: Props) => {
           <div key={r.step.productSlug} className="py-3 grid sm:grid-cols-[1fr_auto_auto] gap-x-6 gap-y-2 items-center">
             <div>
               <Link to={`/products/${r.product.slug}`} className="font-medium hover:text-primary">{r.product.name}</Link>
-              <p className="text-xs text-muted-foreground">{r.step.purpose}</p>
+              <p className="text-xs text-muted-foreground">{r.step.rateText}</p>
             </div>
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               Applications
@@ -92,10 +94,10 @@ const ProgrammeCalculator = ({ programme, products }: Props) => {
               {r.plan ? (
                 <>
                   <p className="font-medium">
-                    {formatLitres(r.litres)} → {r.plan.lines.map((l) => `${l.quantity} × ${formatLitres(l.pack.size_liters)}`).join(" + ")}
+                    {formatAmount(r.needed, r.unit)} → {r.plan.lines.map((l) => `${l.quantity} × ${formatSize(l.pack.size_liters, r.unit)}`).join(" + ")}
                   </p>
                   <p className={r.enoughStock ? "text-muted-foreground" : "text-destructive"}>
-                    {r.enoughStock ? formatKes(r.plan.price) : `Only ${formatLitres(r.product.stock_quantity)} in stock`}
+                    {r.enoughStock ? formatKes(r.plan.price) : "Not enough in stock"}
                   </p>
                 </>
               ) : (
