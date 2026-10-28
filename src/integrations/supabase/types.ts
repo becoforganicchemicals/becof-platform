@@ -1292,6 +1292,7 @@ export type Database = {
           slug: string
           specifications: Json | null
           stock_quantity: number
+          unit: string
           updated_at: string
           usage_instructions: string | null
         }
@@ -1316,6 +1317,7 @@ export type Database = {
           slug: string
           specifications?: Json | null
           stock_quantity?: number
+          unit?: string
           updated_at?: string
           usage_instructions?: string | null
         }
@@ -1340,6 +1342,7 @@ export type Database = {
           slug?: string
           specifications?: Json | null
           stock_quantity?: number
+          unit?: string
           updated_at?: string
           usage_instructions?: string | null
         }
