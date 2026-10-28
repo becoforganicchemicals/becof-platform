@@ -1,9 +1,9 @@
 // Crop application programmes. Shown on the crop pages, used by the "How much
 // do I need?" calculators, and published in llms.txt.
 //
-// DRAFT (October 2026 range): rates come from each product's label; timings
-// and numbers of applications are proposed and need Becof's technical team to
-// approve before going live.
+// October 2026 range, approved by Becof's technical team. Rates come from
+// each product's label. SoilFix's per-acre drench rate (1 L in 1,000 L of
+// water per acre) and NeemShield's "repeat as needed" are Becof's guidance.
 
 export interface ProgrammeStep {
   productSlug: string;
