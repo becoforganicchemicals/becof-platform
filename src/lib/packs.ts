@@ -11,6 +11,7 @@ export interface PackSize {
   price: number;
   sku: string | null;
   is_active?: boolean;
+  image_url?: string | null; // this pack's image; falls back to the product image
 }
 
 export const unitOf = (unit: string | null | undefined): Unit => (unit === "kg" || unit === "g" ? unit : "L");

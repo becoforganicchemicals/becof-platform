@@ -66,7 +66,7 @@ interface CartRow {
   products: CartItem["product"] | null;
   product_variants: PackSize | null;
 }
-const PACK_FIELDS = "id, size_liters, price, sku, is_active";
+const PACK_FIELDS = "id, size_liters, price, sku, is_active, image_url";
 
 // Cart lines created before pack sizes existed have no variant: treat them
 // as the product's 1 L pack at its listed price.

@@ -54,7 +54,7 @@ const Cart = () => {
                 <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   className="flex gap-4 p-4 bg-card rounded-xl border border-border">
                   <Link to={`/products/${item.product.slug}`} className="w-20 h-20 rounded-lg overflow-hidden bg-muted shrink-0">
-                    <img src={item.product.images?.[0] || "/placeholder.svg"} alt={item.product.name} className="w-full h-full object-cover" />
+                    <img src={item.pack.image_url || item.product.images?.[0] || "/placeholder.svg"} alt={item.product.name} className="w-full h-full object-cover" />
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link to={`/products/${item.product.slug}`} className="font-semibold hover:text-primary">{item.product.name}</Link>

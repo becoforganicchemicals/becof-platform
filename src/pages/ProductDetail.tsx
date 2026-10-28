@@ -142,6 +142,7 @@ const ProductDetail = () => {
     packs[0];
   const selectPack = (pack: PackSize) => {
     setQuantity(1);
+    setSelectedImage(0); // show the chosen pack's own image, if it has one
     setSearchParams(pack === packs[0] ? {} : { size: String(pack.size_liters) }, { replace: true });
   };
   const maxQuantity = product && selectedPack
@@ -160,7 +161,11 @@ const ProductDetail = () => {
   if (loadFailed && !product) return <Layout><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-2">We couldn't load this product</h1><p className="text-muted-foreground mb-6">Please check your connection and try again.</p><Button onClick={() => window.location.reload()}>Try again</Button></div></Layout>;
   if (!product) return <Layout><SEO title="Product not found" description="This product could not be found." url={`https://www.becoforganicchemicals.com/products/${slug}`} noindex /><div className="container py-20 text-center"><h1 className="text-2xl font-bold mb-4">Product not found</h1><Link to="/products"><Button>Back to Products</Button></Link></div></Layout>;
 
-  const images = product.images?.length ? product.images : ["/placeholder.svg"];
+  const productImages: string[] = product.images?.length ? product.images : ["/placeholder.svg"];
+  // The selected pack's own image (e.g. the 5 kg pouch) leads the gallery
+  const images = selectedPack?.image_url
+    ? [selectedPack.image_url, ...productImages.filter((img) => img !== selectedPack.image_url)]
+    : productImages;
   const inStock = product.stock_quantity > 0;
   const packInStock = isPackInStock(selectedPack, product.stock_quantity);
   // Exact stock isn't useful to shoppers (and is in grams for some products):
@@ -179,10 +184,10 @@ const ProductDetail = () => {
         title={product.name}
         description={product.short_description}
         url={productUrl}
-        image={images[0]}
+        image={productImages[0]}
         type="product"
         jsonLd={[
-          productSchema(product, images, reviews, packs),
+          productSchema(product, productImages, reviews, packs),
           breadcrumbSchema([
             { name: "Home", path: "/" },
             { name: "Products", path: "/products" },

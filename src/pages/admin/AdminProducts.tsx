@@ -19,7 +19,7 @@ import {
 // Every pack size the product is sold in, in the product's unit (L, kg or g).
 // The product's listed price is its smallest active pack's price, and that
 // pack uses the product SKU unless one is entered.
-interface PackForm { id?: string; size: string; price: string; sku: string; is_active: boolean }
+interface PackForm { id?: string; size: string; price: string; sku: string; is_active: boolean; image_url?: string | null }
 type Unit = "L" | "kg" | "g";
 
 interface ProductForm {
@@ -83,7 +83,7 @@ const AdminProducts = () => {
       const { data, error } = await supabase.from("products").select(`
         *,
         categories (id, name, parent_id, parent:parent_id (id, name)),
-        product_variants (id, size_liters, price, sku, is_active)
+        product_variants (id, size_liters, price, sku, is_active, image_url)
       `).order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -201,6 +201,7 @@ const AdminProducts = () => {
         const { error: packErr } = await supabase.from("product_variants").upsert(
           packs.map((p, i) => ({
             product_id: productId, size_liters: p.sizeNum, price: p.priceNum, is_active: p.is_active,
+            image_url: p.image_url || null,
             sku: p.sku.trim() || (i === 0 ? payload.sku : `${payload.sku}-${p.sizeNum}${unit.toUpperCase()}`),
           })),
           { onConflict: "product_id,size_liters" }
@@ -296,7 +297,7 @@ const AdminProducts = () => {
       subcategory_id: isSub ? p.category_id : "",
       packs: (p.product_variants || [])
         .sort((a: any, b: any) => a.size_liters - b.size_liters)
-        .map((v: any) => ({ id: v.id, size: String(v.size_liters), price: String(v.price), sku: v.sku || "", is_active: v.is_active })),
+        .map((v: any) => ({ id: v.id, size: String(v.size_liters), price: String(v.price), sku: v.sku || "", is_active: v.is_active, image_url: v.image_url })),
     });
     setDialogOpen(true);
   };
@@ -468,7 +469,7 @@ const AdminProducts = () => {
                         <Plus className="h-3 w-3" /> Add size
                       </Button>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">Size in {form.unit}, price in KES. The smallest pack on sale sets the listed price.</p>
+                    <p className="text-[11px] text-muted-foreground">Size in {form.unit}, price in KES. The smallest pack on sale sets the listed price. Pack images are optional — without one, the product image is shown.</p>
                     {form.packs.length === 0 && <p className="text-xs text-destructive">Add at least one pack size.</p>}
                     {form.packs.map((pack, i) => {
                       const setPack = (patch: Partial<PackForm>) =>
@@ -476,7 +477,28 @@ const AdminProducts = () => {
                       const perUnit = Number(pack.size) > 0 && Number(pack.price) > 0
                         ? Math.round(Number(pack.price) / Number(pack.size)) : null;
                       return (
-                        <div key={pack.id ?? `new-${i}`} className="grid grid-cols-[4.5rem_1fr_1fr_auto_auto] gap-2 items-center">
+                        <div key={pack.id ?? `new-${i}`} className="grid grid-cols-[2.5rem_4.5rem_1fr_1fr_auto_auto] gap-2 items-center">
+                          {/* Optional image of this pack size (e.g. the 5 kg bag) */}
+                          <label
+                            className="relative h-10 w-10 rounded-md border border-dashed border-border bg-muted/30 overflow-hidden cursor-pointer flex items-center justify-center hover:border-primary"
+                            title={pack.image_url ? "Change this pack's image" : "Add an image of this pack (optional)"}
+                          >
+                            {pack.image_url
+                              ? <img src={pack.image_url} alt="" className="h-full w-full object-cover" />
+                              : <Upload className="h-3.5 w-3.5 text-muted-foreground" />}
+                            <input
+                              type="file" accept="image/*" className="sr-only"
+                              onChange={async e => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                try {
+                                  setPack({ image_url: await uploadFile(file, "product-images", "products") });
+                                } catch (err: any) {
+                                  toast({ title: "Image upload failed", description: err.message, variant: "destructive" });
+                                }
+                              }}
+                            />
+                          </label>
                           <Input
                             type="number" min="1" step="1" placeholder={form.unit} aria-label={`Size in ${form.unit}`} className="h-8 text-sm"
                             value={pack.size} onChange={e => setPack({ size: e.target.value })} required

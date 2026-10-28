@@ -280,7 +280,7 @@ ${site.products
 ${packs.length > 1 ? `      <g:item_group_id>${escapeXml(p.sku || p.id)}</g:item_group_id>\n` : ""}      <g:title>${escapeXml(`${p.name} — ${size(p, pack.size_liters)}`)}</g:title>
       <g:description>${escapeXml(stripHtml(p.long_description) || p.short_description || p.name)}</g:description>
       <g:link>${escapeXml(packUrl(p, pack, i))}</g:link>
-${images[0] ? `      <g:image_link>${escapeXml(images[0])}</g:image_link>\n` : ""}${images
+${(pack.image_url || images[0]) ? `      <g:image_link>${escapeXml(pack.image_url ? absolute(pack.image_url) : images[0])}</g:image_link>\n` : ""}${images
       .slice(1, 11)
       .map((img) => `      <g:additional_image_link>${escapeXml(img)}</g:additional_image_link>\n`)
       .join("")}      <g:availability>${p.stock_quantity >= pack.size_liters ? "in_stock" : "out_of_stock"}</g:availability>

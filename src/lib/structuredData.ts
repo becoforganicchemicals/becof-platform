@@ -196,7 +196,7 @@ export const productSchema = (
         name: `${product.name} — ${formatSize(pack.size_liters, unitOf(product.unit))}`,
         sku: pack.sku || undefined,
         size: formatSize(pack.size_liters, unitOf(product.unit)),
-        image: images.map(absolute)[0],
+        image: absolute(pack.image_url || images[0]),
         url: variantUrl,
         offers: packOffer(product, pack, variantUrl),
       };

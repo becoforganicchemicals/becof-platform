@@ -10,7 +10,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // Active pack sizes (RLS hides inactive ones from the public)
-const PACKS = "product_variants (id, size_liters, price, sku, is_active)";
+const PACKS = "product_variants (id, size_liters, price, sku, is_active, image_url)";
 
 const must = <T>({ data, error }: { data: T; error: { message: string } | null }): T => {
   if (error) throw new Error(error.message);
