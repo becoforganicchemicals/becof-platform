@@ -5,8 +5,8 @@ const items = [
   {
     icon: Leaf,
     title: "Eco-Friendly Crop Protection",
-    desc: "Our certified organic agricultural chemicals protect your crops from pests, disease, and environmental stress — without toxic residues, without harming pollinators, and without compromising food safety.",
-    stat: "100% Organic",
+    desc: "Our biological crop inputs — made from beneficial microorganisms and plant extracts — protect your crops from pests, disease, and environmental stress — without toxic residues, without harming pollinators, and without compromising food safety.",
+    stat: "Natural, Biological Inputs",
   },
   {
     icon: FlaskConical,
@@ -29,8 +29,8 @@ const items = [
   {
     icon: ShieldCheck,
     title: "Farmer Safety & Compliance",
-    desc: "Every product we make meets Kenya Bureau of Standards and PCPB certification. We train farmers on safe handling, proper dosing, and integrated pest management to protect lives and livelihoods.",
-    stat: "KEBS & PCPB Certified",
+    desc: "We are completing product registration with Kenya's regulators, including the Pest Control Products Board (PCPB) for our biopesticides, and will show registration numbers on each product page and label as they are issued. We train farmers on safe handling, proper dosing, and integrated pest management to protect lives and livelihoods.",
+    stat: "Safe-Handling Training",
   },
   {
     icon: Lightbulb,

@@ -32,6 +32,12 @@ export const FAQS: Faq[] = [
   },
   {
     category: "products",
+    question: "Are Becof products registered with Kenya's regulators?",
+    answer:
+      "Becof Organic Chemicals Limited is a registered Kenyan company, and we are committed to meeting every regulatory requirement for our products. We are completing product registration with Kenya's regulators, including the Pest Control Products Board (PCPB) for our biopesticides, NeemShield™ and TrichoShield™. Registration numbers will appear on each product page and label as they are issued. Questions about any product? Email info@becoforganic.com or call +254 735 283 397.",
+  },
+  {
+    category: "products",
     question: "How do I choose the right product for my crop?",
     answer: `Start with what your crop needs. NitroFix™ is a rhizobium seed inoculant that lets dry beans and kidney beans make their own nitrogen. RootMax™ is a mycorrhiza granule that builds a stronger root system for better water and nutrient uptake (all crops). TrichoShield™ protects roots from soil-borne fungal disease. SoilFix™ revitalizes degraded soil and stabilizes pH and EC. NeemShield™ is a botanical insecticide, miticide and nematicide for pests such as whitefly, aphids, thrips and spider mites. Our crop guides for ${cropNamesList()} set out exactly which products to use and when.`,
     link: { to: "/crops", label: "See the crop guides" },

@@ -8,6 +8,7 @@ import { DELIVERY_SUMMARY, formatKes } from "@/lib/delivery";
 import { formatSize, isPackInStock, maxPacks, pricePerUnit, sortPacks, unitOf, type PackSize } from "@/lib/packs";
 import { programmesForProduct } from "@/lib/cropProgrammes";
 import PackCalculator from "@/components/product/PackCalculator";
+import { PRODUCT_BADGES } from "@/lib/productBadges";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -235,12 +236,17 @@ const ProductDetail = () => {
                   <span className="font-medium">{avgRating.toFixed(1)}</span>
                   <span className="text-sm text-muted-foreground">({reviews.length} review{reviews.length === 1 ? "" : "s"})</span>
                 </div>
-                {product.environmental_rating && (
-                  <div className="flex items-center gap-1 text-sm text-secondary">
-                    <Leaf className="h-4 w-4" /> Eco Score: {product.environmental_rating}/5
-                  </div>
-                )}
               </div>
+
+              {(PRODUCT_BADGES[product.slug] ?? []).length > 0 && (
+                <ul className="flex flex-wrap gap-2" aria-label="Product highlights">
+                  {PRODUCT_BADGES[product.slug].map((badge) => (
+                    <li key={badge} className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                      <Leaf className="h-3.5 w-3.5" /> {badge}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-3xl font-bold text-primary">{formatKes(selectedPack.price)}</span>

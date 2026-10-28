@@ -15,7 +15,7 @@ const highlights = [
   {
     icon: ShoppingBag,
     title: "Full E-Commerce Store",
-    desc: "Browse, compare, and purchase certified organic crop inputs with detailed usage guides, stock levels, and bulk pricing tiers.",
+    desc: "Browse, compare, and purchase natural, biological crop inputs with detailed usage guides, stock levels, and bulk pricing tiers.",
     color: "text-primary",
     bg: "bg-primary/10",
   },
