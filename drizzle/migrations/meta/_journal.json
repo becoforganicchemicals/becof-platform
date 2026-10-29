@@ -15,6 +15,27 @@
       "when": 1792796769108,
       "tag": "0001_product_pack_sizes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793239052141,
+      "tag": "0002_pack_images",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793239054510,
+      "tag": "0003_soilfix_description",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793239056934,
+      "tag": "0004_nitrofix_organic_wording",
+      "breakpoints": true
     }
   ]
 }
