@@ -85,32 +85,16 @@ serve(async (req) => {
         const orderRef = order_id.slice(0, 8).toUpperCase();
 
         // ── Email templates by type ──
+        // "order_placed" fires the moment the order row is created, before the
+        // M-Pesa prompt is even sent. The customer is NOT emailed here — they
+        // already have the STK push on their phone, and emailing them "please
+        // pay" before they've paid just reads as a confirmation for an unpaid
+        // order. Their first email is "payment_received" once M-Pesa confirms.
+        // The admin alert still goes out now so unpaid/abandoned checkouts
+        // stay visible and can be followed up by phone.
         if (type === "order_placed") {
-            await sendEmail(customerEmail, `Order Received – #${orderRef} | Becof Organic Chemicals`, `
-        <div style="max-width:560px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-          ${brandHeader}
-          <div style="padding:32px;background:#fff;font-family:sans-serif;">
-            <h2 style="color:#166534;margin:0 0 8px;">Order Received! 🌿</h2>
-            <p style="color:#475569;margin:0 0 20px;">Hi ${order.shipping_address?.full_name || "Valued Customer"},</p>
-            <p style="color:#475569;margin:0 0 20px;">
-              Thank you for your order. We've received it and it's being processed.
-            </p>
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin-bottom:20px;">
-              <p style="margin:0;color:#166534;font-weight:600;">Order #${orderRef}</p>
-              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Total: KES ${order.total_amount?.toLocaleString()}</p>
-              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Delivery: ${order.delivery_fee ? `KES ${order.delivery_fee.toLocaleString()} (included in total)` : "Free"}</p>
-              <p style="margin:4px 0 0;color:#475569;font-size:14px;">Status: Pending Payment</p>
-            </div>
-            <p style="color:#475569;font-size:14px;">
-              Please complete your M-Pesa payment to confirm your order. You can track your order status by logging into your account.
-            </p>
-          </div>
-          ${brandFooter}
-        </div>
-      `);
-
-            // Notify admins
-            await sendEmail(ADMIN_EMAIL, `New Order #${orderRef} – KES ${order.total_amount?.toLocaleString()}`, `
+            // Notify admins of the new (unpaid) order
+            await sendEmail(ADMIN_EMAIL, `New Order #${orderRef} – KES ${order.total_amount?.toLocaleString()} (unpaid)`, `
         <div style="max-width:560px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
           ${brandHeader}
           <div style="padding:32px;background:#fff;font-family:sans-serif;">
@@ -120,6 +104,7 @@ serve(async (req) => {
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Amount: KES ${order.total_amount?.toLocaleString()} (delivery: ${order.delivery_fee ? `KES ${order.delivery_fee.toLocaleString()}` : "free"})</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Customer: ${order.shipping_address?.full_name}</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Phone: ${order.shipping_address?.phone}</p>
+              <p style="margin:4px 0 0;color:#b45309;font-size:14px;">Payment: awaiting M-Pesa — customer's first email goes out once payment is confirmed</p>
             </div>
             <a href="https://www.becoforganicchemicals.com/admin" style="background:#166534;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View in Admin Dashboard</a>
           </div>

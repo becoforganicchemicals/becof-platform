@@ -214,7 +214,9 @@ const Checkout = () => {
     // spent. Both are applied server-side (mpesa-callback / mpesa-stk-query)
     // at the exact moment payment_status actually transitions to "paid".
 
-    // Send order placed email
+    // Send the admin alert for the new (unpaid) order. The customer is NOT
+    // emailed here — their first email is "Payment Confirmed" once M-Pesa
+    // actually confirms the payment (mpesa-callback / mpesa-stk-push mock).
     await supabase.functions.invoke("send-order-email", {
       body: { order_id: newOrderId, order_type: "standard", type: "order_placed" },
     });
