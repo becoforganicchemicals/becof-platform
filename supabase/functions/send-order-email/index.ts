@@ -104,6 +104,7 @@ serve(async (req) => {
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Amount: KES ${order.total_amount?.toLocaleString()} (delivery: ${order.delivery_fee ? `KES ${order.delivery_fee.toLocaleString()}` : "free"})</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Customer: ${order.shipping_address?.full_name}</p>
               <p style="margin:4px 0 0;color:#475569;font-size:14px;">Phone: ${order.shipping_address?.phone}</p>
+              <p style="margin:4px 0 0;color:#b45309;font-size:14px;">Payment: awaiting M-Pesa — customer's first email goes out once payment is confirmed</p>
             </div>
             <a href="https://www.becoforganicchemicals.com/admin" style="background:#166534;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">View in Admin Dashboard</a>
           </div>
