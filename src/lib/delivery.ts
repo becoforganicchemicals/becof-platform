@@ -1,10 +1,10 @@
 // Delivery pricing, anywhere in Kenya. Must match the shipping settings in
-// Google Merchant Center (flat KES 500, free over KES 30,000) — Google checks
+// Google Merchant Center (flat KES 300, free over KES 10,000) — Google checks
 // that listings and checkout agree. Also stated in Terms of Service §5 and
 // llms.txt (scripts/prerender.mjs); update those too if these change.
 
-export const DELIVERY_FEE = 500;
-export const FREE_DELIVERY_THRESHOLD = 30000;
+export const DELIVERY_FEE = 300;
+export const FREE_DELIVERY_THRESHOLD = 10000;
 
 // Based on the product subtotal, before coupons and points, so a discount
 // never takes away free delivery the order otherwise qualified for.

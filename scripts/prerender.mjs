@@ -177,7 +177,7 @@ const productLine = (p) =>
 
 const llms = `# Becof Organic Chemicals
 
-> Becof Organic Chemicals Limited is a Kenyan agri-biotechnology company that makes microbial biofertilizers, biopesticides and organic soil amendments for farmers across Kenya and beyond. Its biofertilizers are 100% natural and formulated for organic farming, and NeemShield is a neem-based botanical insecticide. Products can be ordered online at ${SITE_URL} and paid for with M-Pesa. Delivery anywhere in Kenya costs a flat KES 500 per order, and is free on orders of KES 30,000 or more.
+> Becof Organic Chemicals Limited is a Kenyan agri-biotechnology company that makes microbial biofertilizers, biopesticides and organic soil amendments for farmers across Kenya and beyond. Its biofertilizers are 100% natural and formulated for organic farming, and NeemShield is a neem-based botanical insecticide. Products can be ordered online at ${SITE_URL} and paid for with M-Pesa. Delivery anywhere in Kenya costs a flat KES 300 per order, and is free on orders of KES 10,000 or more.
 
 Contact: info@becoforganic.com, +254 735 283 397 (Mon–Fri, 8AM–6PM EAT). Based in Nairobi and Kilifi, Kenya.
 
