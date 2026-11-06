@@ -297,6 +297,7 @@ const AdminAnalytics = () => {
               <ArrowUpRight className={`h-4 w-4 ${card.textAccent} opacity-60`} />
             </div>
             <p className="text-2xl font-bold text-foreground leading-none">{card.value}</p>
+            <p className="text-sm font-semibold text-foreground mt-2">{card.label}</p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{card.sub}</p>
             {card.spark && (
               <div className="mt-3">
