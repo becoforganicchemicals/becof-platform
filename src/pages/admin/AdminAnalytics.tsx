@@ -5,6 +5,7 @@ import {
   DollarSign, CheckCircle, Clock, Star, Inbox,
   ArrowUpRight, BarChart2, RefreshCw,
 } from "lucide-react";
+import { countPaidDeliveredOrdersThisMonth } from "@/lib/orderMetrics";
 
 /* ─── helpers ─── */
 const fmt = (n: number) => n.toLocaleString("en-KE");
@@ -78,6 +79,8 @@ const AdminAnalytics = () => {
       if (error) throw error;
       return data;
     },
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: products = [], refetch: refetchProducts } = useQuery({
@@ -136,6 +139,11 @@ const AdminAnalytics = () => {
   const paidRevenue = orders.filter(o => (o as any).payment_status === "paid").reduce((s, o) => s + Number(o.total_amount), 0);
   const totalOrders = orders.length;
   const deliveredOrders = orders.filter(o => o.status === "delivered").length;
+  const paidDeliveredThisMonth = countPaidDeliveredOrdersThisMonth(orders, new Date());
+  const currentMonthLabel = new Intl.DateTimeFormat("en-KE", {
+    month: "long",
+    timeZone: "Africa/Nairobi",
+  }).format(new Date());
   const pendingOrders = orders.filter(o => o.status === "received" || o.status === "processing").length;
   const totalProducts = products.length;
   const publishedProds = products.filter(p => p.is_published).length;
@@ -231,7 +239,7 @@ const AdminAnalytics = () => {
       )}
 
       {/* ── KPI strip ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           {
             label: "Total Revenue",
@@ -252,6 +260,15 @@ const AdminAnalytics = () => {
             sparkColor: "bg-blue-400",
             accent: "from-blue-600 to-cyan-500",
             textAccent: "text-blue-600",
+          },
+          {
+            label: "Paid & Delivered",
+            value: fmt(paidDeliveredThisMonth),
+            sub: `Completed in ${currentMonthLabel}`,
+            icon: CheckCircle,
+            spark: null,
+            accent: "from-primary to-secondary",
+            textAccent: "text-primary",
           },
           {
             label: "Products",
@@ -280,6 +297,7 @@ const AdminAnalytics = () => {
               <ArrowUpRight className={`h-4 w-4 ${card.textAccent} opacity-60`} />
             </div>
             <p className="text-2xl font-bold text-foreground leading-none">{card.value}</p>
+            <p className="text-sm font-semibold text-foreground mt-2">{card.label}</p>
             <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{card.sub}</p>
             {card.spark && (
               <div className="mt-3">
